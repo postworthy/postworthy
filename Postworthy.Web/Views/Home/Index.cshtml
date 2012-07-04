@@ -1,0 +1,197 @@
+﻿@model List<Postworthy.Models.Twitter.ITweet>
+@{
+    ViewBag.Title = "Home Page";
+    ViewBag.Home = true;
+}
+<style>
+    .profile-image-small
+    {
+        width:25px;
+        height:25px;
+        float:left;
+        padding-right: 3px;
+        padding-bottom: 5px;
+    }
+    .tweet-info
+    {
+        height:25px;
+        float:left;
+        font-size:10px;
+        padding-bottom: 5px;
+        line-height: 12px;
+    }
+    .btn-tweet
+    {
+        float:right;
+        margin: 5px 0px 5px 0px;
+    }
+    #characterCount
+    {
+        float:right;
+        font-size: 16px;
+        font-weight: bold;
+        color: #ccc;
+        line-height:28px;
+        padding-right:4px;
+        margin: 5px 0px 5px 0px;
+    }
+    .box { border-top: 4px solid #DCB; }
+    .box a { word-wrap: break-word; overflow-wrap: break-word; }
+    .col1 { width: 225px; }
+    .col2 { width: 460px; }
+    .col3 { width: 695px; }
+    .col4 { width: 930px; }
+    .newest{ background-color: #E6F0F5; }
+    .top10{ font-family: bold;  }
+    .top20{ font-weight: bold; }
+    .top30{ font-weight: bold; }
+    .postIndex
+    { 
+        float:right;
+        font-size: 16px;
+        font-weight: bold;
+        color: #ccc;
+        line-height:28px;
+        padding-right:4px;
+    }
+</style>
+<script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
+<script type="text/javascript">
+    $(function () {
+        $('#container').imagesLoaded(function () {
+            $('#container').masonry({ itemSelector: '.box', columnWidth: 235 });
+        });
+    });
+</script>
+<div id="container">
+    <div>
+        @if (Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize && ViewBag.ScreenName == User.Identity.Name) 
+        {
+            <script src="@Url.Content("~/Scripts/jquery.watermark.min.js")" type="text/javascript"></script>
+            <script type="text/javascript">
+                $(function () {
+                    var supportOnInput = 'oninput' in document.createElement('input');
+
+                    var btn = $("#btnTweet")
+                    var tweet = $("#Tweet");
+                    var maxLength = 140;
+
+                    var el = $("#characterCount");
+
+                    tweet.bind(supportOnInput ? 'input' : 'keyup', function () {
+                        var cc = tweet.val().length;
+
+                        if (cc > 0)
+                            btn.removeAttr("disabled");
+                        else
+                            btn.attr("disabled", "disabled");
+
+                        el.text(maxLength - cc);
+
+                        if (maxLength < cc) {
+                            el.css('color', 'red');
+                        } else {
+                            el.css('color', '#ccc');
+                        }
+                    });
+
+                    tweet.watermark('Start typing here to tweet something!');
+                });
+            </script>
+            using (Html.BeginForm("Tweet", "Home"))
+            {
+            <div class="box col2">
+                <div style="padding:5px 5px 5px 5px;">
+                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 450px;border: 0;"></textarea>
+                    <button id="btnTweet" type="submit" class="btn btn-primary btn-tweet" disabled>
+                        <i class="icon-comment icon-white"></i> Tweet
+                    </button>
+                    <span id="characterCount" class="characterCount">140</span>
+                </div>
+            </div>
+            }
+        }
+        @if (Model != null)
+        {
+            var ranked = Model.OrderByDescending(t => t.TweetRank);
+            var top10 = ranked.Take(10);
+            var top20 = ranked.Skip(10).Take(10);
+            var top30 = ranked.Skip(20).Take(10);
+            var HotTweets = ranked.Take(100).OrderByDescending(x => x.CreatedAt);
+            var index = 0; 
+            foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
+            {
+                index++;
+                var isTop10 = top10.Contains(tweet);
+                var isTop20 = top20.Contains(tweet);
+                var isTop30 = top30.Contains(tweet);
+                var randomImage = tweet.Links.Where(l=>l.Image != null).OrderBy(x=>Guid.NewGuid()).FirstOrDefault();
+                var hasVideo = tweet.Links.Where(l => l.Video != null).Count() > 0;
+
+                var topN = (isTop10) ? " top10" : (isTop20 ? " top20" : (isTop30 ? " top30" : ""));
+            
+                <div class="box @((hasVideo) ? "col2" : "col1")@(tweet.RetweetCount > 5 && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
+                    <div style="padding:5px;">
+                        <img alt="@tweet.User.Name" title="@tweet.User.Name" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
+                        <div class="tweet-info">
+                            
+                            Created @tweet.TweetTime <br/>
+                            @((tweet.RetweetCount > 0) ? "Retweeted " + tweet.RetweetCount + " times" : "Not yet retweeted")
+                        </div>
+                        <span class="postIndex">#@index</span>
+                        <hr style="clear:both;" />
+                        @if(randomImage != null)
+                        {
+                            <div class="tweet-image-div">
+                                <img width="100%" src="@randomImage.Image.ToString()" />
+                            </div>
+                        }
+                    
+                        @if(isTop10) 
+                        { 
+                            <h3>@Html.Raw(tweet.TweetText)</h3>
+                        }
+                        else if(isTop20) 
+                        { 
+                            <h4>@Html.Raw(tweet.TweetText)</h4>
+                        }
+                        else if(isTop30) 
+                        { 
+                            <h5>@Html.Raw(tweet.TweetText)</h5>
+                        }
+                        else
+                        {
+                            @Html.Raw(tweet.TweetText)
+                        }
+                        
+                                         
+                        @if (hasVideo)
+                        {
+                            <hr style="clear:both;" />
+                            foreach (var link in tweet.Links.Where(l => l.Video != null))
+                            {
+                                <iframe width="320" height="215" src="@link.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen></iframe>
+                            }
+                        }
+                        @if (tweet.Links.Where(l => l.Image == null && l.Video == null).Count() > 0)
+                        {
+                            <hr style="clear:both;" />
+                            foreach (var link in tweet.Links.Where(l => l.Image == null && l.Video == null))
+                            {
+                                <li><a href="@link.Uri">@link.Title</a></li>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="box span4">
+                <div style="padding:5px;">
+                    Sorry no tweets to view at this time. Please try again later.
+                </div>
+            </div>
+        }
+    </div>
+</div>
