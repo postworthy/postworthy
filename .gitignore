@@ -28,8 +28,8 @@ obj/
 _ReSharper*/
 [Tt]est[Rr]esult*
 app.config
-Web.config
-Web.Debug.config
-Web.Release.config
-UsersCollection.config
+Postworthy.Web/Web.config
+Postworthy.Web/Web.Debug.config
+Postworthy.Web/Web.Release.config
+Postworthy.Web/UsersCollection.config
 Postworthy.Web.Publish.xml
