@@ -176,7 +176,8 @@
                         @if (tweet.Links.Where(l => l.Image == null && l.Video == null).Count() > 0)
                         {
                             <hr style="clear:both;" />
-                            foreach (var link in tweet.Links.Where(l => l.Image == null && l.Video == null))
+                            var links = tweet.Links.Where(l => l.Image == null && l.Video == null).Distinct();
+                            foreach (var link in links)
                             {
                                 <li><a href="@link.Uri">@link.Title</a></li>
                             }

@@ -32,3 +32,4 @@ Web.config
 Web.Debug.config
 Web.Release.config
 UsersCollection.config
+Postworthy.Web.Publish.xml

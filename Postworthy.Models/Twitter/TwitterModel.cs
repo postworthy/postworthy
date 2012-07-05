@@ -89,10 +89,12 @@ namespace Postworthy.Models.Twitter
                 (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) && 
                 ((t.RetweetCount > 5 && t.CreatedAt > DateTime.Now.AddHours(-48)) || t.User.Identifier.ScreenName.ToLower() == screenname.ToLower());
 
-            var tweets = screenNames.SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, where: where) ?? new List<Tweet>())
-                .OrderBy(t => t.Status.CreatedAt)
-                .GroupSimilar()
-                .Select(g => new TweetGroup(g));
+            var tweets = screenNames
+                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit30, where: where) ?? new List<Tweet>())
+                .Distinct()
+                .OrderBy(t => t.Status.CreatedAt);
+                //.GroupSimilar()
+                //.Select(g => new TweetGroup(g));
 
             return tweets.Cast<ITweet>().ToList();
         }
