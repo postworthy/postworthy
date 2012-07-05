@@ -26,7 +26,7 @@ namespace Postworthy.Models.Core
         public Uri Image { get { return _Image; } set { SetNotifyingProperty("Image", ref _Image, value); } }
         public Uri Video { get { return _Video; } set { SetNotifyingProperty("Video", ref _Video, value); } }
         public bool IsHtmlContentUrl { get { return _IsHtmlContentUrl; } set { SetNotifyingProperty("IsHtmlContentUrl", ref _IsHtmlContentUrl, value); } }
-        public bool IsImageContentUrl { get { return _IsImageContentUrl; } set { SetNotifyingProperty("IsImageContentUrl", ref _IsHtmlContentUrl, value); } }
+        public bool IsImageContentUrl { get { return _IsImageContentUrl; } set { SetNotifyingProperty("IsImageContentUrl", ref _IsImageContentUrl, value); } }
 
 
         public UriEx() { }

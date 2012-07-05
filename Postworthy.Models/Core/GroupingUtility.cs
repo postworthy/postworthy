@@ -13,7 +13,7 @@ namespace Postworthy.Models.Core
     {
         private const int MIN_LENGTH = 3;
         private const decimal MINIMUM = .40M;
-        private const decimal GOOD = .66M;
+        private const decimal GOOD = .55M;
         private const decimal STRONG = .75M;
 
         private class SimilarObject<T> where T : ISimilarText
@@ -91,7 +91,7 @@ namespace Postworthy.Models.Core
                                             }
                                         }
                                         si = (2.0M * intersection) / union;
-                                        if (si >= MINIMUM)
+                                        if (si >= GOOD)
                                         {
                                             so[j].ParentObject = so[i].Object;
                                             so[j].SimilarityIndex = si;
