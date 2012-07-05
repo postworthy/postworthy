@@ -148,6 +148,8 @@
     <Content Include="Views\Account\Register.cshtml" />
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
+    <None Include="Example.UsersCollection.config" />
+    <None Include="Example.Web.config" />
     <None Include="Views\Home\_Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_LogOnPartial.cshtml" />
