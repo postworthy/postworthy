@@ -91,8 +91,8 @@ namespace Postworthy.Models.Twitter
                 .Take(300)
                 //Group based on the date (for speeding up the next step, similar tweets would happen on the same day)
                 .GroupBy(t => t.CreatedAt.ToShortDateString())
-                //Group similar tweets
-                .SelectMany(g => g.Select(t => t).GroupSimilar())
+                //Group similar tweets (the ordering is done first so that the earliest tweet gets credit)
+                .SelectMany(g => g.OrderBy(t=>t.CreatedAt).GroupSimilar())
                 //Convert groups into something we can display
                 .Select(g => new TweetGroup(g));
 
