@@ -17,10 +17,7 @@ namespace Postworthy.Web.Controllers
             base.Initialize(requestContext);
             var user = UsersCollection.PrimaryUser();
             if (user != null)
-            {
-                ViewBag.ScreenName = user.TwitterScreenName;
                 ViewBag.Brand = user.SiteName;
-            }
         }
 
         public ActionResult Index()

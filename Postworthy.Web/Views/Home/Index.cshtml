@@ -132,7 +132,9 @@
             
                 <div class="box @((hasVideo) ? "col2" : "col1")@(tweet.RetweetCount > 5 && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
                     <div style="padding:5px;">
-                        <img alt="@tweet.User.Name" title="@tweet.User.Name" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
+                        <a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName">
+                            <img alt="@tweet.User.Identifier.ScreenName" title="@tweet.User.Identifier.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
+                        </a>
                         <div class="tweet-info">
                             
                             Created @tweet.TweetTime <br/>
