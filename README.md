@@ -12,6 +12,9 @@ and also use the example.app.config in the UpdateRepository project to create an
 You will then need to authorize your twitter account and use the  example.userscollection.config 
 file in the Postworthy.Web directory to create a userscollection.config file.
 
+Once you have your twitter account ready you will want to modify the PrimaryUser in both the web.config and 
+the app.config.
+
 #UsersCollection References
 
 In both the web.config and the app.config you will need to modify the UsersCollection setting to point 

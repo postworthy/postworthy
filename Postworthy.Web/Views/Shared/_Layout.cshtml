@@ -15,11 +15,10 @@
     <div class="navbar navbar-fixed-top">
         <div class="navbar-inner">
             <div class="container">
-                <a class="brand" href="@Url.Content("~/" + ViewBag.ScreenName)">@(ViewBag.Brand ?? "Postworthy")</a>
+                <a class="brand" href="@Url.Content("~/")">@(ViewBag.Brand ?? "Postworthy")</a>
                 <ul class="nav">
-                    <li class="@((ViewBag.Home == true) ? "active" : "")"><a href="@Url.Content("~/" + ViewBag.ScreenName)"><i class="icon-home @((ViewBag.Home == true) ? "icon-white" : "")"></i> Home</a></li>
-                    <li class="@((ViewBag.Directory == true)? "active" : "")"><a href="@(Url.Content("~/" + ViewBag.ScreenName + "/home/directory"))"><i class="icon-th-list @((ViewBag.Directory == true) ? "icon-white" : "")"></i> Directory</a></li>
-                    <li class="@((ViewBag.About == true)? "active" : "")"><a href="@(Url.Content("~/" + ViewBag.ScreenName + "/home/about"))"><i class="icon-info-sign @((ViewBag.About == true) ? "icon-white" : "")"></i> About</a></li>
+                    <li class="@((ViewBag.Home == true) ? "active" : "")"><a href="@Url.Content("~/")"><i class="icon-home @((ViewBag.Home == true) ? "icon-white" : "")"></i> Home</a></li>
+                    <li class="@((ViewBag.About == true)? "active" : "")"><a href="@(Url.Content("~/home/about"))"><i class="icon-info-sign @((ViewBag.About == true) ? "icon-white" : "")"></i> About</a></li>
                 </ul>
                 <ul class="nav pull-right">
                     @Html.Partial("_LogOnPartial")

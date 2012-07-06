@@ -6,17 +6,16 @@ using System.Web.Mvc;
 using Postworthy.Models;
 using Postworthy.Models.Account;
 using Postworthy.Models.Twitter;
+using Postworthy.Web.Models;
 
 namespace Postworthy.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private const string POSTWORTHY = "postworthy";
-
         protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
             base.Initialize(requestContext);
-            var user = UsersCollection.Single(requestContext.RouteData.Values.SingleOrDefault(x => x.Key == "site").Value.ToString());
+            var user = UsersCollection.PrimaryUser();
             if (user != null)
             {
                 ViewBag.ScreenName = user.TwitterScreenName;
@@ -26,22 +25,10 @@ namespace Postworthy.Web.Controllers
 
         public ActionResult Index()
         {
-            string screenName = ViewBag.ScreenName;
-            if (!string.IsNullOrEmpty(screenName))
-            {
-                return View(TwitterModel.Instance.Tweets(screenName));
-            }
-            else
-                return RedirectToAction("Register", new
-                {
-                    site = Request.RequestContext.RouteData.Values.SingleOrDefault(x => x.Key == "site").Value,
-                    controller = "Account",
-                    action = "Register",
-                    id = UrlParameter.Optional
-                });
+            return View(TwitterModel.Instance.Tweets(UsersCollection.PrimaryUser().TwitterScreenName));
         }
 
-        [Authorize]
+        [AuthorizePrimaryUser]
         [HttpPost]
         public ActionResult Tweet(string Tweet)
         {
@@ -51,24 +38,14 @@ namespace Postworthy.Web.Controllers
             return RedirectToAction("Index");
         }
 
-        public ActionResult Directory()
+        /*public ActionResult Directory()
         {
             return View(UsersCollection.All());
-        }
+        }*/
 
         public ActionResult About()
         {
-            string screenName = ViewBag.ScreenName;
-            if (!string.IsNullOrEmpty(screenName))
-                return View(UsersCollection.Single(screenName));
-            else
-                return RedirectToAction("Register", new
-                {
-                    site = Request.RequestContext.RouteData.Values.SingleOrDefault(x => x.Key == "site").Value,
-                    controller = "Account",
-                    action = "Register",
-                    id = UrlParameter.Optional
-                });
+            return View(UsersCollection.PrimaryUser());
         }
     }
 }

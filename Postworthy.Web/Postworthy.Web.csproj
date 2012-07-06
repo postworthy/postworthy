@@ -102,6 +102,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\AuthorizePrimaryUserAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -174,7 +175,6 @@
   <ItemGroup>
     <Folder Include="Lib\" />
     <Folder Include="LongTermStorage\" />
-    <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Postworthy.Models\Postworthy.Models.csproj">

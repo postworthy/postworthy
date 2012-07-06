@@ -49,11 +49,24 @@ namespace Postworthy.Models.Account
                     !string.IsNullOrEmpty(AccessToken);
             }
         }
+
+        public bool IsPrimaryUser
+        {
+            get
+            {
+                return TwitterScreenName.ToLower() == ConfigurationManager.AppSettings["PrimaryUser"].ToLower();
+            }
+        }
     }
 
     public class UsersCollection
     {
         private static readonly object locker = new object();
+
+        public static PostworthyUser PrimaryUser()
+        {
+            return Single(ConfigurationManager.AppSettings["PrimaryUser"]);
+        }
 
         public static PostworthyUser Single(string ScreenName, bool force = false, bool addIfNotFound = false)
         {

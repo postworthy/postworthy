@@ -26,8 +26,8 @@ namespace Postworthy.Web
 
             routes.MapRoute(
                 "Default", // Route name
-                "{site}/{controller}/{action}/{id}", // URL with parameters
-                new { site = "Postworthy", controller = "Home", action = "Index", id = UrlParameter.Optional } // Parameter defaults
+                "{controller}/{action}/{id}", // URL with parameters
+                new { controller = "Home", action = "Index", id = UrlParameter.Optional } // Parameter defaults
             );
 
         }

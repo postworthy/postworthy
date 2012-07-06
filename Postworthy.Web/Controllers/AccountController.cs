@@ -12,6 +12,7 @@ using System.IO;
 using LinqToTwitter;
 using Postworthy.Models.Account;
 using Postworthy.Models.Twitter;
+using Postworthy.Web.Models;
 
 namespace Postworthy.Web.Controllers
 {
@@ -20,7 +21,7 @@ namespace Postworthy.Web.Controllers
         protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
             base.Initialize(requestContext);
-            var user = UsersCollection.Single(requestContext.RouteData.Values.SingleOrDefault(x => x.Key == "site").Value.ToString());
+            var user = UsersCollection.PrimaryUser();
             if (user != null)
             {
                 ViewBag.ScreenName = user.TwitterScreenName;
@@ -53,11 +54,11 @@ namespace Postworthy.Web.Controllers
                         pm.OAuthToken = auth.Credentials.OAuthToken;
                         UsersCollection.Save();
                     }
-                    return RedirectToAction("Index", new { site = auth.ScreenName, controller = "Home", action = "Index", id = UrlParameter.Optional });
+                    return RedirectToAction("Index", new { controller = "Home", action = "Index", id = UrlParameter.Optional });
                 }
             }
             else
-                return RedirectToAction("Index", new { site = User.Identity.Name, controller = "Home", action = "Index", id = UrlParameter.Optional });
+                return RedirectToAction("Index", new { controller = "Home", action = "Index", id = UrlParameter.Optional });
         }
 
         //
@@ -65,11 +66,9 @@ namespace Postworthy.Web.Controllers
 
         public ActionResult LogOff()
         {
-            var site = User.Identity.Name;
-
             FormsAuthentication.SignOut();
 
-            return RedirectToAction("Index", new { site = site, controller = "Home", action = "Index", id = UrlParameter.Optional });
+            return RedirectToAction("Index", new { controller = "Home", action = "Index", id = UrlParameter.Optional });
         }
 
         //
@@ -85,14 +84,14 @@ namespace Postworthy.Web.Controllers
         //
         // POST: /Account/Register
 
-        [Authorize]
+        [AuthorizePrimaryUser]
         public ActionResult Personalization()
-        {
+        {  
             PostworthyUser model = UsersCollection.Single(User.Identity.Name);
             return View(model);
         }
 
-        [Authorize]
+        [AuthorizePrimaryUser]
         [HttpPost]
         public ActionResult Personalization(PostworthyUser model)
         {
@@ -109,7 +108,7 @@ namespace Postworthy.Web.Controllers
             return View(model);
         }
 
-        [Authorize]
+        [AuthorizePrimaryUser]
         public ActionResult Friends()
         {
             return View(TwitterModel.Instance.Friends(User.Identity.Name));

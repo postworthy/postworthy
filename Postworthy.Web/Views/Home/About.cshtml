@@ -6,10 +6,10 @@
 
 <fieldset>
     <legend>About @( "@" + Model.TwitterScreenName)</legend>
-    @if (Model.About == null && Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize && ViewBag.ScreenName == User.Identity.Name)
+    @if (Model.About == null && Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser &&Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize)
     {
         <p>
-            @Html.ActionLink("Update your about text in the personalization section of the site", "Personalization", new { site = User.Identity.Name, controller = "Account", action = "Personalization", id = UrlParameter.Optional })
+            @Html.ActionLink("Update your about text in the personalization section of the site", "Personalization", new { controller = "Account", action = "Personalization", id = UrlParameter.Optional })
         </p>
     }
     else

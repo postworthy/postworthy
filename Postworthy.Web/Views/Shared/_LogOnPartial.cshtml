@@ -1,17 +1,21 @@
 ﻿@if (Request.IsAuthenticated)
 {
+    var user = Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name);
     <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">
         <i class="icon-user @((ViewBag.Account == true) ? "icon-white" : "")"></i> @User.Identity.Name
         <b class="caret"></b></a>
         <ul class="dropdown-menu">
+            @if (user.IsPrimaryUser)
+            {
             <li>
-                @Html.ActionLink("Personalize", "Personalization", new { site = User.Identity.Name, controller = "Account", action = "Personalization", id = UrlParameter.Optional })
+                @Html.ActionLink("Personalize", "Personalization", new { controller = "Account", action = "Personalization", id = UrlParameter.Optional })
             </li>
             <li>
-                @Html.ActionLink("Friends", "Friends", new { site = User.Identity.Name, controller = "Account", action = "Friends", id = UrlParameter.Optional })
+                @Html.ActionLink("Friends", "Friends", new { controller = "Account", action = "Friends", id = UrlParameter.Optional })
             </li>
+            }
             <li>
-                @Html.ActionLink("Log Off", "LogOff", new { site = User.Identity.Name, controller = "Account", action = "LogOff", id = UrlParameter.Optional })
+                @Html.ActionLink("Log Off", "LogOff", new { controller = "Account", action = "LogOff", id = UrlParameter.Optional })
             </li>
         </ul>
     </li>

@@ -140,7 +140,7 @@
             <div class="timeline">
             </div>
         </div>
-        @if (Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize && ViewBag.ScreenName == User.Identity.Name) {
+        @if (Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize) {
             <script src="@Url.Content("~/Scripts/jquery.watermark.min.js")" type="text/javascript"></script>
             <script type="text/javascript">
                 $(function () {

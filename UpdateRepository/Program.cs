@@ -12,6 +12,7 @@ using Postworthy.Models.Repository;
 using Postworthy.Models.Account;
 using Postworthy.Models.Twitter;
 using Postworthy.Models.Core;
+using System.Configuration;
 
 namespace UpdateRepository
 {
@@ -42,7 +43,7 @@ namespace UpdateRepository
 
                     Console.WriteLine("{0}: Started", start);
 
-                    var users = UsersCollection.All();
+                    var primaryUser = UsersCollection.PrimaryUser();
 
                     List<Tweet> RecentTweets = new List<Tweet>();
                     List<Tweet> tweets;
@@ -50,18 +51,13 @@ namespace UpdateRepository
 
                     List<string> screenNames = new List<string>();
 
-                    users.ForEach(u =>
-                        {
-                            Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, u.TwitterScreenName);
-                            tweeps = GetFriends(u.TwitterScreenName);
+                    Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, primaryUser);
+                    tweeps = GetFriends(primaryUser.TwitterScreenName);
 
-                            if (tweeps != null)
-                                Repository<Tweep>.Instance.Save(u.TwitterScreenName + FRIENDS, tweeps);
+                    if (tweeps != null)
+                        Repository<Tweep>.Instance.Save(primaryUser.TwitterScreenName + FRIENDS, tweeps);
 
-                            screenNames.AddRange(TwitterModel.Instance.GetRelevantScreenNames(u.TwitterScreenName));
-                        });
-
-                    screenNames = screenNames.Distinct().ToList();
+                    screenNames.AddRange(TwitterModel.Instance.GetRelevantScreenNames(primaryUser.TwitterScreenName));
 
                     foreach (var screenName in screenNames)
                     {
