@@ -74,27 +74,27 @@ namespace Postworthy.Models.Twitter
                 screenNames = GetRelevantScreenNames(screenname);
             else
                 screenNames = new List<string> { screenname.ToLower() };
-            /*
-            var tweets = screenNames.SelectMany(x => Repository<Tweet>.Instance.Find(x + TWEETS) ?? new List<Tweet>())
-                .Where(x => user.OnlyTweetsWithLinks == false || (x.Links != null && x.Links.Count > 0))
-                .GroupBy(x => x.Status.User.Identifier.ScreenName)
-                .SelectMany(g => g.OrderByDescending(t => t.TweetRank).Take(15))
-                .OrderByDescending(t => t.TweetRank)
-                .Take(100)
-                .OrderByDescending(x => x.Status.CreatedAt)
-                .ToList();
-            */
+            
 
             Expression<Func<Tweet, bool>> where = t => 
+                //Should everything be displayed or do you only want content
                 (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) && 
+                //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
                 ((t.RetweetCount > 5 && t.CreatedAt > DateTime.Now.AddHours(-48)) || t.User.Identifier.ScreenName.ToLower() == screenname.ToLower());
 
             var tweets = screenNames
+                //For each screen name (i.e. - you and your friends if included) select the most recent tweets
                 .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
-                .Distinct()
-                .OrderBy(t => t.Status.CreatedAt);
-                //.GroupSimilar()
-                //.Select(g => new TweetGroup(g));
+                //Order all tweets based on rank
+                .OrderByDescending(t=>t.TweetRank)
+                //Take the top 300
+                .Take(300)
+                //Group based on the date (for speeding up the next step, similar tweets would happen on the same day)
+                .GroupBy(t => t.CreatedAt.ToShortDateString())
+                //Group similar tweets
+                .SelectMany(g => g.Select(t => t).GroupSimilar())
+                //Convert groups into something we can display
+                .Select(g => new TweetGroup(g));
 
             return tweets.Cast<ITweet>().ToList();
         }

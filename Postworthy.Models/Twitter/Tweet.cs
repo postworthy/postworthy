@@ -77,6 +77,7 @@ namespace Postworthy.Models.Twitter
         private void InitializeWordLetterPairHash(string text)
         {
             text = Regex.Replace(text, @"(http|ftp|https)://([\w+?\.\w+])+([a-zA-Z0-9\~\!\@\#\$\%\^\&\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?", "");
+            text = text.Trim();
             int MIN_LENGTH = 3;
             WordLetterPairHash = new List<int>(text.Length);
             string[] words = text.ToLower().Split(' ');
