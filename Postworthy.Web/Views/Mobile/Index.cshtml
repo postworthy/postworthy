@@ -38,10 +38,7 @@
     }
     .box { border-top: 4px solid #DCB; }
     .box a { word-wrap: break-word; overflow-wrap: break-word; }
-    .col1 { width: 225px; }
-    .col2 { width: 460px; }
-    .col3 { width: 695px; }
-    .col4 { width: 930px; }
+    .colFull { width: 320px; }
     .newest{ background-color: #E6F0F5; }
     .top10{ font-family: bold;  }
     .top20{ font-weight: bold; }
@@ -59,11 +56,11 @@
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
-        $('#container').masonry({ itemSelector: '.box', columnWidth: 235 });
+        $('#container').masonry({ itemSelector: '.box', columnWidth: 320 });
 
         $('#container').imagesLoaded(function () {
             $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
-            $('#container').masonry({ itemSelector: '.box', columnWidth: 235 });
+            $('#container').masonry({ itemSelector: '.box', columnWidth: 320 });
         });
     });
 </script>
@@ -104,9 +101,9 @@
             </script>
             using (Html.BeginForm("Tweet", "Mobile"))
             {
-            <div class="box col2">
+            <div class="box colFull">
                 <div style="padding:5px 5px 5px 5px;">
-                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 450px;border: 0;"></textarea>
+                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 320px;border: 0;"></textarea>
                     <button id="btnTweet" type="submit" class="btn btn-primary btn-tweet" disabled>
                         <i class="icon-comment icon-white"></i> Tweet
                     </button>
@@ -134,7 +131,7 @@
 
                 var topN = (isTop10) ? " top10" : (isTop20 ? " top20" : (isTop30 ? " top30" : ""));
             
-                <div class="box col2@(tweet.RetweetCount > 5 && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
+                <div class="box colFull@(tweet.RetweetCount > 5 && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
                     <div style="padding:5px;">
                         <a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName">
                             <img alt="@tweet.User.Identifier.ScreenName" title="@tweet.User.Identifier.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />

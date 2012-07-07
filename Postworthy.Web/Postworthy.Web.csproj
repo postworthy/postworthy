@@ -160,6 +160,7 @@
     <Content Include="Views\Mobile\Index.cshtml" />
     <Content Include="Views\Shared\_MobileLayout.cshtml" />
     <Content Include="Views\Mobile\About.cshtml" />
+    <Content Include="Views\Shared\_MobileLogOnPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Account\Personalization.cshtml" />
