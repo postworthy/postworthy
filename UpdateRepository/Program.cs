@@ -131,7 +131,7 @@ namespace UpdateRepository
 
                     if (updateTweets.Count > 0)
                     {
-                        Console.WriteLine("{0}: Processing {1} Tweets which Reached Threshold", DateTime.Now, updateTweets.Count);
+                        Console.WriteLine("{0}: Processing {1} Tweets with New Retweet Counts", DateTime.Now, updateTweets.Count);
                         tp = new TweetProcessor(updateTweets);
                         tp.Start();
                         Repository<Tweet>.Instance.FlushChanges();
