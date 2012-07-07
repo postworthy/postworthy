@@ -58,7 +58,10 @@
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
+        $('#container').masonry({ itemSelector: '.box', columnWidth: 235 });
+
         $('#container').imagesLoaded(function () {
+            $('.tweet-image-div').css('max-height','100px').css('height','auto');
             $('#container').masonry({ itemSelector: '.box', columnWidth: 235 });
         });
     });
@@ -146,7 +149,7 @@
                         @if(randomImage != null)
                         {
                             <div class="tweet-image-div">
-                                <img width="100%" src="@randomImage.Image.ToString()" />
+                                <img src="@randomImage.Image.ToString()" />
                             </div>
                         }
                     

@@ -6,11 +6,16 @@
 .tweet-image-div
 {
     width:100px;
-    max-height:100px;
+    height:100px;
     overflow:hidden;
     float:left;
     margin-right:3px;
 }
+.tweet-image-div img
+{
+    width: 100%;
+}
+
 .tweet-text
 {
     float:left;
