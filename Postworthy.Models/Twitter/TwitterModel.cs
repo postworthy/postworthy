@@ -139,6 +139,11 @@ namespace Postworthy.Models.Twitter
             }
         }
 
+        public void Retweet(string statusId, string screenname)
+        {
+            var status = GetAuthorizedTwitterContext(screenname).Retweet(statusId);
+        }
+
         public TwitterContext GetAuthorizedTwitterContext(string screenname)
         {
             var pm = UsersCollection.Single(screenname);

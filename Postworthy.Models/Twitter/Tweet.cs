@@ -53,6 +53,14 @@ namespace Postworthy.Models.Twitter
             InitializeWordLetterPairHash(status.Text);
         }
 
+        public string StatusID 
+        { 
+            get 
+            {
+                return this.Status.StatusID;
+            } 
+        }
+
         public override bool IsEqual(RepositoryEntity other)
         {
             if (other is Tweet)

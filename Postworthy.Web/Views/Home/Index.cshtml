@@ -138,7 +138,8 @@
                         <div class="tweet-info">
                             
                             Created @tweet.TweetTime <br/>
-                            @((tweet.RetweetCount > 0) ? "Retweeted " + tweet.RetweetCount + " times" : "Not yet retweeted")
+                            <i class="icon-retweet"></i> @((tweet.RetweetCount > 0) ? tweet.RetweetCount + " Retweets" : "Not yet retweeted") 
+                            [<a title="Retweet This" href="@(Url.Content("~/home/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
                         </div>
                         <span class="postIndex">#@index</span>
                         <hr style="clear:both;" />

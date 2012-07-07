@@ -11,6 +11,7 @@ namespace Postworthy.Models.Twitter
     {
         public TweetGroup(IGrouping<Tweet, Tweet> tg)
         {
+            StatusID = tg.Key.StatusID;
             TweetText = tg.Key.TweetText;
             CreatedAt = tg.Key.CreatedAt;
             TweetTime = tg.Key.TweetTime;
@@ -21,6 +22,8 @@ namespace Postworthy.Models.Twitter
         }
 
         #region ITweet Members
+
+        public string StatusID { get; private set; }
 
         public List<UriEx> Links { get; private set; }
 

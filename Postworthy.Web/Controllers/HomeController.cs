@@ -35,6 +35,15 @@ namespace Postworthy.Web.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize]
+        public ActionResult Retweet(string id)
+        {
+            if (!string.IsNullOrEmpty(id))
+                TwitterModel.Instance.Retweet(id, User.Identity.Name);
+
+            return RedirectToAction("Index");
+        }
+
         /*public ActionResult Directory()
         {
             return View(UsersCollection.All());
