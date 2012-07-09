@@ -1,7 +1,7 @@
 ﻿@model List<Postworthy.Models.Twitter.ITweet>
 @{
     Layout = "~/Views/Shared/_MobileLayout.cshtml";
-    ViewBag.Title = "Home Page";
+    ViewBag.Title = ViewBag.Brand ?? "Postworthy";
     ViewBag.Home = true;
 }
 <style>
