@@ -160,7 +160,7 @@ namespace UpdateRepository
                     between = new BetweenStatuses(0, 0);
                     between.MinStatusID = (tweets != null && tweets.Count() > 0) ? ulong.Parse(tweets.First().Status.StatusID) : 0;
                 }
-                var user = UsersCollection.Single(screenname) ?? UsersCollection.Single("postworthy");
+                var user = UsersCollection.Single(screenname) ?? UsersCollection.PrimaryUser();
                 if (user.CanAuthorize)
                 {
                     try
