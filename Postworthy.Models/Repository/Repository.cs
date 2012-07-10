@@ -287,7 +287,6 @@ namespace Postworthy.Models.Repository
         {
             LongTermStorageCache.Remove(key, obj);
         }
-        
         private void SaveQueue()
         {
             lock(ChangeQueue)
@@ -299,7 +298,6 @@ namespace Postworthy.Models.Repository
                 ChangeQueue.Clear();
             }
         }
-        
         private void QueueChange(string key, TYPE obj)
         {
             key = key.ToLower();

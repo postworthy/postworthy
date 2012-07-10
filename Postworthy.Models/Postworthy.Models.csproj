@@ -57,7 +57,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Account\AccountModels.cs" />
+    <Compile Include="Account\PostworthyUser.cs" />
+    <Compile Include="Account\UsersCollection.cs" />
     <Compile Include="Core\CustomTaskScheduler.cs" />
     <Compile Include="Repository\Providers\DistributedSharedCache.cs" />
     <Compile Include="Core\Extensions.cs" />
