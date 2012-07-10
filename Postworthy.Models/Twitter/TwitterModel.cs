@@ -22,8 +22,7 @@ namespace Postworthy.Models.Twitter
     {
         private static volatile TwitterModel instance;
         private static object instance_lock = new object();
-        private static readonly object locker_tweets = new object();
-        private static readonly object locker_friends = new object();
+        private static object tweets_lock = new object();
 
         private const string CACHED_TWEETS = "CachedTweets";
         private const string TWEETS = "_tweets";
@@ -67,48 +66,57 @@ namespace Postworthy.Models.Twitter
 
         public List<ITweet> Tweets(string screenname, bool includeRelevantScreenNames = true)
         {
-            //Since the grouping can be a somewhat expensive task we willcache the results to gain a speedup
+            //Since the grouping can be a somewhat expensive task we will cache the results to gain a speed up.
             var cachedResponse = HttpRuntime.Cache[CACHED_TWEETS] as List<ITweet>;
             if (cachedResponse != null && cachedResponse.Count > 0)
                 return cachedResponse;
             else
             {
-                List<string> screenNames = null;
+                lock (tweets_lock)
+                {
+                    cachedResponse = HttpRuntime.Cache[CACHED_TWEETS] as List<ITweet>;
+                    if (cachedResponse != null && cachedResponse.Count > 0)
+                        return cachedResponse;
+                    else
+                    {
+                        List<string> screenNames = null;
 
-                var user = UsersCollection.Single(screenname);
+                        var user = UsersCollection.Single(screenname);
 
-                if (includeRelevantScreenNames)
-                    screenNames = GetRelevantScreenNames(screenname);
-                else
-                    screenNames = new List<string> { screenname.ToLower() };
+                        if (includeRelevantScreenNames)
+                            screenNames = GetRelevantScreenNames(screenname);
+                        else
+                            screenNames = new List<string> { screenname.ToLower() };
 
 
-                Expression<Func<Tweet, bool>> where = t =>
-                    //Should everything be displayed or do you only want content
-                    (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) &&
-                        //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
-                    ((t.RetweetCount > 5 && t.CreatedAt > DateTime.Now.AddHours(-48)) || t.User.Identifier.ScreenName.ToLower() == screenname.ToLower());
+                        Expression<Func<Tweet, bool>> where = t =>
+                            //Should everything be displayed or do you only want content
+                            (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) &&
+                                //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
+                            ((t.RetweetCount > 5 && t.CreatedAt > DateTime.Now.AddHours(-48)) || t.User.Identifier.ScreenName.ToLower() == screenname.ToLower());
 
-                var tweets = screenNames
-                    //For each screen name (i.e. - you and your friends if included) select the most recent tweets
-                    .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
-                    //Order all tweets based on rank
-                    .OrderByDescending(t => t.TweetRank)
-                    //Take the top 300
-                    .Take(300)
-                    //Group based on the date (for speeding up the next step, similar tweets would happen on the same day)
-                    .GroupBy(t => t.CreatedAt.ToShortDateString())
-                    //Group similar tweets (the ordering is done first so that the earliest tweet gets credit)
-                    .SelectMany(g => g.OrderBy(t => t.CreatedAt).GroupSimilar())
-                    //Convert groups into something we can display
-                    .Select(g => new TweetGroup(g));
+                        var tweets = screenNames
+                            //For each screen name (i.e. - you and your friends if included) select the most recent tweets
+                            .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
+                            //Order all tweets based on rank
+                            .OrderByDescending(t => t.TweetRank)
+                            //Take the top 300
+                            .Take(300)
+                            //Group based on the date (for speeding up the next step, similar tweets would happen on the same day)
+                            .GroupBy(t => t.CreatedAt.ToShortDateString())
+                            //Group similar tweets (the ordering is done first so that the earliest tweet gets credit)
+                            .SelectMany(g => g.OrderBy(t => t.CreatedAt).GroupSimilar())
+                            //Convert groups into something we can display
+                            .Select(g => new TweetGroup(g));
 
-                var results = tweets.Cast<ITweet>().ToList();
+                        var results = tweets.Cast<ITweet>().ToList();
 
-                if(results != null && results.Count > 0)
-                    HttpRuntime.Cache.Add(CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(5), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
+                        if (results != null && results.Count > 0)
+                            HttpRuntime.Cache.Add(CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(5), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
 
-                return results;
+                        return results;
+                    }
+                }
             }
         }
 
