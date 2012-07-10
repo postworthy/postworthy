@@ -83,11 +83,7 @@ namespace Postworthy.Models.Repository.Providers
 
         public DistributedSharedCache()
         {
-            MemcachedClientConfiguration config = new MemcachedClientConfiguration();
-            config.AddServer("127.0.0.1", 11211);
-            config.Protocol = MemcachedProtocol.Text;
-
-            SharedCache = new MemcachedClient(config);
+            SharedCache = new MemcachedClient();
         }
 
         private List<string> GetSharedCacheItemKeys(string key)
