@@ -90,19 +90,23 @@ namespace Postworthy.Web.Controllers
 
         [AuthorizePrimaryUser]
         [HttpPost]
-        public ActionResult Personalization(PostworthyUser model)
+        [ValidateInput(false)]
+        public ActionResult Personalization(FormCollection form)
         {
 
             var prevModel = UsersCollection.Single(User.Identity.Name);
 
-            prevModel.SiteName = model.SiteName;
-            prevModel.About = model.About;
-            prevModel.IncludeFriends = model.IncludeFriends;
-            prevModel.OnlyTweetsWithLinks = model.OnlyTweetsWithLinks;
+            prevModel.SiteName = form["SiteName"];
+            prevModel.About = form["About"];
+            prevModel.IncludeFriends = bool.Parse(form["IncludeFriends"].Split(',').First());
+            prevModel.OnlyTweetsWithLinks = bool.Parse(form["OnlyTweetsWithLinks"].Split(',').First());
+            prevModel.AnalyticsScript = form["AnalyticsScript"];
+            prevModel.AdScript = form["AdScript"];
+            prevModel.MobileAdScript = form["MobileAdScript"];
 
             UsersCollection.Save();
 
-            return View(model);
+            return View(prevModel);
         }
 
         [AuthorizePrimaryUser]

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Configuration;
+using System.Xml.Serialization;
 
 namespace Postworthy.Models.Account
 {
@@ -34,6 +35,18 @@ namespace Postworthy.Models.Account
 
         [Display(Name = "Twitter Access Token")]
         public string AccessToken { get; set; }
+
+        [Display(Name = "Analytics Script")]
+        [DataType(DataType.MultilineText)]
+        public string AnalyticsScript { get; set; }
+
+        [Display(Name = "Ad Script")]
+        [DataType(DataType.MultilineText)]
+        public string AdScript { get; set; }
+
+        [Display(Name = "Mobile Ad Script")]
+        [DataType(DataType.MultilineText)]
+        public string MobileAdScript { get; set; }
 
         public bool CanAuthorize
         {

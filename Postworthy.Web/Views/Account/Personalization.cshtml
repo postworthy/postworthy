@@ -7,7 +7,22 @@
 #About
 {
     width:550px;
-    height:250px;
+    height:150px;
+}
+#AnalyticsScript
+{
+    width:550px;
+    height:150px;
+}
+#AdScript
+{
+    width:550px;
+    height:150px;
+}
+#MobileAdScript
+{
+    width:550px;
+    height:150px;
 }
 </style>
 @using (Html.BeginForm())
@@ -31,6 +46,33 @@
             <div class="controls">
                 @Html.EditorFor(model => model.About)
                 @Html.ValidationMessageFor(model => model.About)
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="control-label">
+                @Html.LabelFor(model => model.AnalyticsScript)
+            </div>
+            <div class="controls">
+                @Html.EditorFor(model => model.AnalyticsScript)
+                @Html.ValidationMessageFor(model => model.AnalyticsScript)
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="control-label">
+                @Html.LabelFor(model => model.AdScript)
+            </div>
+            <div class="controls">
+                @Html.EditorFor(model => model.AdScript)
+                @Html.ValidationMessageFor(model => model.AdScript)
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="control-label">
+                @Html.LabelFor(model => model.MobileAdScript)
+            </div>
+            <div class="controls">
+                @Html.EditorFor(model => model.MobileAdScript)
+                @Html.ValidationMessageFor(model => model.MobileAdScript)
             </div>
         </div>
         <div class="control-group">
