@@ -112,6 +112,15 @@
     <Content Include="Content\bootstrap-responsive.min.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\images\icons-18-black.png" />
+    <Content Include="Content\images\icons-18-white.png" />
+    <Content Include="Content\images\pw-outline.png" />
+    <Content Include="Content\images\pw-touch-114x114.png" />
+    <Content Include="Content\images\pw-touch-144x144.png" />
+    <Content Include="Content\images\pw-touch-72x72.png" />
+    <Content Include="Content\images\pw-touch.png" />
+    <Content Include="Content\images\pw.jpg" />
+    <Content Include="Content\images\pw2.jpg" />
     <Content Include="Content\mobile.bootstrap.css" />
     <Content Include="Content\images\glyphicons-halflings-white.png" />
     <Content Include="Content\images\glyphicons-halflings.png" />
@@ -121,6 +130,8 @@
     <Content Include="Content\images\wash-white.png" />
     <Content Include="Content\jquery.mobile-1.1.0.css" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\bookmark_bubble.js" />
+    <Content Include="Scripts\bookmark_bubble_show.js" />
     <Content Include="Scripts\jquery.masonry.min.js" />
     <Content Include="Scripts\jquery.mobile-1.1.0.min.js" />
     <Content Include="Scripts\jquery.watermark.min.js" />
@@ -150,6 +161,7 @@
     <Content Include="Views\Account\Register.cshtml" />
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
+    <None Include="Content\images\pw2.svg" />
     <None Include="Example.UsersCollection.config" />
     <None Include="Example.Web.config" />
     <None Include="Views\Home\_Index.cshtml" />

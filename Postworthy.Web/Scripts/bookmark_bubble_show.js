@@ -2,16 +2,14 @@
     window.setTimeout(function () {
         var bubble = new google.bookmarkbubble.Bubble();
 
-        var parameter = 'bmb=1';
+        var BUBBLE_STORAGE_KEY = 'bubble';
 
         bubble.hasHashParameter = function () {
-            return window.location.hash.indexOf(parameter) != -1;
+            return window.localStorage[BUBBLE_STORAGE_KEY];
         };
 
         bubble.setHashParameter = function () {
-            if (!this.hasHashParameter()) {
-                window.location.hash += parameter;
-            }
+            window.localStorage[BUBBLE_STORAGE_KEY] = '1';
         };
 
         bubble.getViewportHeight = function () {
