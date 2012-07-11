@@ -114,6 +114,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\images\icons-18-black.png" />
     <Content Include="Content\images\icons-18-white.png" />
+    <Content Include="Content\images\pull-icon%402x.png" />
     <Content Include="Content\images\pw-outline.png" />
     <Content Include="Content\images\pw-touch-114x114.png" />
     <Content Include="Content\images\pw-touch-144x144.png" />
@@ -121,6 +122,7 @@
     <Content Include="Content\images\pw-touch.png" />
     <Content Include="Content\images\pw.jpg" />
     <Content Include="Content\images\pw2.jpg" />
+    <Content Include="Content\iscroll.css" />
     <Content Include="Content\mobile.bootstrap.css" />
     <Content Include="Content\images\glyphicons-halflings-white.png" />
     <Content Include="Content\images\glyphicons-halflings.png" />
@@ -132,6 +134,8 @@
     <Content Include="Global.asax" />
     <Content Include="Scripts\bookmark_bubble.js" />
     <Content Include="Scripts\bookmark_bubble_show.js" />
+    <Content Include="Scripts\iscroll.js" />
+    <Content Include="Scripts\iscroll_load.js" />
     <Content Include="Scripts\jquery.masonry.min.js" />
     <Content Include="Scripts\jquery.mobile-1.1.0.min.js" />
     <Content Include="Scripts\jquery.watermark.min.js" />
