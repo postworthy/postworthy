@@ -2,22 +2,18 @@
 	pullDownEl, pullDownOffset,
 	generatedCount = 0;
 
-function pullDownAction(page) {
-    $.mobile.changePage(page, { reloadPage: true });
+function pullDownAction() {
+    $.mobile.activePage.find('#refreshForm')[0].submit();
 }
 
-function iScrollLoaded(page) {
+function iScrollLoaded() {
     if (myScroll) {
-        setTimeout(function () {
-            myScroll.destroy();
-            myScroll = null;
-            iScrollLoaded(page);
-        }, 200);
+        myScroll.refresh();
     }
     else {
         pullDownEl = document.getElementById('pullDown');
         pullDownOffset = pullDownEl.offsetHeight;
-        myScroll = new iScroll($.mobile.activePage.find('#wrapper')[0].id, {
+        myScroll = new iScroll('wrapper', {
             useTransition: true,
             topOffset: pullDownOffset,
             onRefresh: function () {
@@ -41,7 +37,7 @@ function iScrollLoaded(page) {
                 if (pullDownEl.className.match('flip')) {
                     pullDownEl.className = 'loading';
                     pullDownEl.querySelector('.pullDownLabel').innerHTML = 'Loading...';
-                    pullDownAction(page); // Execute custom function (ajax call?)
+                    pullDownAction(); // Execute custom function (ajax call?)
                 }
             }
 

@@ -24,6 +24,11 @@ namespace Postworthy.Web.Controllers
             return View(TwitterModel.Instance.Tweets(UsersCollection.PrimaryUser().TwitterScreenName));
         }
 
+        public ActionResult Refresh()
+        {
+            return PartialView("_ItemsList", TwitterModel.Instance.Tweets(UsersCollection.PrimaryUser().TwitterScreenName));
+        }
+
         [AuthorizePrimaryUser]
         [HttpPost]
         public ActionResult Tweet(string Tweet)

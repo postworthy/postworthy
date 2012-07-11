@@ -1,0 +1,86 @@
+﻿@model List<Postworthy.Models.Twitter.ITweet>
+@if (Model != null && Model.Count > 0)
+{
+	var ranked = Model.OrderByDescending(t => t.TweetRank);
+	var top10 = ranked.Take(10);
+	var top20 = ranked.Skip(10).Take(10);
+	var top30 = ranked.Skip(20).Take(10);
+	var HotTweets = ranked.Take(50).OrderByDescending(x => x.CreatedAt);
+	var index = 0;
+	foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
+	{
+		index++;
+		var isTop10 = top10.Contains(tweet);
+		var isTop20 = top20.Contains(tweet);
+		var isTop30 = top30.Contains(tweet);
+		var randomImage = tweet.Links.Where(l => l.Image != null).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+		var hasVideo = tweet.Links.Where(l => l.Video != null).Count() > 0;
+
+		var topN = (isTop10) ? " top10" : (isTop20 ? " top20" : (isTop30 ? " top30" : ""));
+            
+	<li class="box colFull@(tweet.RetweetCount > 5 && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
+		<div style="padding: 5px;">
+			<a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName">
+				<img alt="@tweet.User.Identifier.ScreenName" title="@tweet.User.Identifier.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
+			</a>
+			<div class="tweet-info">
+				Created @tweet.TweetTime
+				<br />
+				<i class="icon-retweet"></i>@((tweet.RetweetCount > 0) ? tweet.RetweetCount + " Retweets" : "Not yet retweeted")
+				[<a title="Retweet This" href="@(Url.Content("~/mobile/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
+			</div>
+			<span class="postIndex">#@index</span>
+			<hr style="clear: both;" />
+			@if (randomImage != null)
+   {
+				<div class="tweet-image-div">
+					<img src="@randomImage.Image.ToString()" />
+				</div>
+   }
+			@if (isTop10)
+   { 
+				<h3>@Html.Raw(tweet.TweetText)</h3>
+   }
+   else if (isTop20)
+   { 
+				<h4>@Html.Raw(tweet.TweetText)</h4>
+   }
+   else if (isTop30)
+   { 
+				<h5>@Html.Raw(tweet.TweetText)</h5>
+   }
+   else
+   {
+				@Html.Raw(tweet.TweetText)
+   }
+			@if (hasVideo)
+   {
+				<hr style="clear: both;" />
+	   foreach (var link in tweet.Links.Where(l => l.Video != null))
+	   {
+				<iframe width="290" height="215" src="@link.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen>
+				</iframe>
+	   }
+   }
+			@if (tweet.Links.Where(l => l.Image == null && l.Video == null).Count() > 0)
+   {
+				<hr style="clear: both;" />
+	   var links = tweet.Links.Where(l => l.Image == null && l.Video == null).Distinct();
+	   foreach (var link in links)
+	   {
+				<div>
+					<a href="@link.Uri">@link.Title</a></div>
+	   }
+   }
+		</div>
+	</li>
+	}
+}
+else
+{
+	<li class="box span4">
+		<div style="padding: 5px;">
+			Sorry no tweets to view at this time. Please try again later.
+		</div>
+	</li>
+}
