@@ -20,6 +20,7 @@ function iScrollLoaded() {
         pullDownEl = document.getElementById('pullDown');
         pullDownOffset = pullDownEl.offsetHeight;
         myScroll = new iScroll('wrapper', {
+            snap: 'li',
             useTransition: true,
             topOffset: pullDownOffset,
             onRefresh: function () {
