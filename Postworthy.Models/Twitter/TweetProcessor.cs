@@ -152,7 +152,7 @@ namespace Postworthy.Models.Twitter
                             });
                         if (ogMeta != null && ogMeta.Count() > 0)
                         {
-                            uriex.Image = ogMeta.Where(x => x.Property == "image_src").Select(x => x.Content.StartsWith("http") ? new Uri(x.Content.Trim()) : new Uri(baseUri + x.Content.Trim())).FirstOrDefault();
+                            uriex.Image = ogMeta.Where(x => x.Property == "image_src").Select(x => CreateUriSafely(baseUri, x.Content)).FirstOrDefault();
                         }
                     }
 
@@ -171,8 +171,8 @@ namespace Postworthy.Models.Twitter
                         {
                             uriex.Title = (ogMeta.Where(x => x.Property == "og:title" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content).FirstOrDefault() ?? "").Trim();
                             uriex.Description = ogMeta.Where(x => x.Property == "og:description" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content).FirstOrDefault() ?? "";
-                            uriex.Image = ogMeta.Where(x => x.Property == "og:image" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content.StartsWith("http") ? new Uri(x.Content.Trim()) : x.Content.StartsWith("/") ? new Uri(baseUri + x.Content.Trim()) : null).FirstOrDefault();
-                            uriex.Video = ogMeta.Where(x => x.Property == "og:video" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content.StartsWith("http") ? new Uri(x.Content.Trim()) : x.Content.StartsWith("/") ? new Uri(baseUri + x.Content.Trim()) : null).FirstOrDefault();
+                            uriex.Image = ogMeta.Where(x => x.Property == "og:image" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(baseUri, x.Content)).FirstOrDefault();
+                            uriex.Video = ogMeta.Where(x => x.Property == "og:video" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(baseUri, x.Content)).FirstOrDefault();
                             uriex.Video = CleanYouTube(uriex.Video);
                         }
                     }
@@ -185,6 +185,17 @@ namespace Postworthy.Models.Twitter
             }
 
             Finished();
+        }
+
+        private Uri CreateUriSafely(string baseUri, string content)
+        {
+            return content.StartsWith("http") ?
+                new Uri(content.Trim()) :
+                content.StartsWith("/") ?
+                    new Uri(baseUri + content.Trim()) :
+                    content.StartsWith("../") ?
+                        new Uri(string.Join("/", baseUri.Split(new string[]{"/"}, StringSplitOptions.RemoveEmptyEntries).Reverse().Skip(1).Reverse()) + content.Trim().Replace("..","")) :
+                        null;
         }
 
         private Uri CleanYouTube(Uri Video)

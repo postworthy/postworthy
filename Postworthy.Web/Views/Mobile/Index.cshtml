@@ -83,15 +83,12 @@
                 $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
                 iScrollLoaded();
             });
+
         } catch (err) {
 
         }
-
     });
 </script>
-@using (Ajax.BeginForm("Refresh", null, new AjaxOptions { InsertionMode = System.Web.Mvc.Ajax.InsertionMode.Replace, UpdateTargetId = "scrollerItems" }, new { id = "refreshForm"}))
-{ 
-}
 <div id="wrapper">
     <div id="scroller">
         <div id="pullDown">

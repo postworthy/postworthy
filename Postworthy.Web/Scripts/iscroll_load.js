@@ -3,7 +3,13 @@
 	generatedCount = 0;
 
 function pullDownAction() {
-    $.mobile.activePage.find('#refreshForm')[0].submit();
+    $.get(
+        "/mobile/refresh",
+        function (data) {
+            $("#scrollerItems").html(data);
+            myScroll.refresh();
+        }
+    );
 }
 
 function iScrollLoaded() {

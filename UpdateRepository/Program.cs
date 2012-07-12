@@ -51,7 +51,7 @@ namespace UpdateRepository
 
                     List<string> screenNames = new List<string>();
 
-                    Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, primaryUser);
+                    Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, primaryUser.TwitterScreenName);
                     tweeps = GetFriends(primaryUser.TwitterScreenName);
 
                     if (tweeps != null)
