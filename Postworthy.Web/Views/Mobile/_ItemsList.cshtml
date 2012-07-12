@@ -39,15 +39,15 @@
             }
             @if (isTop10)
             { 
-                <h3>@Html.Raw(tweet.TweetText)</h3>
+                <h3 class="tweettext">@Html.Raw(tweet.TweetText)</h3>
             }
             else if (isTop20)
             { 
-                <h4>@Html.Raw(tweet.TweetText)</h4>
+                <h4 class="tweettext">@Html.Raw(tweet.TweetText)</h4>
             }
             else if (isTop30)
             { 
-                <h5>@Html.Raw(tweet.TweetText)</h5>
+                <h5 class="tweettext">@Html.Raw(tweet.TweetText)</h5>
             }
             else
             {

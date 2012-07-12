@@ -1,0 +1,11 @@
+﻿@{
+    Layout = "~/Views/Shared/_MobileLayout.cshtml";
+    ViewBag.Title = ViewBag.Brand ?? "Postworthy";
+}
+<style type="text/css">
+.ui-content
+{
+    padding: 0px;
+}
+</style>
+<iframe frameborder="0" src="@(ViewBag.ExternalLink)"  style="position:absolute;height:100%;width:100%;max-width:320px;"/>

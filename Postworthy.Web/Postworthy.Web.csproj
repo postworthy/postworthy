@@ -112,6 +112,7 @@
     <Content Include="Content\bootstrap-responsive.min.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\images\ajax-loader.gif" />
     <Content Include="Content\images\icons-18-black.png" />
     <Content Include="Content\images\icons-18-white.png" />
     <Content Include="Content\images\pull-icon%402x.png" />
@@ -179,6 +180,7 @@
     <Content Include="Views\Shared\_MobileLayout.cshtml" />
     <Content Include="Views\Mobile\About.cshtml" />
     <Content Include="Views\Shared\_MobileLogOnPartial.cshtml" />
+    <Content Include="Views\Mobile\ExternalFrame.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Account\Personalization.cshtml" />
