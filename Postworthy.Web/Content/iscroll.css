@@ -10,7 +10,7 @@ footer
 }
 #wrapper {
 	position:absolute; z-index:1;
-	top:123px; bottom:55px; left:-9999px;
+	top:123px; bottom:0; left:-9999px;
 	width:100%;
     max-Width: 480px;
 	overflow:auto;

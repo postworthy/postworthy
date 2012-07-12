@@ -7,6 +7,7 @@
     <meta name="author" content="">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<link rel="apple-touch-startup-image" href="@Url.Content("~/Content/images/pw-startup.png")" />
     <link rel="apple-touch-icon-precomposed" href="@Url.Content("~/Content/images/pw-touch.png")" />
     <link rel="apple-touch-icon-72x72-precomposed" href="@Url.Content("~/Content/images/pw-touch-72x72.png")" />
     <link rel="apple-touch-icon-114x114-precomposed" href="@Url.Content("~/Content/images/pw-touch-114x114.png")" />
@@ -36,12 +37,6 @@
         #page
         {
             max-width: 480px;
-            margin: auto;
-            position: absolute;
-            top: 0px;
-            bottom: 0px;
-            left: 0px;
-            right: 0px;
         }
     </style>
     <script type="text/javascript">
@@ -59,8 +54,15 @@
             });
         });
     </script>
+	<script>
+		function BlockMove(event) {
+			if (window.navigator.standalone) {
+				event.preventDefault();
+			}
+		}
+	</script>
 </head>
-<body>
+<body ontouchmove="BlockMove(event);">
     <div data-role="page" id="page">
         <div id="header" data-theme="a" data-role="header">
             <h3>
@@ -81,13 +83,6 @@
         </div>
         <div class="container" data-role="content">
             @RenderBody()
-            <footer>
-                <p>
-                    &copy; @DateTime.Now.Year @(ViewBag.Brand ?? "Postworthy")
-                    via <a target="_blank" href="http://postworthy.org" title="Postworthy - The Open Source Content Curation Tool">
-                        pw</a>
-                </p>
-            </footer>
         </div>
         <div id="adsense_top" style="display: none;">
             @Html.Raw(Postworthy.Models.Account.UsersCollection.PrimaryUser().MobileAdScript)

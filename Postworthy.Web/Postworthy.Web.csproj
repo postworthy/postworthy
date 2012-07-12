@@ -117,6 +117,7 @@
     <Content Include="Content\images\icons-18-white.png" />
     <Content Include="Content\images\pull-icon%402x.png" />
     <Content Include="Content\images\pw-outline.png" />
+    <Content Include="Content\images\pw-startup.png" />
     <Content Include="Content\images\pw-touch-114x114.png" />
     <Content Include="Content\images\pw-touch-144x144.png" />
     <Content Include="Content\images\pw-touch-72x72.png" />
