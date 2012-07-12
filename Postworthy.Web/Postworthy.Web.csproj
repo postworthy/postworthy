@@ -115,6 +115,8 @@
     <Content Include="Content\images\ajax-loader.gif" />
     <Content Include="Content\images\icons-18-black.png" />
     <Content Include="Content\images\icons-18-white.png" />
+    <Content Include="Content\images\icons-36-black.png" />
+    <Content Include="Content\images\icons-36-white.png" />
     <Content Include="Content\images\pull-icon%402x.png" />
     <Content Include="Content\images\pw-outline.png" />
     <Content Include="Content\images\pw-startup.png" />
