@@ -135,7 +135,7 @@
             
                 <div class="box @((hasVideo) ? "col2" : "col1")@(tweet.RetweetCount > 5 && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
                     <div style="padding:5px;">
-                        <a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName">
+                        <a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName" target="_blank">
                             <img alt="@tweet.User.Identifier.ScreenName" title="@tweet.User.Identifier.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
                         </a>
                         <div class="tweet-info">
@@ -185,7 +185,7 @@
                             var links = tweet.Links.Where(l => l.Image == null && l.Video == null).Distinct();
                             foreach (var link in links)
                             {
-                                <li><a href="@link.Uri">@link.Title</a></li>
+                                <li><a target="_blank" href="@link.Uri">@link.Title</a></li>
                             }
                         }
                     </div>
