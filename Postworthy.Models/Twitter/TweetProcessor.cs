@@ -117,7 +117,6 @@ namespace Postworthy.Models.Twitter
 
             if (uriex.IsHtmlContentUrl)
             {
-                var baseUri = uriex.Uri.GetLeftPart(UriPartial.Authority);
                 var doc = new HtmlAgilityPack.HtmlDocument();
                 try
                 {
@@ -152,7 +151,7 @@ namespace Postworthy.Models.Twitter
                             });
                         if (ogMeta != null && ogMeta.Count() > 0)
                         {
-                            uriex.Image = ogMeta.Where(x => x.Property == "image_src").Select(x => CreateUriSafely(baseUri, x.Content)).FirstOrDefault();
+                            uriex.Image = ogMeta.Where(x => x.Property == "image_src").Select(x => CreateUriSafely(uriex.Uri, x.Content)).FirstOrDefault();
                         }
                     }
 
@@ -171,8 +170,8 @@ namespace Postworthy.Models.Twitter
                         {
                             uriex.Title = (ogMeta.Where(x => x.Property == "og:title" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content).FirstOrDefault() ?? "").Trim();
                             uriex.Description = ogMeta.Where(x => x.Property == "og:description" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content).FirstOrDefault() ?? "";
-                            uriex.Image = ogMeta.Where(x => x.Property == "og:image" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(baseUri, x.Content)).FirstOrDefault();
-                            uriex.Video = ogMeta.Where(x => x.Property == "og:video" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(baseUri, x.Content)).FirstOrDefault();
+                            uriex.Image = ogMeta.Where(x => x.Property == "og:image" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(uriex.Uri, x.Content)).FirstOrDefault();
+                            uriex.Video = ogMeta.Where(x => x.Property == "og:video" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(uriex.Uri, x.Content)).FirstOrDefault();
                             uriex.Video = CleanYouTube(uriex.Video);
                         }
                     }
@@ -187,14 +186,18 @@ namespace Postworthy.Models.Twitter
             Finished();
         }
 
-        private Uri CreateUriSafely(string baseUri, string content)
+        private Uri CreateUriSafely(Uri uri, string content)
         {
+            var baseUri = uri.GetLeftPart(UriPartial.Authority);
+            var dirUri = string.Join("/", baseUri.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries).Reverse().Skip(1).Reverse());
+
             return content.StartsWith("http") ?
                 new Uri(content.Trim()) :
                 content.StartsWith("/") ?
                     new Uri(baseUri + content.Trim()) :
-                    content.StartsWith("../") ?
-                        new Uri(string.Join("/", baseUri.Split(new string[]{"/"}, StringSplitOptions.RemoveEmptyEntries).Reverse().Skip(1).Reverse()) + content.Trim().Replace("..","")) :
+                    //This may look a bit strange but the split join above could leave you with google.com if the full url is http(s)://google.com
+                    content.StartsWith("../") && dirUri.Contains("://") ?
+                        new Uri(dirUri + content.Trim().Replace("..","")) :
                         null;
         }
 
