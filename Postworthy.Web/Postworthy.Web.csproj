@@ -127,6 +127,7 @@
     <Content Include="Content\images\pw-touch.png" />
     <Content Include="Content\images\pw.jpg" />
     <Content Include="Content\images\pw2.jpg" />
+    <Content Include="Content\images\video-player-icon.png" />
     <Content Include="Content\iscroll.css" />
     <Content Include="Content\mobile.bootstrap.css" />
     <Content Include="Content\images\glyphicons-halflings-white.png" />

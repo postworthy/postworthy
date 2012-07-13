@@ -153,8 +153,7 @@ namespace UpdateRepository
         {
             int fetchMultiplier = int.Parse(
                 !string.IsNullOrEmpty(ConfigurationManager.AppSettings["FetchMultiplier"]) ? 
-                    ConfigurationManager.AppSettings["FetchMultiplier"] : "10"
-                    );
+                    ConfigurationManager.AppSettings["FetchMultiplier"] : "10");
 
             var tweets = Repository<Tweet>.Instance.Query(screenname + TWEETS, where: t => t.CreatedAt > DateTime.Now.AddHours(-48));
             if (tweets != null) 

@@ -103,6 +103,7 @@ namespace Postworthy.Web.Controllers
             prevModel.AnalyticsScript = form["AnalyticsScript"];
             prevModel.AdScript = form["AdScript"];
             prevModel.MobileAdScript = form["MobileAdScript"];
+            prevModel.RetweetThreshold = int.Parse(!string.IsNullOrEmpty(form["RetweetThreshold"]) ? form["RetweetThreshold"] : "5");
 
             UsersCollection.Save();
 

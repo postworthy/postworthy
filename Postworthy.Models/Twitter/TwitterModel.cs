@@ -88,12 +88,13 @@ namespace Postworthy.Models.Twitter
                         else
                             screenNames = new List<string> { screenname.ToLower() };
 
+                        int RetweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
 
                         Expression<Func<Tweet, bool>> where = t =>
                             //Should everything be displayed or do you only want content
                             (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) &&
                                 //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
-                            ((t.RetweetCount > 5 && t.CreatedAt > DateTime.Now.AddHours(-48)) || t.User.Identifier.ScreenName.ToLower() == screenname.ToLower());
+                            ((t.RetweetCount > RetweetThreshold && t.CreatedAt > DateTime.Now.AddHours(-48)) || t.User.Identifier.ScreenName.ToLower() == screenname.ToLower());
 
                         var tweets = screenNames
                             //For each screen name (i.e. - you and your friends if included) select the most recent tweets

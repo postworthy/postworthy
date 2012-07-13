@@ -8,6 +8,8 @@ using LinqToTwitter;
 using System.Threading;
 using System.IO;
 using Postworthy.Models.Core;
+using System.Configuration;
+using Postworthy.Models.Account;
 
 namespace Postworthy.Models.Twitter
 {
@@ -19,13 +21,15 @@ namespace Postworthy.Models.Twitter
 
         public TweetProcessor(IEnumerable<Tweet> tweets, bool force = false)
         {
+            int RetweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
+
             UriActions = new List<KeyValuePair<string, Action>>();
 
             TaskFactory = new TaskFactory(new CustomTaskScheduler(15));
 
             foreach (var t in tweets)
             {
-                if((t.Status.RetweetCount > 5 && t.Links.Count == 0) || force) 
+                if ((t.Status.RetweetCount > RetweetThreshold && t.Links.Count == 0) || force) 
                     ExtractUriTasks(t);
             }
         }

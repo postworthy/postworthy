@@ -48,6 +48,9 @@ namespace Postworthy.Models.Account
         [DataType(DataType.MultilineText)]
         public string MobileAdScript { get; set; }
 
+        [Display(Name = "Minimum Retweeted Count")]
+        public int RetweetThreshold { get; set; }
+
         public bool CanAuthorize
         {
             get
