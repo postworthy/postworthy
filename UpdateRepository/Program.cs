@@ -13,6 +13,7 @@ using Postworthy.Models.Account;
 using Postworthy.Models.Twitter;
 using Postworthy.Models.Core;
 using System.Configuration;
+using UpdateRepository.Models;
 
 namespace UpdateRepository
 {
@@ -150,10 +151,19 @@ namespace UpdateRepository
 
         private static List<Status> GetStatuses(string screenname, BetweenStatuses between = null)
         {
+            int fetchMultiplier = int.Parse(
+                !string.IsNullOrEmpty(ConfigurationManager.AppSettings["FetchMultiplier"]) ? 
+                    ConfigurationManager.AppSettings["FetchMultiplier"] : "10"
+                    );
+
             var tweets = Repository<Tweet>.Instance.Query(screenname + TWEETS, where: t => t.CreatedAt > DateTime.Now.AddHours(-48));
             if (tweets != null) 
                 tweets = tweets.OrderByDescending(t => t.Status.CreatedAt).ToList();
-            if (between != null || tweets == null || tweets.Count() < 10 || !tweets.Select(t => t.Status.CreatedAt).IsWithinAverageDifference())
+            if (between != null || 
+                tweets == null || 
+                tweets.Count() < 5 ||
+                !tweets.Select(t => t.Status.CreatedAt)
+                    .IsWithinAverageRecurrenceInterval(multiplier: fetchMultiplier))
             {
                 if (between == null)
                 {
@@ -167,11 +177,23 @@ namespace UpdateRepository
                     {
                         Expression<Func<Status, bool>> where;
                             if(between.MaxStatusID > 0 && between.MinStatusID > 0)
-                                where = (s => s.MaxID == between.MaxStatusID && s.SinceID == between.MinStatusID && s.ScreenName == screenname && s.IncludeEntities == true && s.Type == StatusType.User && s.Count == 50);
+                                where = (s => s.MaxID == between.MaxStatusID && 
+                                    s.SinceID == between.MinStatusID && 
+                                    s.ScreenName == screenname && 
+                                    s.IncludeEntities == true && 
+                                    s.Type == StatusType.User && 
+                                    s.Count == 50);
                             else if (between.MinStatusID > 0)
-                                where = (s => s.SinceID == between.MinStatusID && s.ScreenName == screenname && s.IncludeEntities == true && s.Type == StatusType.User && s.Count == 50);
+                                where = (s => s.SinceID == between.MinStatusID && 
+                                    s.ScreenName == screenname && 
+                                    s.IncludeEntities == true && 
+                                    s.Type == StatusType.User && 
+                                    s.Count == 50);
                             else
-                                where = (s => s.ScreenName == screenname && s.IncludeEntities == true && s.Type == StatusType.User && s.Count == 10);
+                                where = (s => s.ScreenName == screenname && 
+                                    s.IncludeEntities == true && 
+                                    s.Type == StatusType.User && 
+                                    s.Count == 10);
 
                         return TwitterModel.Instance.GetAuthorizedTwitterContext(user.TwitterScreenName)
                             .Status
