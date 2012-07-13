@@ -36,6 +36,7 @@
         margin: 5px 0px 5px 0px;
     }
     .box { border-top: 4px solid #DCB; }
+    .adbox { margin-left:101px; border: none; }
     .box a { word-wrap: break-word; overflow-wrap: break-word; }
     .col1 { width: 225px; }
     .col2 { width: 460px; }
@@ -114,6 +115,12 @@
             </div>
             }
         }
+        else if (!string.IsNullOrEmpty(Postworthy.Models.Account.UsersCollection.PrimaryUser().AdScript))
+        {
+            <div class="box adbox col4">
+                @Html.Raw(Postworthy.Models.Account.UsersCollection.PrimaryUser().AdScript)
+            </div>
+        }
         @if (Model != null)
         {
             var ranked = Model.OrderByDescending(t => t.TweetRank);
@@ -121,6 +128,7 @@
             var top20 = ranked.Skip(10).Take(10);
             var top30 = ranked.Skip(20).Take(10);
             var HotTweets = ranked.Take(100).OrderByDescending(x => x.CreatedAt);
+            
             var index = 0; 
             foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
             {
