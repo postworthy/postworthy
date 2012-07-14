@@ -4,6 +4,13 @@
     ViewBag.Home = true;
 }
 <style>
+    .profile-image-tiny
+    {
+        width: 20px;
+        height: 20px;
+        float: left;
+        padding-right: 3px;
+    }
     .profile-image-small
     {
         width: 25px;
@@ -48,6 +55,63 @@
     {
         word-wrap: break-word;
         overflow-wrap: break-word;
+    }
+    .box ul
+    {
+        margin: 0;
+        list-style: none;
+        padding-bottom: 5px;
+        padding-top: 3px;
+    }
+    .box li
+    {
+        line-height: 18px;
+        font-size: 11px;
+        font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
+        color:#333;
+        padding-top: 2px;
+        cursor: pointer;
+        border-radius: 0 2px 2px 0;
+        -webkit-border-radius:0 2px 2px 0;
+    }
+    .selected
+    {
+        background-color: #D8DFEA;
+    }
+    .box li:hover
+    {
+        background-color: #D8DFEA;
+    }
+    .box li img
+    {
+        width:18px;
+        height:18px;
+    }
+    .icon-ok
+    {
+        position:absolute;
+        float:left;
+        margin-left: -37px;
+        display: none;
+    }
+    .icon-ok:hover
+    {
+        background-position: -312px 0;
+    }
+    .box li span
+    {
+        height: 13px;
+        padding-left: 5px;
+        padding-right: 5px;
+        color: #3B5998;
+        background-color: #D8DFEA;
+        float: right;
+        font-size: 9px;
+        border-radius: 2px;
+        -webkit-border-radius: 2px;
+        text-align: center;
+        line-height: 13px;
+        font-weight: bold;
     }
     .col1
     {
@@ -94,11 +158,11 @@
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
-        $('#container').masonry({ itemSelector: '.box', columnWidth: 235 });
+        $('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
 
         $('#container').imagesLoaded(function () {
             $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
-            $('#container').masonry({ itemSelector: '.box', columnWidth: 235 });
+            $('#container').masonry('reload');
         });
     });
 </script>
@@ -139,9 +203,9 @@
             </script>
             using (Html.BeginForm("Tweet", "Home"))
             {
-            <div class="box col2">
+            <div class="box col3">
                 <div style="padding: 5px 5px 5px 5px;">
-                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 450px; border: 0;"></textarea>
+                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 685px; border: 0;"></textarea>
                     <button id="btnTweet" type="submit" class="btn btn-primary btn-tweet" disabled>
                         <i class="icon-comment icon-white"></i>Tweet
                     </button>
@@ -163,6 +227,54 @@
             var top20 = ranked.Skip(10).Take(10);
             var top30 = ranked.Skip(20).Take(10);
             var HotTweets = ranked.Take(100).OrderByDescending(x => x.CreatedAt);
+            var UserFilters = HotTweets
+                .GroupBy(t => t.User.Identifier.ScreenName)
+                .Select(g => new
+                {
+                    UserName = g.FirstOrDefault().User.Name,
+                    UserID = g.FirstOrDefault().User.Identifier.ID,
+                    Image = g.FirstOrDefault().User.ProfileImageUrl,
+                    HotTweets = g.Count()
+                })
+                .OrderByDescending(x=>x.HotTweets)
+                .ThenBy(x=>x.UserName);
+
+            if (UserFilters.Count() > 1)
+            {
+            <div class="box col1">
+                <ul>
+                    @foreach (var user in UserFilters)
+                    {
+                        <li class="filter @user.UserID" onclick="filterBy('@user.UserID')">
+                            <i class="icon-ok"></i>
+                            <img alt="@user.UserName" title="@user.UserName" src="@user.Image" class="profile-image-tiny" />@user.UserName
+                            <span>@user.HotTweets</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <script type="text/javascript">
+                function filterBy(userid) {
+                    if (!$(".filter." + userid).hasClass("selected")) {
+                        $(".filter").removeClass("selected");
+                        $(".filter." + userid).addClass("selected");
+                        $(".filter .icon-ok").hide();
+                        $(".filter." + userid + " .icon-ok").show();
+
+
+                        $(".post:hidden").show();
+                        $(".post").not("." + userid).hide();
+                        $('#container').masonry('reload');
+                    }
+                    else {
+                        $(".filter").removeClass("selected");
+                        $(".filter .icon-ok").hide();
+                        $(".post:hidden").show();
+                        $('#container').masonry('reload');
+                    }
+                }
+            </script>
+            }
 
             var index = 0;
             foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
@@ -178,7 +290,7 @@
 
                 int RetweetThreshold = Postworthy.Models.Account.UsersCollection.PrimaryUser().RetweetThreshold;
             
-            <div class="box @((hasVideo) ? "col2" : "col1")@(tweet.RetweetCount > RetweetThreshold && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
+            <div class="@tweet.User.Identifier.ID post box @((hasVideo) ? "col2" : "col1")@(tweet.RetweetCount > RetweetThreshold && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
                 <div style="padding: 5px;">
                     <a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName" target="_blank">
                         <img alt="@tweet.User.Identifier.ScreenName" title="@tweet.User.Identifier.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
@@ -220,15 +332,16 @@
                         {
                             if (link.Video.Authority.ToLower().Contains("youtube"))
                             {            
-                                <iframe width="320" height="215" src="@link.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen>
-                                </iframe>
+                        <iframe width="320" height="215" src="@link.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen>
+                        </iframe>
                             }
                             else
                             {
-                                <a target="_blank" href="@link.Video">
-                                    <h3>WATCH VIDEO</h3>
-                                    <img src="@Url.Content("~/Content/images/video-player-icon.png")" style="width:320;height:196px" />
-                                </a>
+                        <a target="_blank" href="@link.Video">
+                            <h3>
+                                WATCH VIDEO</h3>
+                            <img src="@Url.Content("~/Content/images/video-player-icon.png")" style="width:320;height:196px" />
+                        </a>
                             }
                         }
                     }
@@ -251,15 +364,20 @@
                 <div style="padding: 5px;">
                     @if (Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.PrimaryUser().CanAuthorize)
                     {
-                        <h1>Hello, @User.Identity.Name! Welcome to the world of <a href="http://postworthy.org">Postworthy</a>!</h1>
+                        <h1>
+                            Hello, @User.Identity.Name! Welcome to the world of <a href="http://postworthy.org">
+                                Postworthy</a>!</h1>
                         <h2>
-                        You should run the update tool so that you can have some tweets to view. But make sure that you have all the configuration settings correct first.
-                        For more information on setting up your site visit the <a href="http://postworthy.org">Postworthy Project Page</a> for setup instructions.
+                            You should run the update tool so that you can have some tweets to view. But make
+                            sure that you have all the configuration settings correct first. For more information
+                            on setting up your site visit the <a href="http://postworthy.org">Postworthy Project
+                                Page</a> for setup instructions.
                         </h2>
                     }
                     else
                     {
-                        <h1>Sorry no tweets to view at this time. Please try again later.</h1>
+                        <h1>
+                            Sorry no tweets to view at this time. Please try again later.</h1>
                     }
                 </div>
             </div>
