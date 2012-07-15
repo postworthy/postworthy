@@ -135,15 +135,15 @@
     }
     .top10
     {
-        font-family: bold;
+        
     }
     .top20
     {
-        font-weight: bold;
+        
     }
     .top30
     {
-        font-weight: bold;
+        
     }
     .postIndex
     {
@@ -243,11 +243,32 @@
             {
             <div class="box col1">
                 <ul>
+                    <li class="filter top10" onclick="filterBy('top10')">
+                        <i style="width:18px;height:18px;" class="icon-fire"></i>
+                        <i class="icon-ok"></i>
+                        Top 10
+                        <span>@top10.Count()</span>
+                    </li>
+                    <li class="filter top20" onclick="filterBy('top20')">
+                        <i style="width:18px;height:18px;" class="icon-fire"></i>
+                        <i class="icon-ok"></i>
+                        Top 11-20
+                        <span>@top20.Count()</span>
+                    </li>
+                    <li class="filter top30" onclick="filterBy('top30')" style="border-bottom: 4px solid #DCB">
+                        <i style="width:18px;height:18px;" class="icon-fire"></i>
+                        <i class="icon-ok"></i>
+                        Top 21-30
+                        <span>@top30.Count()</span>
+                    </li>
+                    
                     @foreach (var user in UserFilters)
                     {
                         <li class="filter @user.UserID" onclick="filterBy('@user.UserID')">
+                            <img alt="@user.UserName" title="@user.UserName" src="@user.Image" class="profile-image-tiny" />
                             <i class="icon-ok"></i>
-                            <img alt="@user.UserName" title="@user.UserName" src="@user.Image" class="profile-image-tiny" />@user.UserName
+                            @user.UserName
+                            
                             <span>@user.HotTweets</span>
                         </li>
                     }
