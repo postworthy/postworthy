@@ -13,6 +13,19 @@ found by those you follow on twitter.
 Postworthy has been created in C# and has been designed to run on multiple operating systems 
 (postworthy.com is actually a linux server).
 
+The project is also mobile ready right out of the box to see this visit the demo link above from your smartphone (iOS or Android).
+
+##Project Features
+==================================
+
+* C# MVC3 (Razor View Engine)
+* Mobile Ready
+* Automatic Content Ranking (Bassed on Reddit's Ranking Algorithm modified for Twitter Data)
+* NoSql
+* Memcached
+* Twitter API
+* Runs on Mono (the demo is running on Mono)
+
 ##Tools
 ==================================
 If you are not familiar with C# then you will want to have a look at these free development tools
