@@ -51,7 +51,8 @@ the app.config.
 #####UsersCollection References
 
 In both the web.config and the app.config you will need to modify the UsersCollection setting to point 
-to your UsersCollection file.
+to your UsersCollection file. You will also need to make sure that the process running your web application has both read 
+and write access to this file.
 
 #####Memcached
 
