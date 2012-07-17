@@ -15,7 +15,7 @@
     else
     {
         <p>
-            @(Model.About ?? "@" + Model.TwitterScreenName + " has not yet updated their about page.")
+            @Html.Raw(Model.About ?? "@" + Model.TwitterScreenName + " has not yet updated their about page.")
         </p>
     }
 </fieldset>
