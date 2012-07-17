@@ -17,14 +17,16 @@ Postworthy has been created in C# and has been designed to run on multiple opera
 ==================================
 If you are not familiar with C# then you will want to have a look at these free development tools
 
-####Windows
+#####Windows
 
 <a href="http://www.microsoft.com/visualstudio/en-us/products/2010-editions/express">Visual Studio 2010 Express</a>
+<br/>
 <a href="http://www.couchbase.com/memcached">Couchbase</a>
 
 #####Mac & Linux
 
 <a href="http://monodevelop.com/">MonoDevelop</a>
+<br/>
 <a href="http://www.couchbase.com/memcached">Couchbase</a>
 
 
@@ -34,7 +36,7 @@ Before you build you will want to sign up for a twitter account and sign up for 
 Postworthy uses the twitter API to find content that you share and also to find content shared by those you follow. 
 You will also want to authorize your twitter account to be used by your application.
 
-####Twitter Keys
+#####Twitter Keys
 
 Before you run the application for the first time you will need to sign up for the twitter developer api.
 You will need to use the example.web.config file in the Postworthy.Web project to create a web.config
@@ -46,12 +48,12 @@ file in the Postworthy.Web directory to create a userscollection.config file.
 Once you have your twitter account ready you will want to modify the PrimaryUser in both the web.config and 
 the app.config.
 
-####UsersCollection References
+#####UsersCollection References
 
 In both the web.config and the app.config you will need to modify the UsersCollection setting to point 
 to your UsersCollection file.
 
-####Memcached
+#####Memcached
 
 You will need to have a local memcached instance running on your development machine. Postworthy is a NoSQL project
 and Memcached allows for scalability as well as a speedy place to store frequently used data. By default Postworthy expects 
