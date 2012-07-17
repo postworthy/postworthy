@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Postworthy : Online Content Curation and Ranking Tool" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Postworthy</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/postworthy/postworthy">View on GitHub</a>
+
+          <h1 id="project_title">Postworthy</h1>
+          <h2 id="project_tagline">Online Content Curation and Ranking Tool</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/postworthy/postworthy/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/postworthy/postworthy/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>Project Demo</h2>
+
+<h1></h1>
+
+<p>The best way to explain what Postworthy is all about is to <a href="http://postworthy.com">experience it first hand</a>.</p>
+
+<h2>Project Intro</h2>
+
+<h1></h1>
+
+<p>If you are the type of person who loves to discover amazing content from across the web and share it with your friends
+then postworthy is for you. Postworthy allows you to create a website filled with the things you find and the things 
+found by those you follow on twitter.</p>
+
+<p>Postworthy has been created in C# and has been designed to run on multiple operating systems 
+(postworthy.com is actually a linux server).</p>
+
+<p>The project is also mobile ready right out of the box to see this visit the demo link above from your smartphone (iOS or Android).</p>
+
+<h2>Project Features</h2>
+
+<h1></h1>
+
+<ul>
+<li>C# MVC3 (Razor View Engine)</li>
+<li>Mobile Ready</li>
+<li>Automatic Content Ranking</li>
+<li>NoSql</li>
+<li>Memcached</li>
+<li>Twitter API</li>
+<li>Runs on Mono (the demo is running on Mono)</li>
+</ul><h2>Tools</h2>
+
+<h1></h1>
+
+<p>If you are not familiar with C# then you will want to have a look at these free development tools</p>
+
+<h5>Windows</h5>
+
+<p><a href="http://www.microsoft.com/visualstudio/en-us/products/2010-editions/express">Visual Studio 2010 Express</a>
+<br><a href="http://www.couchbase.com/memcached">Couchbase</a></p>
+
+<h5>Mac &amp; Linux</h5>
+
+<p><a href="http://monodevelop.com/">MonoDevelop</a>
+<br><a href="http://www.couchbase.com/memcached">Couchbase</a></p>
+
+<h2>Before You Build</h2>
+
+<h1></h1>
+
+<p>Before you build you will want to sign up for a twitter account and sign up for a <a href="https://dev.twitter.com/">twitter api key</a>. 
+Postworthy uses the twitter API to find content that you share and also to find content shared by those you follow. 
+You will also want to authorize your twitter account to be used by your application.</p>
+
+<h5>Twitter Keys</h5>
+
+<p>Before you run the application for the first time you will need to sign up for the twitter developer api.
+You will need to use the example.web.config file in the Postworthy.Web project to create a web.config
+and also use the example.app.config in the UpdateRepository project to create an app.config file.</p>
+
+<p>You will then need to authorize your twitter account and use the  example.userscollection.config 
+file in the Postworthy.Web directory to create a userscollection.config file.</p>
+
+<p>Once you have your twitter account ready you will want to modify the PrimaryUser in both the web.config and 
+the app.config.</p>
+
+<h5>UsersCollection References</h5>
+
+<p>In both the web.config and the app.config you will need to modify the UsersCollection setting to point 
+to your UsersCollection file. You will also need to make sure that the process running your web application has both read 
+and write access to this file.</p>
+
+<h5>Memcached</h5>
+
+<p>You will need to have a local memcached instance running on your development machine. Postworthy is a NoSQL project
+and Memcached allows for scalability as well as a speedy place to store frequently used data. By default Postworthy expects 
+the memcached instance to be running local and be available on port 11211.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Postworthy maintained by <a href="https://github.com/postworthy">postworthy</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-642235-10");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
