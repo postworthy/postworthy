@@ -20,7 +20,7 @@ The project is also mobile ready right out of the box to see this visit the demo
 
 * C# MVC3 (Razor View Engine)
 * Mobile Ready
-* Automatic Content Ranking (Bassed on Reddit's Ranking Algorithm modified for Twitter Data)
+* Automatic Content Ranking
 * NoSql
 * Memcached
 * Twitter API
