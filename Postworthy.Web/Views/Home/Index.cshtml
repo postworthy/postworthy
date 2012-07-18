@@ -235,12 +235,12 @@
             var top20 = ranked.Skip(10).Take(10);
             var top30 = ranked.Skip(20).Take(10);
             var index = 0;
-            int.TryParse(Request.QueryString["index"], out index);
-            index = index > -1 ? index : 0;
-            var previousIndex = index > 100 ? index - 100 : 0;
-            var hasPrevious = index > 0;
+			var page = 0;
+            int.TryParse(Request.QueryString["page"], out page);
+			page = page > -1 ? page : 0;
+			index = page * 100;
             var HotTweets = ranked.Skip(index).Take(100).OrderByDescending(x => x.CreatedAt);
-            var hasMore = ranked.Skip(index + 100).Count() > 0;
+			var pageCount = Convert.ToInt32(Math.Ceiling(ranked.Count() / 100.0));
             var UserFilters = HotTweets
                 .GroupBy(t => t.User.Identifier.ScreenName)
                 .Select(g => new
@@ -393,17 +393,15 @@
                 </div>
             </div>
             }
-            if (hasMore || hasPrevious)
+            if (pageCount > 1)
             {
-            <div class="box col4 pagination">
-                @if(hasPrevious)
-                {
-                    <a href="@Url.Content("~/?index=" + previousIndex)"><< Prev</a>
-                }
-                @if (hasMore)
-                {
-                <a href="@Url.Content("~/?index=" + index)">Next >></a>
-                }
+            <div class="box col4 pagination pagination-centered">
+				<ul>
+                @for (int i = 0; i < pageCount; i++)
+				{
+                    <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/?page=" + i)">@(i + 1)</a></li>
+				}
+				</ul>
             </div>
             }
         }
