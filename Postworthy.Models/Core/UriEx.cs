@@ -21,7 +21,7 @@ namespace Postworthy.Models.Core
         private bool _IsImageContentUrl;
 
         public Uri Uri { get { return _Uri; } set { SetNotifyingProperty("Uri", ref _Uri, value); } }
-        public string Title { get { return _Title; } set { SetNotifyingProperty("Title", ref _Title, value); } }
+        public string Title { get { return !string.IsNullOrEmpty(_Title) ? _Title : Uri.ToString(); } set { SetNotifyingProperty("Title", ref _Title, value); } }
         public string Description { get { return _Description; } set { SetNotifyingProperty("Description", ref _Description, value); } }
         public Uri Image { get { return _Image; } set { SetNotifyingProperty("Image", ref _Image, value); } }
         public Uri Video { get { return _Video; } set { SetNotifyingProperty("Video", ref _Video, value); } }

@@ -111,7 +111,7 @@ namespace Postworthy.Models.Twitter
         {
             if (m is UrlMention || m is MediaMention)
             {
-                tweet.TweetText = tweet.Status.Text.Replace(((dynamic)m).Url, "<a target=\"_blank\" href=\"" + ((dynamic)m).ExpandedUrl + "\">[" + l.Title + "]</a>");
+                tweet.TweetText = tweet.Status.Text.Replace(((dynamic)m).Url, "<a target=\"_blank\" href=\"" + l.Uri + "\">[" + l.Title + "]</a>");
             }
         }
 
