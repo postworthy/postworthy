@@ -234,7 +234,13 @@
             var top10 = ranked.Take(10);
             var top20 = ranked.Skip(10).Take(10);
             var top30 = ranked.Skip(20).Take(10);
-            var HotTweets = ranked.Take(100).OrderByDescending(x => x.CreatedAt);
+            var index = 0;
+            int.TryParse(Request.QueryString["index"], out index);
+            index = index > 0 ? index : 0;
+            var previousIndex = index > 100 ? index - 100 : 0;
+            var hasPrevious = index > 0;
+            var HotTweets = ranked.Skip(index).Take(100).OrderByDescending(x => x.CreatedAt);
+            var hasMore = ranked.Skip(index + 100).Count() > 0;
             var UserFilters = HotTweets
                 .GroupBy(t => t.User.Identifier.ScreenName)
                 .Select(g => new
@@ -251,6 +257,8 @@
             {
             <div class="box col1">
                 <ul>
+                @if(index == 0)
+                {
                     <li class="filter top10" onclick="filterBy('top10')">
                         <i style="width:18px;height:18px;" class="icon-fire"></i>
                         <i class="icon-ok"></i>
@@ -269,7 +277,7 @@
                         Top 21-30
                         <span>@top30.Count()</span>
                     </li>
-                    
+                 }   
                     @foreach (var user in UserFilters)
                     {
                         <li class="filter @user.UserID" onclick="filterBy('@user.UserID')">
@@ -305,7 +313,6 @@
             </script>
             }
 
-            var index = 0;
             foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
             {
                 index++;
@@ -384,6 +391,19 @@
                         }
                     }
                 </div>
+            </div>
+            }
+            if (hasMore || hasPrevious)
+            {
+            <div class="box col4 pagination">
+                @if(hasPrevious)
+                {
+                    <a href="@Url.Content("~/?index=" + previousIndex)"><< Prev</a>
+                }
+                @if (hasMore)
+                {
+                <a href="@Url.Content("~/?index=" + index)">Next >></a>
+                }
             </div>
             }
         }
