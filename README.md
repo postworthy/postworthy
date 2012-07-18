@@ -13,6 +13,19 @@ found by those you follow on twitter.
 Postworthy has been created in C# and has been designed to run on multiple operating systems 
 (postworthy.com is actually a linux server).
 
+The project is also mobile ready right out of the box to see this visit the demo link above from your smartphone (iOS or Android).
+
+##Project Features
+==================================
+
+* C# MVC3 (Razor View Engine)
+* Mobile Ready
+* Automatic Content Ranking
+* NoSql
+* Memcached
+* Twitter API
+* Runs on Mono (the demo is running on Mono)
+
 ##Tools
 ==================================
 If you are not familiar with C# then you will want to have a look at these free development tools
@@ -51,7 +64,8 @@ the app.config.
 #####UsersCollection References
 
 In both the web.config and the app.config you will need to modify the UsersCollection setting to point 
-to your UsersCollection file.
+to your UsersCollection file. You will also need to make sure that the process running your web application has both read 
+and write access to this file.
 
 #####Memcached
 
