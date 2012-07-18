@@ -397,10 +397,12 @@
             {
             <div class="box col4 pagination pagination-centered">
 				<ul>
+				<li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/?page=" + Convert.ToInt32(Math.Max(page - 1, 0))) + "\"")">«</a></li>
                 @for (int i = 0; i < pageCount; i++)
 				{
                     <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/?page=" + i)">@(i + 1)</a></li>
 				}
+				<li @Html.Raw(page >= pageCount-1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount-1 ? "" : "href=\"" + Url.Content("~/?page=" + (page + 1)) + "\"")">»</a></li>
 				</ul>
             </div>
             }
