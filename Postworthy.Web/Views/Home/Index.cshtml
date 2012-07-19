@@ -175,8 +175,6 @@
 	var currentLayout = "@(Request.QueryString["layout"])";
 	function updateLayout(layout) {
 		if (layout) {
-			if(layout == currentLayout)
-				return;
 			currentLayout = layout;
 		}
 		switch (currentLayout) {
@@ -187,7 +185,9 @@
 				$("#container").masonry("reload");
 				$("#container .post").css("left", "235px");
 				$(".pagination a").each(function(i,o) {
-					$(o).attr("href", $(o).attr("href") + "&layout=list");
+					if($(o).attr("href") && $(o).attr("href").indexOf("&layout=list") == -1) {
+						$(o).attr("href", $(o).attr("href") + "&layout=list");
+					}
 				});
 				break;
 			default:
@@ -196,7 +196,8 @@
 				$("#container .post").removeClass("listViewOverride");
 				$("#container").masonry("reload");
 				$(".pagination a").each(function(i,o){
-					$(o).attr("href", $(o).attr("href").replace("&layout=list",""));
+					if($(o).attr("href"))
+						$(o).attr("href", $(o).attr("href").replace("&layout=list",""));
 				});
 				break;
 		}
