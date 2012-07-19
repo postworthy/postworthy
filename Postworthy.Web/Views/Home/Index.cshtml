@@ -183,7 +183,9 @@
 				$(".gridview").removeClass("active");
 				$("#container .post").addClass("listViewOverride");
 				$("#container").masonry("reload");
-				$("#container .post").css("left", "235px");
+				@Html.Raw((Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.PrimaryUser().CanAuthorize) ?
+					"" : "$(\"#container .post\").css(\"left\", \"235px\");"
+				)
 				$(".pagination a").each(function(i,o) {
 					if($(o).attr("href") && $(o).attr("href").indexOf("&layout=list") == -1) {
 						$(o).attr("href", $(o).attr("href") + "&layout=list");
@@ -205,7 +207,7 @@
 </script>
 <div id="container">
     <div>
-        @if (Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize)
+        @if (Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.PrimaryUser().CanAuthorize)
         {
             <script src="@Url.Content("~/Scripts/jquery.watermark.min.js")" type="text/javascript"></script>
             <script type="text/javascript">
