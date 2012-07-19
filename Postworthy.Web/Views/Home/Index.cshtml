@@ -156,17 +156,51 @@
         line-height: 28px;
         padding-right: 4px;
     }
+	.listViewOverride
+	{
+		width: 695px;
+	}
+	.
 </style>
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
 <script type="text/javascript">
-    $(function () {
-        $('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
+	$(function () {
+		$('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
 
-        $('#container').imagesLoaded(function () {
-            $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
-            $('#container').masonry('reload');
-        });
-    });
+		$('#container').imagesLoaded(function () {
+			$('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
+			updateLayout();
+		});
+	});
+	var currentLayout = "@(Request.QueryString["layout"])";
+	function updateLayout(layout) {
+		if (layout) {
+			if(layout == currentLayout)
+				return;
+			currentLayout = layout;
+		}
+		switch (currentLayout) {
+			case "list":
+				$(".listview").addClass("active");
+				$(".gridview").removeClass("active");
+				$("#container .post").addClass("listViewOverride");
+				$("#container").masonry("reload");
+				$("#container .post").css("left", "235px");
+				$(".pagination a").each(function(i,o) {
+					$(o).attr("href", $(o).attr("href") + "&layout=list");
+				});
+				break;
+			default:
+				$(".gridview").addClass("active");
+				$(".listview").removeClass("active");
+				$("#container .post").removeClass("listViewOverride");
+				$("#container").masonry("reload");
+				$(".pagination a").each(function(i,o){
+					$(o).attr("href", $(o).attr("href").replace("&layout=list",""));
+				});
+				break;
+		}
+	}
 </script>
 <div id="container">
     <div>
@@ -255,10 +289,10 @@
 
             if (UserFilters.Count() > 1)
             {
-            <div class="box col1">
+            <div class="box col1 filters">
 				<div class="btn-group" style="border-bottom: 4px solid #DCB; padding-top: 5px; padding-bottom: 5px;">
-                    <a class="btn active" style="width:90px;"><i class="icon-th"></i> Grid</a>
-					<a class="btn" style="width:90px;"><i class="icon-list"></i> List</a>
+                    <a class="btn active gridview" style="width:90px;" onclick="updateLayout('grid')"><i class="icon-th"></i> Grid</a>
+					<a class="btn listview" style="width:90px;" onclick="updateLayout('list')"><i class="icon-list"></i> List</a>
 				</div>
                 <ul>
                 @if(index == 0)
@@ -305,13 +339,13 @@
 
                         $(".post:hidden").show();
                         $(".post").not("." + userid).hide();
-                        $('#container').masonry('reload');
+                        updateLayout();
                     }
                     else {
                         $(".filter").removeClass("selected");
                         $(".filter .icon-ok").hide();
                         $(".post:hidden").show();
-                        $('#container').masonry('reload');
+                        updateLayout();
                     }
                 }
             </script>
