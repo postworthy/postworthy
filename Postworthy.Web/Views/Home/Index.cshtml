@@ -432,7 +432,7 @@
                             }
                         }
                     }
-                    @if (tweet.Links.Where(l => l.Image == null && l.Video == null).Count() > 0)
+                    @if (tweet is Postworthy.Models.Twitter.TweetGroup && tweet.Links.Where(l => l.Image == null && l.Video == null).Count() > 0)
                     {
                         <hr style="clear: both;" />
                         var links = tweet.Links.Where(l => l.Image == null && l.Video == null).Distinct();

@@ -64,6 +64,7 @@
     <Compile Include="Core\UriExtensions.cs" />
     <Compile Include="Repository\Providers\FileSystemCache.cs" />
     <Compile Include="Repository\Providers\MemoryCache.cs" />
+    <Compile Include="Repository\RepositorySingleton.cs" />
     <Compile Include="Repository\RepositoryStorageProvider.cs" />
     <Compile Include="Core\ISimilarText.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

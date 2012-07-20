@@ -9,6 +9,7 @@ namespace Postworthy.Models.Twitter
 {
     public class TweetGroup : ITweet
     {
+        public TweetGroup() { }
         public TweetGroup(IGrouping<Tweet, Tweet> tg)
         {
             StatusID = tg.Key.StatusID;
@@ -23,17 +24,17 @@ namespace Postworthy.Models.Twitter
 
         #region ITweet Members
 
-        public string StatusID { get; private set; }
+        public string StatusID { get; set; }
 
-        public List<UriEx> Links { get; private set; }
+        public List<UriEx> Links { get; set; }
 
-        public string TweetText { get; private set; }
+        public string TweetText { get; set; }
 
-        public int RetweetCount { get; private set; }
+        public int RetweetCount { get; set; }
 
-        public string TweetTime { get; private set; }
+        public string TweetTime { get; set; }
 
-        public DateTime CreatedAt { get; private set; }
+        public DateTime CreatedAt { get; set; }
 
         public double TweetRank
         {
@@ -52,7 +53,7 @@ namespace Postworthy.Models.Twitter
             }
         }
 
-        public User User { get; private set; }
+        public User User { get; set; }
 
         #endregion
     }

@@ -53,17 +53,17 @@ You will also want to authorize your twitter account to be used by your applicat
 
 Before you run the application for the first time you will need to sign up for the twitter developer api.
 You will need to use the example.web.config file in the Postworthy.Web project to create a web.config
-and also use the example.app.config in the UpdateRepository project to create an app.config file.
+and also use the example.app.config in the UpdateRepository project and the Grouping to create app.config files for each.
 
 You will then need to authorize your twitter account and use the  example.userscollection.config 
 file in the Postworthy.Web directory to create a userscollection.config file.
 
 Once you have your twitter account ready you will want to modify the PrimaryUser in both the web.config and 
-the app.config.
+the app.configs.
 
 #####UsersCollection References
 
-In both the web.config and the app.config you will need to modify the UsersCollection setting to point 
+In both the web.config and the app.configs you will need to modify the UsersCollection setting to point 
 to your UsersCollection file. You will also need to make sure that the process running your web application has both read 
 and write access to this file.
 
