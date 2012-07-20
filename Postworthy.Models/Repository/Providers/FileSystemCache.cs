@@ -4,22 +4,15 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Models.Repository.Providers
 {
     public class FileSystemCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
-        private string StoragePath = null;
-
         private string GetPath(string key)
         {
-            if (string.IsNullOrEmpty(StoragePath))
-            {
-                StoragePath = Path.GetTempPath() + "longtermstorage/";
-                if (!Directory.Exists(StoragePath))
-                    Directory.CreateDirectory(StoragePath);
-            }
-            return StoragePath + key + ".json";
+            return FileUtility.GetPath(key + ".json");
         }
         private string Get(string key)
         {

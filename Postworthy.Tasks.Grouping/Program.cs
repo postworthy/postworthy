@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Repository.Providers;
 using Postworthy.Models.Core;
+using System.IO;
 
 namespace Postworthy.Tasks.Grouping
 {
@@ -18,6 +19,19 @@ namespace Postworthy.Tasks.Grouping
 
         static void Main(string[] args)
         {
+            var start = DateTime.Now;
+            Console.WriteLine("{0}: Started", start);
+
+            Console.WriteLine("{0}: Deleting old groups from files from storage", DateTime.Now);
+            Repository<TweetGroup>.Instance.Delete(GROUPING);
+            /*
+            var fileNames = Directory.GetFiles(FileUtility.GetPath("tweetgroup_*.json"));
+            foreach (var fn in fileNames)
+            {
+                File.Delete(fn);
+            }
+             * */
+
             List<string> screenNames = null;
 
             var user = UsersCollection.PrimaryUser();
@@ -32,35 +46,36 @@ namespace Postworthy.Tasks.Grouping
                     //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
                 ((t.RetweetCount > RetweetThreshold /*&& t.CreatedAt > DateTime.Now.AddHours(-48)*/) || t.User.Identifier.ScreenName.ToLower() == user.TwitterScreenName.ToLower());
 
-            var start = DateTime.Now;
-            Console.WriteLine("Starting Grouping Procedure @ {0}", start);
+            var startGrouping = DateTime.Now;
+            Console.WriteLine("{0}: Starting grouping procedure", startGrouping);
 
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
                 .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
-                .OrderByDescending(t => t.TweetRank)
+                .OrderByDescending(t => t.TweetRank);
+
+            var groups = tweets
                 //Group similar tweets (the ordering is done first so that the earliest tweet gets credit)
                 .GroupSimilar()
                 //Convert groups into something we can display
-                .Select(g => new TweetGroup(g));
+                .Select(g => new TweetGroup(g) { RepositoryKey = GROUPING })
+                //For the sake of space we only want to store groups that have more than 1 item
+                .Where(g=>g.GroupStatusIDs.Count > 1);
 
-            var results = tweets.ToList();
+            var results = groups.ToList();
 
-            var end = DateTime.Now;
-            Console.WriteLine("Grouping Procedure Completed @ {0} and took {1} minutes to complete", end, (end - start).TotalMinutes);
+            var endGrouping = DateTime.Now;
+            Console.WriteLine("{0}: Grouping procedure completed and it took {1} minutes to complete", endGrouping, (endGrouping - startGrouping).TotalMinutes);
 
-            Console.WriteLine("Storing Data in Distributed Shared Cache");
+            Console.WriteLine("Storing data in repository");
             if (results != null && results.Count > 0)
             {
-                var shared = new DistributedSharedCache<RepositorySingleton<List<TweetGroup>>>();
-                shared.Store(GROUPING, new RepositorySingleton<List<TweetGroup>>()
-                    {
-                        Key = GROUPING,
-                        RepositoryKey = GROUPING,
-                        Data = results
-                    });
+                Repository<TweetGroup>.Instance.Save(GROUPING, results);
             }
+
+            var end = DateTime.Now;
+            Console.WriteLine("{0}: Ending and it took {1} minutes to complete", end, (end - start).TotalMinutes);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Postworthy.Models.Twitter
 {
     public interface ITweet
     {
-        string StatusID { get; }
+        long StatusID { get; }
         List<UriEx> Links { get; }
         string TweetText { get; }
         int RetweetCount { get; }

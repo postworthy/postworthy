@@ -4,14 +4,23 @@ using System.Linq;
 using System.Text;
 using LinqToTwitter;
 using Postworthy.Models.Core;
+using Postworthy.Models.Repository;
 
 namespace Postworthy.Models.Twitter
 {
-    public class TweetGroup : ITweet
+    public class TweetGroup : RepositoryEntity, ITweet
     {
-        public TweetGroup() { }
+        public DateTime CreatedOn { get; set; }
+        public List<long> GroupStatusIDs { get; set; }
+
+        public TweetGroup() 
+        {
+            CreatedOn = DateTime.Now;
+        }
         public TweetGroup(IGrouping<Tweet, Tweet> tg)
         {
+            GroupStatusIDs = tg.Select(g => g.StatusID).ToList();
+            CreatedOn = DateTime.Now;
             StatusID = tg.Key.StatusID;
             TweetText = tg.Key.TweetText;
             CreatedAt = tg.Key.CreatedAt;
@@ -24,7 +33,7 @@ namespace Postworthy.Models.Twitter
 
         #region ITweet Members
 
-        public string StatusID { get; set; }
+        public long StatusID { get; set; }
 
         public List<UriEx> Links { get; set; }
 
@@ -56,5 +65,21 @@ namespace Postworthy.Models.Twitter
         public User User { get; set; }
 
         #endregion
+
+        public override string UniqueKey
+        {
+            get { return "tweetgroup_" + StatusID; }
+        }
+
+        public override bool IsEqual(RepositoryEntity other)
+        {
+            if (other is TweetGroup)
+            {
+                var otherTweet = other as TweetGroup;
+                return this.StatusID == otherTweet.StatusID;
+            }
+            else
+                return false;
+        }
     }
 }

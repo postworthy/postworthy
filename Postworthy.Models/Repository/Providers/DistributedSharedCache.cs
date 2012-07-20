@@ -7,23 +7,17 @@ using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
 using System.IO;
 using System.Threading;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Models.Repository.Providers
 {
     public class DistributedSharedCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
-        private string StoragePath = null;
         private MemcachedClient SharedCache;
 
         private string GetPath(string key)
         {
-            if (string.IsNullOrEmpty(StoragePath))
-            {
-                StoragePath = Path.GetTempPath() + "longtermstorage/";
-                if (!Directory.Exists(StoragePath))
-                    Directory.CreateDirectory(StoragePath);
-            }
-            return StoragePath + key + ".json";
+            return FileUtility.GetPath(key + ".json");
         }
 
         private string GetLocal(string key)

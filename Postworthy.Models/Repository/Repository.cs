@@ -107,47 +107,9 @@ namespace Postworthy.Models.Repository
             var list = Find(key, triggerNotFound: false);
             return list != null && list.Count > 0;
         }
-        public List<TYPE> UpdateLocalCache(string key, Limit limit = Limit.Limit100, bool triggerNotFound = true)
+        public void RefreshLocalCache(string key)
         {
-            key = key.ToLower();
-            var objects = CheckSharedCache(key, (int)limit);
-
-            if (objects == null || objects.Count == 0)
-            {
-                objects = CheckLongTermStorage(key, (int)limit);
-
-                if (objects != null)
-                {
-                    objects.ForEach(o =>
-                    {
-                        InsertIntoLocalCache(key, o);
-                    });
-
-                    InsertIntoSharedCache(key, objects);
-                }
-                else if (KeyNotFound != null && triggerNotFound)
-                {
-                    lock (keynotfound_lock)
-                    {
-                        objects = CheckLocalCache(key, (int)limit);
-                        if (objects == null || objects.Count == 0)
-                        {
-                            objects = KeyNotFound(key);
-                            if (objects != null)
-                                Save(key, objects);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                objects.ForEach(o =>
-                {
-                    InsertIntoLocalCache(key, o);
-                });
-            }
-
-            return objects;
+            UpdateLocalCache(key);
         }
         public List<TYPE> Query(string key, Limit limit = Limit.Limit100, Expression<Func<TYPE, bool>> where = null)
         {
@@ -156,7 +118,7 @@ namespace Postworthy.Models.Repository
             //var savedQuery = !string.IsNullOrEmpty(whereKey) ? Find(whereKey, triggerNotFound: false) : null;
             //if (savedQuery == null || savedQuery.Count == 0)
             //{
-                var objects = Find(key, limit);
+                var objects = Find(key, (int)limit);
 
                 if (objects != null)
                 {
@@ -196,6 +158,12 @@ namespace Postworthy.Models.Repository
             InsertIntoSharedCache(key, objects);
             InsertIntoLongTermStorage(key, objects);
         }
+        public void Delete(string key)
+        {
+            key = key.ToLower();
+            Delete(key, Find(key, 0, false));
+            
+        }
         public void Delete(string key, TYPE obj)
         {
             key = key.ToLower();
@@ -206,24 +174,69 @@ namespace Postworthy.Models.Repository
         public void Delete(string key, List<TYPE> objects)
         {
             key = key.ToLower();
-            objects.ForEach(o =>
+            if (objects != null)
             {
-                DeleteFromLocalCache(key, o);
-            });
+                objects.ForEach(o =>
+                {
+                    DeleteFromLocalCache(key, o);
+                });
 
-            DeleteFromSharedCache(key, objects);
-            DeleteFromLongTermStorage(key, objects);
+                DeleteFromSharedCache(key, objects);
+                DeleteFromLongTermStorage(key, objects);
+            }
         }
         public void FlushChanges()
         {
             SaveQueue();
         }
-        private List<TYPE> Find(string key, Limit limit = Limit.Limit100, bool triggerNotFound = true)
+        private List<TYPE> UpdateLocalCache(string key, int limit = (int)Limit.Limit100, bool triggerNotFound = true)
+        {
+            key = key.ToLower();
+            var objects = CheckSharedCache(key, limit);
+
+            if (objects == null || objects.Count == 0)
+            {
+                objects = CheckLongTermStorage(key, limit);
+
+                if (objects != null)
+                {
+                    objects.ForEach(o =>
+                    {
+                        InsertIntoLocalCache(key, o);
+                    });
+
+                    InsertIntoSharedCache(key, objects);
+                }
+                else if (KeyNotFound != null && triggerNotFound)
+                {
+                    lock (keynotfound_lock)
+                    {
+                        objects = CheckLocalCache(key, limit);
+                        if (objects == null || objects.Count == 0)
+                        {
+                            objects = KeyNotFound(key);
+                            if (objects != null)
+                                Save(key, objects);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                objects.ForEach(o =>
+                {
+                    InsertIntoLocalCache(key, o);
+                });
+            }
+
+            return objects;
+        }
+        private List<TYPE> Find(string key, int limit = (int)Limit.Limit100, bool triggerNotFound = true)
         {
             key = key.ToLower();
             if (!string.IsNullOrEmpty(key))
             {
-                var objects = CheckLocalCache(key, (int)limit);
+                var objects = CheckLocalCache(key, limit);
 
                 if (objects == null || objects.Count == 0)
                 {
