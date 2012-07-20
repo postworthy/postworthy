@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace UpdateRepository.Models
+namespace Postworthy.Tasks.Update.Models
 {
     public static class ExtensionMethods
     {

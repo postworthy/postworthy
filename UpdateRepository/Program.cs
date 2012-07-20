@@ -13,9 +13,9 @@ using Postworthy.Models.Account;
 using Postworthy.Models.Twitter;
 using Postworthy.Models.Core;
 using System.Configuration;
-using UpdateRepository.Models;
+using Postworthy.Tasks.Update.Models;
 
-namespace UpdateRepository
+namespace Postworthy.Tasks.Update
 {
     class Program
     {
@@ -38,7 +38,7 @@ namespace UpdateRepository
         {
             try
             {
-                using (var lockFile = File.Open(Path.GetTempPath() + "/UpdateRepository.lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                using (var lockFile = File.Open(Path.GetTempPath() + "/Postworthy.Tasks.Update.lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
                 {
                     var start = DateTime.Now;
 

@@ -8,8 +8,8 @@
     <ProjectGuid>{74468A94-8F4C-4A40-93BF-D22585F4AA25}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>UpdateRepository</RootNamespace>
-    <AssemblyName>UpdateRepository</AssemblyName>
+    <RootNamespace>Postworthy.Tasks.Update</RootNamespace>
+    <AssemblyName>Postworthy.Tasks.Update</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
