@@ -35,8 +35,6 @@ namespace Postworthy.Models.Twitter
 
         public Tweet(Status status)
         {
-
-            StatusID = long.Parse(this.Status.StatusID);
             Links = new List<UriEx>();
             /*
             Links.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((x,y) => 
@@ -53,6 +51,7 @@ namespace Postworthy.Models.Twitter
             */
             Status = status;
             InitializeWordLetterPairHash(status.Text);
+            StatusID = long.Parse(this.Status.StatusID);
         }
 
         public long StatusID { get; set; }
