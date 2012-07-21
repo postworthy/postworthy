@@ -35,6 +35,7 @@ namespace Postworthy.Models.Twitter
 
         public Tweet(Status status)
         {
+            if (status == null) throw new ArgumentException("ctor Tweet(Status status) can not be passed a null value!");
             Links = new List<UriEx>();
             /*
             Links.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((x,y) => 
