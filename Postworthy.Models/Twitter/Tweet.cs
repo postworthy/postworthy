@@ -62,7 +62,7 @@ namespace Postworthy.Models.Twitter
             if (other is Tweet)
             {
                 var otherTweet = other as Tweet;
-                return this.Status.StatusID == otherTweet.Status.StatusID;
+                return this.StatusID == otherTweet.StatusID;
             }
             else
                 return false;

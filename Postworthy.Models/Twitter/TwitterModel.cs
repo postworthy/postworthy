@@ -143,7 +143,8 @@ namespace Postworthy.Models.Twitter
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
                 .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
-                .OrderByDescending(t => t.TweetRank);
+                .OrderByDescending(t => t.TweetRank)
+                .Distinct();
 
             return tweets.Cast<ITweet>().ToList();
         }
