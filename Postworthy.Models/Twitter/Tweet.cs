@@ -72,7 +72,7 @@ namespace Postworthy.Models.Twitter
         {
             get
             {
-                return "tweet_" + this.Status.StatusID;
+                return "tweet_" + StatusID;
             }
         }
 
@@ -134,7 +134,11 @@ namespace Postworthy.Models.Twitter
 
         public int RetweetCount
         {
-            get { return Status != null ? Status.RetweetCount : 0; }
+            get 
+            { 
+                return Status != null ? 
+                    Status.RetweetCount + Links.Sum(l=>l.UrlTweetCount) : 0; 
+            }
         }
 
         public string TweetTime

@@ -119,6 +119,8 @@ namespace Postworthy.Models.Twitter
         {
             uriex.Init();
 
+            uriex.UrlTweetCount = uriex.Uri.GetTweetCount();
+
             if (uriex.IsHtmlContentUrl)
             {
                 var doc = new HtmlAgilityPack.HtmlDocument();

@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Net;
+using System.Web.Script.Serialization;
+using Postworthy.Models.Twitter;
+using System.IO;
+using System.Text;
 
 namespace Postworthy.Models.Core
 {
     public static class UriExtensions
     {
+        private const string URL_TWEET_COUNT_ENDPOINT = "http://urls.api.twitter.com/1/urls/count.json?url=";
+
         public static HttpWebRequest GetWebRequest(this Uri uri)
         {
             var webReq = (HttpWebRequest)WebRequest.Create(uri);
@@ -77,6 +83,25 @@ namespace Postworthy.Models.Core
             catch { }
 
             return null;
+        }
+
+        public static int GetTweetCount(this Uri uri)
+        {
+            var jss = new JavaScriptSerializer();
+            var twtcnt = new Uri(URL_TWEET_COUNT_ENDPOINT + HttpUtility.UrlEncode(uri.ToString()));
+            var req = twtcnt.GetWebRequest();
+            using (var resp = req.GetResponse())
+            {
+                using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.Default))
+                {
+                    try
+                    {
+                        var utc = jss.Deserialize<UrlTweetCount>(reader.ReadToEnd());
+                        return utc.count;
+                    }
+                    catch { return 0; }
+                }
+            }
         }
     }
 }

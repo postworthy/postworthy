@@ -35,7 +35,7 @@ namespace Postworthy.Models.Repository
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return UniqueKey.GetHashCode();
         }
 
         public override bool Equals(object obj)

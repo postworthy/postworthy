@@ -19,6 +19,7 @@ namespace Postworthy.Models.Core
         private Uri _Video;
         private bool _IsHtmlContentUrl;
         private bool _IsImageContentUrl;
+        private int _UrlTweetCount;
 
         public Uri Uri { get { return _Uri; } set { SetNotifyingProperty("Uri", ref _Uri, value); } }
         public string Title { get { return !string.IsNullOrEmpty(_Title) ? _Title : Uri.ToString(); } set { SetNotifyingProperty("Title", ref _Title, value); } }
@@ -27,7 +28,7 @@ namespace Postworthy.Models.Core
         public Uri Video { get { return _Video; } set { SetNotifyingProperty("Video", ref _Video, value); } }
         public bool IsHtmlContentUrl { get { return _IsHtmlContentUrl; } set { SetNotifyingProperty("IsHtmlContentUrl", ref _IsHtmlContentUrl, value); } }
         public bool IsImageContentUrl { get { return _IsImageContentUrl; } set { SetNotifyingProperty("IsImageContentUrl", ref _IsImageContentUrl, value); } }
-
+        public int UrlTweetCount { get { return _UrlTweetCount; } set { SetNotifyingProperty("UrlTweetCount", ref _UrlTweetCount, value); } }
 
         public UriEx() { }
 

@@ -65,6 +65,7 @@
     <Compile Include="Core\UriExtensions.cs" />
     <Compile Include="Repository\Providers\FileSystemCache.cs" />
     <Compile Include="Repository\Providers\MemoryCache.cs" />
+    <Compile Include="Repository\RepositoryEntityComparer.cs" />
     <Compile Include="Repository\RepositoryStorageProvider.cs" />
     <Compile Include="Core\ISimilarText.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="Twitter\TwitterModel.cs" />
     <Compile Include="Core\UriEx.cs" />
     <Compile Include="Core\GroupingUtility.cs" />
+    <Compile Include="Twitter\UrlTweetCount.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
