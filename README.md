@@ -34,13 +34,13 @@ If you are not familiar with C# then you will want to have a look at these free 
 
 <a href="http://www.microsoft.com/visualstudio/en-us/products/2010-editions/express">Visual Studio 2010 Express</a>
 <br/>
-<a href="http://www.couchbase.com/memcached">Couchbase</a>
+<a href="http://www.couchbase.com/memcached">Couchbase</a> (in memcached mode)
 
 #####Mac & Linux
 
 <a href="http://monodevelop.com/">MonoDevelop</a>
 <br/>
-<a href="http://www.couchbase.com/memcached">Couchbase</a>
+<a href="http://www.couchbase.com/memcached">Couchbase</a> (in memcached mode)
 
 
 ##Before You Build
