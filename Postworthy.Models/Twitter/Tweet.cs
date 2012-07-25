@@ -52,10 +52,10 @@ namespace Postworthy.Models.Twitter
             */
             Status = status;
             InitializeWordLetterPairHash(status.Text);
-            StatusID = long.Parse(this.Status.StatusID);
+            StatusID = ulong.Parse(this.Status.StatusID);
         }
 
-        public long StatusID { get; set; }
+        public ulong StatusID { get; set; }
 
         public override bool IsEqual(RepositoryEntity other)
         {

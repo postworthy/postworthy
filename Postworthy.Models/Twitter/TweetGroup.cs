@@ -11,7 +11,7 @@ namespace Postworthy.Models.Twitter
     public class TweetGroup : RepositoryEntity, ITweet
     {
         public DateTime CreatedOn { get; set; }
-        public List<long> GroupStatusIDs { get; set; }
+        public List<ulong> GroupStatusIDs { get; set; }
 
         public TweetGroup() 
         {
@@ -33,7 +33,7 @@ namespace Postworthy.Models.Twitter
 
         #region ITweet Members
 
-        public long StatusID { get; set; }
+        public ulong StatusID { get; set; }
 
         public List<UriEx> Links { get; set; }
 

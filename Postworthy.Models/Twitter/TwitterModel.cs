@@ -118,7 +118,7 @@ namespace Postworthy.Models.Twitter
             }
         }
 
-        private List<ITweet> GetTweets(string screenname, bool includeRelevantScreenNames, List<long> excludeStatisIDs = null)
+        private List<ITweet> GetTweets(string screenname, bool includeRelevantScreenNames, List<ulong> excludeStatisIDs = null)
         {
             List<string> screenNames = null;
 
