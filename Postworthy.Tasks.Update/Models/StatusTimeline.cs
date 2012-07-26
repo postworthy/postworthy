@@ -21,7 +21,7 @@ namespace Postworthy.Tasks.Update.Models
 
         }
 
-        internal static List<Tweet> Get(string screenname, ulong maxStatusID)
+        public static List<Tweet> Get(string screenname, ulong maxStatusID)
         {
 
             int fetchMultiplier = int.Parse(

@@ -153,7 +153,7 @@ namespace Postworthy.Models.Twitter
         {
             var screenNames = new List<string> { screenname.ToLower() };
 
-            if (UsersCollection.Single(screenname).IncludeFriends)
+            if (UsersCollection.Single(screenname) != null && UsersCollection.Single(screenname).IncludeFriends)
                 screenNames.AddRange((Friends(screenname) ?? new List<Tweep>()).Where(f => f.Type != Tweep.TweepType.Follower).Select(f => f.User.Identifier.ScreenName.ToLower()));
 
             return screenNames;
