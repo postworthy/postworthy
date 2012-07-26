@@ -43,7 +43,6 @@ namespace Postworthy.Tasks.Update
                         Console.WriteLine("{0}: Processing {1} Tweets", DateTime.Now, tweets.Count);
 
                         tp = new TweetProcessor(tweets);
-
                         tp.Start();
 
                         Console.WriteLine("{0}: Saving Tweets", DateTime.Now);
@@ -58,6 +57,8 @@ namespace Postworthy.Tasks.Update
 
                         Repository<Tweet>.Instance.FlushChanges();
                     }
+                    else
+                        tweets = new List<Tweet>();
 
                     List<string> screenNames = new List<string>();
                     screenNames.AddRange(TwitterModel.Instance.GetRelevantScreenNames(primaryUser.TwitterScreenName));
