@@ -250,7 +250,7 @@ namespace Postworthy.Models.Twitter
             {
                 //This algorithm is the Reddit Ranking Algorithm slightly modified for tweets
                 //If you are looking at this you should also checkout the reddit code: https://github.com/reddit/reddit/wiki
-                var score = RetweetCount;
+                var score = Status.RetweetCount * 0.7 + Links.Sum(l => l.UrlTweetCount) * 0.3;
                 var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                 var twitterStartDate = Convert.ToInt64((new DateTime(2006, 7, 15, 0, 0, 0, DateTimeKind.Utc) - epoch).TotalSeconds);
                 var createDate = Convert.ToInt64((Status.CreatedAt.ToUniversalTime() - epoch).TotalSeconds);
