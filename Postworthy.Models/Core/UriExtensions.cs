@@ -21,6 +21,9 @@ namespace Postworthy.Models.Core
             webReq.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1092.0 Safari/536.6";
             webReq.KeepAlive = true;
             webReq.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+            webReq.Headers.Add("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.3");
+            webReq.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
             return webReq;
         }
 

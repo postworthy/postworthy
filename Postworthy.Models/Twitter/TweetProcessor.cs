@@ -129,13 +129,16 @@ namespace Postworthy.Models.Twitter
                     var req = uriex.Uri.GetWebRequest();
                     using (var resp = req.GetResponse())
                     {
-                        using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.Default))
+                        using (var reader = new StreamReader(resp.GetResponseStream(), true))
                         {
                             doc.Load(reader);
                         }
                     }
                 }
-                catch { }
+                catch(Exception ex)
+                {
+                    ex = ex;
+                }
                 if (doc.DocumentNode != null)
                 {
                     var nodes = doc.DocumentNode.SelectNodes("//title");
