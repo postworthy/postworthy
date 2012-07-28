@@ -28,6 +28,7 @@ The project is also mobile ready right out of the box to see this visit the demo
 
 ##Tools
 ==================================
+
 If you are not familiar with C# then you will want to have a look at these free development tools
 
 #####Windows
@@ -45,6 +46,7 @@ If you are not familiar with C# then you will want to have a look at these free 
 
 ##Before You Build
 ==================================
+
 Before you build you will want to sign up for a twitter account and sign up for a <a href="https://dev.twitter.com/">twitter api key</a>. 
 Postworthy uses the twitter API to find content that you share and also to find content shared by those you follow. 
 You will also want to authorize your twitter account to be used by your application.
@@ -53,7 +55,8 @@ You will also want to authorize your twitter account to be used by your applicat
 
 Before you run the application for the first time you will need to sign up for the twitter developer api.
 You will need to use the example.web.config file in the Postworthy.Web project to create a web.config
-and also use the example.app.config in the UpdateRepository project and the Grouping to create app.config files for each.
+and also use the example.app.config in the UpdateRepository, Grouping, and Streaming projects to create 
+app.config files for each.
 
 You will then need to authorize your twitter account and use the  example.userscollection.config 
 file in the Postworthy.Web directory to create a userscollection.config file.
@@ -64,11 +67,18 @@ the app.configs.
 #####UsersCollection References
 
 In both the web.config and the app.configs you will need to modify the UsersCollection setting to point 
-to your UsersCollection file. You will also need to make sure that the process running your web application has both read 
-and write access to this file.
+to your UsersCollection file. You will also need to make sure that the process running your web application 
+has both read and write access to this file.
+
+#####Streaming API
+
+If you chose to use the streaming service you will want to place your account information in the app.config 
+file for the Postworthy.Tasks.Streaming project so that it can connect to the twitter stream.
 
 #####Memcached
 
 You will need to have a local memcached instance running on your development machine. Postworthy is a NoSQL project
 and Memcached allows for scalability as well as a speedy place to store frequently used data. By default Postworthy expects 
 the memcached instance to be running local and be available on port 11211.
+
+If you use Couchbase make sure that you configure it to run as a Memcached server.
