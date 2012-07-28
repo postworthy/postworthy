@@ -23,8 +23,6 @@ namespace Postworthy.Tasks.Streaming
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
             
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
-            context.StreamingUserName = ConfigurationManager.AppSettings["StreamingUserName"];
-            context.StreamingPassword = ConfigurationManager.AppSettings["StreamingPassword"];
             
             var stream = context
                 .UserStream
@@ -64,18 +62,19 @@ namespace Postworthy.Tasks.Streaming
 
                         Console.WriteLine("{0}: Processing {1} Items from Queue", DateTime.Now, tweets.Length);
 
-                        var tp = new TweetProcessor(tweets);
+                        var tp = new TweetProcessor(tweets, true);
                         tp.Start();
 
                         tweets
                             .GroupBy(t => t.User.Identifier.ScreenName)
-                            .Select(g => g)
                             .ToList()
-                            .ForEach(tg =>
+                            .ForEach(g =>
                         {
-                            Repository<Tweet>.Instance.Save(tg.Key + TWEETS, tg.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
-                            Console.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, tg.Count(), tg.Key);
+                            Repository<Tweet>.Instance.Save(g.Key + TWEETS, g.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
+                            Console.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, g.Count(), g.Key);
                         });
+
+                        Repository<Tweet>.Instance.FlushChanges();
 
                         tweets = null;
 
