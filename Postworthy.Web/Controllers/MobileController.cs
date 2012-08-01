@@ -29,6 +29,12 @@ namespace Postworthy.Web.Controllers
             return PartialView("_ItemsList", TwitterModel.Instance.Tweets(UsersCollection.PrimaryUser().TwitterScreenName));
         }
 
+        public ActionResult More(int id)
+        {
+            ViewBag.Page = id;
+            return PartialView("_ItemsList", TwitterModel.Instance.Tweets(UsersCollection.PrimaryUser().TwitterScreenName));
+        }
+
         public ActionResult ExternalFrame(string url)
         {
             ViewBag.ExternalLink = url;

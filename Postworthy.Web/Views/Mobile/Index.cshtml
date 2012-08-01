@@ -98,11 +98,14 @@
 </script>
 <div id="wrapper">
     <div id="scroller">
-        <div id="pullDown">
+        <div id="pullDown"  style="clear:both;">
             <span class="pullDownIcon"></span><span class="pullDownLabel">Pull down to refresh...</span>
         </div>
         <ul id="scrollerItems">
             @{ Html.RenderPartial("_ItemsList", Model); }
         </ul>
+        <div id="pullUp" style="clear:both;">
+            <span class="pullUpIcon"></span><span class="pullUpLabel">Pull up to load mores...</span>
+        </div>
     </div>
 </div>
