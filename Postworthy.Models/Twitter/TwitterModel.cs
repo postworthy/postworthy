@@ -68,10 +68,11 @@ namespace Postworthy.Models.Twitter
 
         public List<ITweet> Tweets(string screenname, bool includeRelevantScreenNames = true)
         {
+            List<ITweet> returnTweets;
             //Since the grouping can be a somewhat expensive task we will cache the results to gain a speed up.
             var cachedResponse = HttpRuntime.Cache[CACHED_TWEETS] as List<ITweet>;
             if (cachedResponse != null && cachedResponse.Count > 0)
-                return cachedResponse;
+                returnTweets = cachedResponse;
             else
             {
                 var sharedResult = Repository<TweetGroup>.Instance.Query(GROUPING);
@@ -85,13 +86,13 @@ namespace Postworthy.Models.Twitter
                     {
                         cachedResponse = HttpRuntime.Cache[CACHED_TWEETS] as List<ITweet>;
                         if (cachedResponse != null && cachedResponse.Count > 0)
-                            return cachedResponse;
+                            returnTweets = cachedResponse;
                         else
                         {
                             var results = sharedResult.Cast<ITweet>().ToList();
                             results.AddRange(GetTweets(screenname, includeRelevantScreenNames, sharedResult.SelectMany(g => g.GroupStatusIDs).ToList()));
                             HttpRuntime.Cache.Add(CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(15), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
-                            return results;
+                            returnTweets = results;
                         }
                     }
                 }
@@ -103,7 +104,7 @@ namespace Postworthy.Models.Twitter
                     {
                         cachedResponse = HttpRuntime.Cache[CACHED_TWEETS] as List<ITweet>;
                         if (cachedResponse != null && cachedResponse.Count > 0)
-                            return cachedResponse;
+                            returnTweets = cachedResponse;
                         else
                         {
                             var results = GetTweets(screenname, includeRelevantScreenNames);
@@ -111,11 +112,14 @@ namespace Postworthy.Models.Twitter
                             if (results != null && results.Count > 0)
                                 HttpRuntime.Cache.Add(CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(5), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
 
-                            return results;
+                            returnTweets = results;
                         }
                     }
                 }
             }
+
+            //Before we return the results we should order the results rank
+            return returnTweets.OrderByTweetRank().ToList();
         }
 
         private List<ITweet> GetTweets(string screenname, bool includeRelevantScreenNames, List<ulong> excludeStatisIDs = null)

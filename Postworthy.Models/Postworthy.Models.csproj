@@ -72,6 +72,7 @@
     <Compile Include="Repository\Repository.cs" />
     <Compile Include="Repository\RepositoryEntity.cs" />
     <Compile Include="Twitter\ITweet.cs" />
+    <Compile Include="Twitter\ITweetExtensions.cs" />
     <Compile Include="Twitter\Tweep.cs" />
     <Compile Include="Twitter\Tweet.cs" />
     <Compile Include="Twitter\TweetGroup.cs" />

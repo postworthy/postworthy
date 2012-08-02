@@ -1,4 +1,5 @@
 ﻿@model List<Postworthy.Models.Twitter.ITweet>
+@using Postworthy.Models.Twitter
 @{
     ViewBag.Title = ViewBag.Brand ?? "Postworthy";
     ViewBag.Home = true;
@@ -168,8 +169,23 @@
 		$('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
 
 		$('#container').imagesLoaded(function () {
-			$('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
-			updateLayout();
+            imageCount = $(".tweet-image-div img").size();
+            $(".tweet-image-div img").each(function(i,o) {
+                $("<img/>")
+                    .attr("src", $(o).attr("src"))
+                    .load(function() {
+                        if(this.width >= 215) $(o).parent().css("width","215px");
+                        if(--imageCount == 0)
+			                updateLayout();
+                      })
+                      .error(function()
+                      {
+                        $(o).parent().remove();
+                        if(--imageCount == 0)
+			                updateLayout();
+                      });
+            });
+            $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
 		});
 	});
 	var currentLayout = "@(Request.QueryString["layout"])";
@@ -268,10 +284,6 @@
         @if (Model != null)
         {
 			var ranked = Model
-				.GroupBy(t => t.User.Identifier.ScreenName)
-				.SelectMany(tg => tg.OrderByDescending(t => t.TweetText).Select((t, i) => new { WeightedTweetRank = Math.Exp(-i / 25) * t.TweetRank, Tweet = t }))
-				.OrderByDescending(x => x.WeightedTweetRank)
-				.Select(x => x.Tweet)
 				.Take(2000)
 				.Distinct();
             var top10 = ranked.Take(10);
@@ -395,7 +407,7 @@
                         [<a title="Retweet This" href="@(Url.Content("~/home/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
                     </div>
                     <span class="postIndex">#@index</span>
-                    <hr style="clear: both;" />
+                    <hr style="clear: both;margin:0;" />
                     @if (randomImage != null)
                     {
                         <div class="tweet-image-div">
