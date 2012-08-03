@@ -1,9 +1,12 @@
 ﻿@model List<Postworthy.Models.Twitter.ITweet>
 @using Postworthy.Models.Twitter
+@{
+    const int PAGE_SIZE = 20;
+}
 @if (Model != null && Model.Count > 0)
 {
     var ranked = Model
-                .Take(2000)
+                .Take(1000)
                 .Distinct();
     var top10 = ranked.Take(10);
     var top20 = ranked.Skip(10).Take(10);
@@ -11,8 +14,8 @@
     var index = 0;
     var page = ViewBag.Page == null ? 0 : (int)ViewBag.Page;
     page = page > -1 ? page : 0;
-    index = page * 20;
-    var HotTweets = ranked.Skip(index).Take(20).OrderByDescending(x => x.CreatedAt);
+    index = page * PAGE_SIZE;
+    var HotTweets = ranked.Skip(index).Take(PAGE_SIZE).OrderByDescending(x => x.CreatedAt);
     foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
     {
         index++;

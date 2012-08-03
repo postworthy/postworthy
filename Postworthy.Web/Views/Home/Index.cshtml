@@ -3,6 +3,7 @@
 @{
     ViewBag.Title = ViewBag.Brand ?? "Postworthy";
     ViewBag.Home = true;
+    const int PAGE_SIZE = 50;
 }
 <style>
     .profile-image-tiny
@@ -174,13 +175,24 @@
                 $("<img/>")
                     .attr("src", $(o).attr("src"))
                     .load(function() {
-                        if(this.width >= 215) $(o).parent().css("width","215px");
+                        var box = $(o).parent().closest(".box");
+                        var parent = $(o).parent();
+                        if(this.width >= 430 && (box.hasClass("top10") || box.hasClass("top10"))) 
+                        {    
+                            box.removeClass("col1");
+                            box.addClass("col2");
+                            parent.css("width","430px");
+                            parent.css('max-height', '200px').css('height', 'auto');
+                        }
+                        else if(this.width >= 215) 
+                            parent.css("width","215px");
+
                         if(--imageCount == 0)
 			                updateLayout();
                       })
                       .error(function()
                       {
-                        $(o).parent().remove();
+                        parent.remove();
                         if(--imageCount == 0)
 			                updateLayout();
                       });
@@ -284,7 +296,7 @@
         @if (Model != null)
         {
 			var ranked = Model
-				.Take(2000)
+				.Take(1000)
 				.Distinct();
             var top10 = ranked.Take(10);
             var top20 = ranked.Skip(10).Take(10);
@@ -293,9 +305,9 @@
 			var page = 0;
             int.TryParse(Request.QueryString["page"], out page);
 			page = page > -1 ? page : 0;
-			index = page * 100;
-            var HotTweets = ranked.Skip(index).Take(100).OrderByDescending(x => x.CreatedAt);
-			var pageCount = Convert.ToInt32(Math.Ceiling(ranked.Count() / 100.0));
+            index = page * PAGE_SIZE;
+            var HotTweets = ranked.Skip(index).Take(PAGE_SIZE).OrderByDescending(x => x.CreatedAt);
+            var pageCount = Convert.ToInt32(Math.Ceiling(ranked.Count() / (1.0 * PAGE_SIZE)));
             var UserFilters = HotTweets
                 .GroupBy(t => t.User.Identifier.ScreenName)
                 .Select(g => new

@@ -78,23 +78,40 @@
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
 <script type="text/javascript">
     $('#page').live('pageshow', function (event, data) {
+        setupPage();
+    });
+
+    function setupPage() {
         try {
             $('#scroller ul').imagesLoaded(function () {
                 $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
+                imageCount = $(".tweet-image-div img").size();
+                $(".tweet-image-div img").each(function (i, o) {
+                    $("<img/>")
+                        .attr("src", $(o).attr("src"))
+                        .load(function () {
+                            var box = $(o).parent().closest(".box");
+                            var parent = $(o).parent();
+                            if (this.width >= 310) {
+                                parent.css("width", "310px");
+                                parent.css('max-height', '150px').css('height', 'auto');
+                            }
+                            if (--imageCount == 0)
+                                iScrollLoaded();
+                        })
+                        .error(function () {
+                            parent.remove();
+                            if (--imageCount == 0)
+                                iScrollLoaded();
+                        });
+                });
+
                 iScrollLoaded();
             });
-            /*
-            $("a[target='_blank']").each(function (i, o) {
-                if ($(this).attr("href").indexOf('javascript:') == -1) {
-                    var uri = '@(Url.Content("~/mobile/externalframe"))?url=' + encodeURIComponent($(this).attr("href"));
-                    $(this).attr("href", "javascript:$.mobile.changePage('" + uri + "');");
-                }
-            });
-            */
         } catch (err) {
 
         }
-    });
+    }
 </script>
 <div id="wrapper">
     <div id="scroller">
