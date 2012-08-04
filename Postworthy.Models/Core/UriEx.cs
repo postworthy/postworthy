@@ -20,6 +20,7 @@ namespace Postworthy.Models.Core
         private bool _IsHtmlContentUrl;
         private bool _IsImageContentUrl;
         private int _UrlTweetCount;
+        private int _UrlFacebookShareCount;
 
         public Uri Uri { get { return _Uri; } set { SetNotifyingProperty("Uri", ref _Uri, value); } }
         public string Title { get { return !string.IsNullOrEmpty(_Title) ? _Title : Uri.ToString(); } set { SetNotifyingProperty("Title", ref _Title, value); } }
@@ -29,7 +30,8 @@ namespace Postworthy.Models.Core
         public bool IsHtmlContentUrl { get { return _IsHtmlContentUrl; } set { SetNotifyingProperty("IsHtmlContentUrl", ref _IsHtmlContentUrl, value); } }
         public bool IsImageContentUrl { get { return _IsImageContentUrl; } set { SetNotifyingProperty("IsImageContentUrl", ref _IsImageContentUrl, value); } }
         public int UrlTweetCount { get { return _UrlTweetCount; } set { SetNotifyingProperty("UrlTweetCount", ref _UrlTweetCount, value); } }
-
+        public int UrlFacebookShareCount { get { return _UrlFacebookShareCount; } set { SetNotifyingProperty("UrlFacebookShareCount", ref _UrlFacebookShareCount, value); } }
+        public int ShareCount { get { return UrlTweetCount + UrlFacebookShareCount; } }
         public UriEx() { }
 
         public UriEx(string uri)

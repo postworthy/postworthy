@@ -120,6 +120,7 @@ namespace Postworthy.Models.Twitter
             uriex.Init();
 
             uriex.UrlTweetCount = uriex.Uri.GetTweetCount();
+            uriex.UrlFacebookShareCount = uriex.Uri.GetFacebookShareCount();
 
             if (uriex.IsHtmlContentUrl)
             {

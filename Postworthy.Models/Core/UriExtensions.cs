@@ -13,6 +13,7 @@ namespace Postworthy.Models.Core
     public static class UriExtensions
     {
         private const string URL_TWEET_COUNT_ENDPOINT = "http://urls.api.twitter.com/1/urls/count.json?url=";
+        private const string URL_FACEBOOK_SHARE_COUNT_ENDPOINT = "https://api.facebook.com/method/fql.query?format=json&query=select%20%20like_count%20from%20link_stat%20where%20url=%22{0}%22";
 
         public static HttpWebRequest GetWebRequest(this Uri uri)
         {
@@ -101,6 +102,25 @@ namespace Postworthy.Models.Core
                     {
                         var utc = jss.Deserialize<UrlTweetCount>(reader.ReadToEnd());
                         return utc.count;
+                    }
+                    catch { return 0; }
+                }
+            }
+        }
+
+        public static int GetFacebookShareCount(this Uri uri)
+        {
+            var jss = new JavaScriptSerializer();
+            var fbshare = new Uri(string.Format(URL_FACEBOOK_SHARE_COUNT_ENDPOINT, HttpUtility.UrlEncode(uri.ToString())));
+            var req = fbshare.GetWebRequest();
+            using (var resp = req.GetResponse())
+            {
+                using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.Default))
+                {
+                    try
+                    {
+                        var usc = jss.Deserialize<UrlFaceBookShareCount[]>(reader.ReadToEnd());
+                        return usc.FirstOrDefault().like_count;
                     }
                     catch { return 0; }
                 }

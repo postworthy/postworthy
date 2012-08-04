@@ -418,7 +418,7 @@
                     <div class="tweet-info">
                         Created @tweet.TweetTime
                         <br />
-                        <i class="icon-retweet"></i>@((tweet.RetweetCount > 0) ? tweet.RetweetCount + " Retweets" : "Not yet retweeted")
+                        <i class="icon-retweet" title="Shares"></i>@Html.Raw((tweet.RetweetCount > 0) ? "&nbsp;<strong>" + tweet.RetweetCount + "</strong>" : "Not yet shared")
                         [<a title="Retweet This" href="@(Url.Content("~/home/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
                     </div>
                     <span class="postIndex">#@index</span>

@@ -13,6 +13,8 @@ namespace Postworthy.Models.Twitter
         public DateTime CreatedOn { get; set; }
         public List<ulong> GroupStatusIDs { get; set; }
         public int LinkRetweetCount { get; set; }
+        public int LinkFacebookShareCount { get; set; }
+        public int ShareCount { get { return LinkRetweetCount + LinkFacebookShareCount; } }
 
         public TweetGroup() 
         {
@@ -28,6 +30,7 @@ namespace Postworthy.Models.Twitter
             TweetTime = tg.Key.TweetTime;
             RetweetCount = tg.Key.RetweetCount + tg.Where(t => t.User.Name != tg.Key.User.Name).Sum(t => t.RetweetCount);
             LinkRetweetCount = tg.SelectMany(x => x.Links).Sum(x => x.UrlTweetCount);
+            LinkFacebookShareCount = tg.SelectMany(x => x.Links).Sum(x => x.UrlFacebookShareCount);
             User = tg.Key.Status.User;
             Links = tg.Where(t => t.User.Name != tg.Key.User.Name).SelectMany(x => x.Links).ToList();
             Links.AddRange(tg.Key.Links.Where(l => l.Image != null || l.Video != null));
@@ -53,7 +56,7 @@ namespace Postworthy.Models.Twitter
             {
                 //This algorithm is the Reddit Ranking Algorithm slightly modified for tweets
                 //If you are looking at this you should also checkout the reddit code: https://github.com/reddit/reddit/wiki
-                var score = (RetweetCount - LinkRetweetCount) * 0.7 - LinkRetweetCount * 0.3;
+                var score = (ShareCount - ShareCount) * 0.7 - ShareCount * 0.3;
                 var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                 var twitterStartDate = Convert.ToInt64((new DateTime(2006, 7, 15, 0, 0, 0, DateTimeKind.Utc) - epoch).TotalSeconds);
                 var createDate = Convert.ToInt64((CreatedAt.ToUniversalTime() - epoch).TotalSeconds);
