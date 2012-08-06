@@ -19,6 +19,12 @@ namespace Postworthy.Tasks.Grouping
 
         static void Main(string[] args)
         {
+            if (!EnsureSingleLoad())
+            {
+                Console.WriteLine("{0}: Another Instance Currently Runing", DateTime.Now);
+                return;
+            }
+
             var start = DateTime.Now;
             Console.WriteLine("{0}: Started", start);
 
@@ -76,6 +82,14 @@ namespace Postworthy.Tasks.Grouping
 
             var end = DateTime.Now;
             Console.WriteLine("{0}: Ending and it took {1} minutes to complete", end, (end - start).TotalMinutes);
+        }
+
+        private static bool EnsureSingleLoad()
+        {
+            bool result;
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Grouping", out result);
+
+            return result;
         }
     }
 }

@@ -20,6 +20,12 @@ namespace Postworthy.Tasks.Streaming
         private static Tweet[] tweets;
         static void Main(string[] args)
         {
+            if (!EnsureSingleLoad())
+            {
+                Console.WriteLine("{0}: Another Instance Currently Runing", DateTime.Now);
+                return;
+            }
+
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
 
@@ -118,6 +124,14 @@ namespace Postworthy.Tasks.Streaming
                 });
             timer.Start();
             Console.ReadLine();
+        }
+
+        private static bool EnsureSingleLoad()
+        {
+            bool result;
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Streaming", out result);
+
+            return result;
         }
     }
 }
