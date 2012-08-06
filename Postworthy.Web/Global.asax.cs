@@ -6,6 +6,7 @@ using System.Web.Mvc;
 using System.Web.Routing;
 using Postworthy.Models;
 using System.Configuration;
+using SignalR;
 
 namespace Postworthy.Web
 {
@@ -21,6 +22,8 @@ namespace Postworthy.Web
 
         public static void RegisterRoutes(RouteCollection routes)
         {
+            RouteTable.Routes.MapConnection<StreamingConnection>("streaming", "streaming/{*operation}");
+
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
             routes.IgnoreRoute("{*favicon}", new { favicon = @"(.*/)?favicon.ico(/.*)?" });
 
@@ -29,7 +32,6 @@ namespace Postworthy.Web
                 "{controller}/{action}/{id}", // URL with parameters
                 new { controller = "Home", action = "Index", id = UrlParameter.Optional } // Parameter defaults
             );
-
         }
 
         protected void Application_Start()
@@ -38,8 +40,6 @@ namespace Postworthy.Web
 
             RegisterGlobalFilters(GlobalFilters.Filters);
             RegisterRoutes(RouteTable.Routes);
-
-            //TwitterModel.Instance;
         }
     }
 }

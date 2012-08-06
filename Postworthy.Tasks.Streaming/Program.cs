@@ -8,6 +8,7 @@ using LinqToTwitter;
 using System.Configuration;
 using System.Timers;
 using Postworthy.Models.Repository;
+using Postworthy.Models.Streaming;
 
 namespace Postworthy.Tasks.Streaming
 {
@@ -21,7 +22,25 @@ namespace Postworthy.Tasks.Streaming
         {
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
-            
+
+            var secret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
+
+            SignalR.Client.Connection pushConnection = (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["PushURL"])) ? new SignalR.Client.Connection(ConfigurationManager.AppSettings["PushURL"]) : null;
+
+            if (pushConnection != null)
+            {
+                try
+                {
+                    Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
+                    pushConnection.Start();
+                }
+                catch
+                {
+                    pushConnection = null;
+                    Console.WriteLine("{0}: Push Connection Currently Unavailable", DateTime.Now);
+                }
+            }
+
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
             
             var stream = context
@@ -75,6 +94,17 @@ namespace Postworthy.Tasks.Streaming
                         });
 
                         Repository<Tweet>.Instance.FlushChanges();
+
+                        if (pushConnection != null && pushConnection.State == SignalR.Client.ConnectionState.Connected)
+                        {
+                            int retweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
+                            tweets = tweets.Where(t => t.RetweetCount >= retweetThreshold).ToArray();
+                            if (tweets.Length > 0)
+                            {
+                                Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, tweets.Count());
+                                pushConnection.Send(new StreamItem() { Secret = secret, Data = tweets });
+                            }
+                        }
 
                         tweets = null;
 

@@ -40,8 +40,8 @@
     <Reference Include="LinqToTwitter">
       <HintPath>..\packages\LinqToTwitter.2.0.26\lib\net40\LinqToTwitter.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -71,6 +71,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repository\Repository.cs" />
     <Compile Include="Repository\RepositoryEntity.cs" />
+    <Compile Include="Streaming\StreamItem.cs" />
     <Compile Include="Twitter\ITweet.cs" />
     <Compile Include="Twitter\ITweetExtensions.cs" />
     <Compile Include="Twitter\Tweep.cs" />

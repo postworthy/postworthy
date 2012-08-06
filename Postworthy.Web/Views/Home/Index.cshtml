@@ -4,6 +4,10 @@
     ViewBag.Title = ViewBag.Brand ?? "Postworthy";
     ViewBag.Home = true;
     const int PAGE_SIZE = 50;
+    
+    var page = 0;
+    int.TryParse(Request.QueryString["page"], out page);
+    page = page > -1 ? page : 0;
 }
 <style>
     .profile-image-tiny
@@ -162,14 +166,70 @@
 	{
 		width: 695px;
 	}
-	.pagination a { padding: 0 10px 0 10px;}
+	.pagination a 
+    { 
+        padding: 0 10px 0 10px;
+    }
+    .update-notification
+    {
+        border-top: 0;
+        width: 880px;
+        padding-bottom: 5px;
+        padding-top: 5px;
+    }
 </style>
+<script src="@Url.Content("~/Scripts/jquery.signalR-0.5.2.min.js")" type="text/javascript"></script>
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
+@if(page == 0) 
+{
+    //Only listen for live updates in you are on the front page
+    
+    <script type="text/javascript">
+        var connection = $.connection('@Url.Content("~/streaming")');
+
+        var availableUpdates = new Array();
+
+        connection.received(function (data) {
+            $(data).each(function (i, o) {
+                availableUpdates.push(o);
+            });
+            updateNotification();
+        });
+      
+        connection.start();
+
+        function loadUpdates() {
+            $(".update-notification").remove();
+            $(".postIndex").each(function (i, o) {
+                $(o).html("#" + (parseInt($(o).html().replace("#", "")) + availableUpdates.length));
+            });
+            $(availableUpdates).each(function (i, o) {
+                $(".filters").after(o);
+            });
+            availableUpdates = new Array();
+            updateLayout();
+            afterImagesLoad();
+        }
+
+        function updateNotification() {
+            if ($(".update-notification").length > 0)
+                $(".update-notification").remove();
+
+            $(".filters").before($('<div class="update-notification box alert alert-info"><button type="button" class="close" data-dismiss="alert">×</button>There are ' + availableUpdates.length + ' new updates available! <a class="btn" href="#" onclick="loadUpdates();return false;">Load Updates</a></div>'));
+            
+            updateLayout();
+        }
+    </script>
+}
 <script type="text/javascript">
 	$(function () {
 		$('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
 
-		$('#container').imagesLoaded(function () {
+		afterImagesLoad();
+	});
+
+    function afterImagesLoad() {
+        $('#container').imagesLoaded(function () {
             imageCount = $(".tweet-image-div img").size();
             $(".tweet-image-div img").each(function(i,o) {
                 $("<img/>")
@@ -188,18 +248,20 @@
                             parent.css("width","215px");
 
                         if(--imageCount == 0)
-			                updateLayout();
-                      })
-                      .error(function()
-                      {
+			                    updateLayout();
+                        })
+                        .error(function()
+                        {
+                        var parent = $(o).parent();
                         parent.remove();
                         if(--imageCount == 0)
 			                updateLayout();
-                      });
+                        });
             });
             $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
 		});
-	});
+    }
+
 	var currentLayout = "@(Request.QueryString["layout"])";
 	function updateLayout(layout) {
 		if (layout) {
@@ -302,9 +364,6 @@
             var top20 = ranked.Skip(10).Take(10);
             var top30 = ranked.Skip(20).Take(10);
             var index = 0;
-			var page = 0;
-            int.TryParse(Request.QueryString["page"], out page);
-			page = page > -1 ? page : 0;
             index = page * PAGE_SIZE;
             var HotTweets = ranked.Skip(index).Take(PAGE_SIZE).OrderByDescending(x => x.CreatedAt);
             var pageCount = Convert.ToInt32(Math.Ceiling(ranked.Count() / (1.0 * PAGE_SIZE)));
@@ -400,82 +459,19 @@
             foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
             {
                 index++;
-                var isTop10 = top10.Contains(tweet);
-                var isTop20 = top20.Contains(tweet);
-                var isTop30 = top30.Contains(tweet);
-                var randomImage = tweet.Links.Where(l => l.Image != null).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
-                var hasVideo = tweet.Links.Where(l => l.Video != null).Count() > 0;
-
-                var topN = (isTop10) ? " top10" : (isTop20 ? " top20" : (isTop30 ? " top30" : ""));
-
-                int RetweetThreshold = Postworthy.Models.Account.UsersCollection.PrimaryUser().RetweetThreshold;
-            <!--STATUS_ID: @tweet.StatusID -->
-            <div class="@tweet.User.Identifier.ID post box @((hasVideo) ? "col2" : "col1")@(tweet.RetweetCount > RetweetThreshold && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
-                <div style="padding: 5px;">
-                    <a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName" target="_blank">
-                        <img alt="@tweet.User.Identifier.ScreenName" title="@tweet.User.Identifier.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
-                    </a>
-                    <div class="tweet-info">
-                        Created @tweet.TweetTime
-                        <br />
-                        <i class="icon-retweet" title="Shares"></i>@Html.Raw((tweet.RetweetCount > 0) ? "&nbsp;<strong>" + tweet.RetweetCount + "</strong>" : "Not yet shared")
-                        [<a title="Retweet This" href="@(Url.Content("~/home/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
-                    </div>
-                    <span class="postIndex">#@index</span>
-                    <hr style="clear: both;margin:0;" />
-                    @if (randomImage != null)
-                    {
-                        <div class="tweet-image-div">
-                            <img src="@randomImage.Image.ToString()" />
-                        </div>
-                    }
-                    @if (isTop10)
-                    { 
-                        <h3>@Html.Raw(tweet.TweetText)</h3>
-                    }
-                    else if (isTop20)
-                    { 
-                        <h4>@Html.Raw(tweet.TweetText)</h4>
-                    }
-                    else if (isTop30)
-                    { 
-                        <h5>@Html.Raw(tweet.TweetText)</h5>
-                    }
-                    else
-                    {
-                        @Html.Raw(tweet.TweetText)
-                    }
-                    @if (hasVideo)
-                    {
-                        <hr style="clear: both;" />
-                        foreach (var link in tweet.Links.Where(l => l.Video != null))
-                        {
-                            if (link.Video.Authority.ToLower().Contains("youtube"))
-                            {            
-                        <iframe width="320" height="215" src="@link.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen>
-                        </iframe>
-                            }
-                            else
-                            {
-                        <a target="_blank" href="@link.Video">
-                            <h3>
-                                WATCH VIDEO</h3>
-                            <img src="@Url.Content("~/Content/images/video-player-icon.png")" style="width:320;height:196px" />
-                        </a>
-                            }
-                        }
-                    }
-                    @if (tweet is Postworthy.Models.Twitter.TweetGroup && tweet.Links.Where(l => l.Image == null && l.Video == null).Count() > 0)
-                    {
-                        <hr style="clear: both;" />
-                        var links = tweet.Links.Where(l => l.Image == null && l.Video == null).Distinct();
-                        foreach (var link in links)
-                        {
-                        <li><a target="_blank" href="@link.Uri">@link.Title</a></li>
-                        }
-                    }
-                </div>
-            </div>
+                var itemData = new Postworthy.Web.Models.ItemData()
+                {
+                    Model = tweet,
+                    index = index,
+                    isTop10 = top10.Contains(tweet),
+                    isTop20 = top20.Contains(tweet),
+                    isTop30 = top30.Contains(tweet),
+                    randomImage = tweet.Links.Where(l => l.Image != null).OrderBy(x => Guid.NewGuid()).FirstOrDefault(),
+                    hasVideo = tweet.Links.Where(l => l.Video != null).Count() > 0,
+                    topN = (top10.Contains(tweet)) ? " top10" : (top20.Contains(tweet) ? " top20" : (top30.Contains(tweet) ? " top30" : "")),
+                };
+                
+                Html.RenderPartial("_Item", itemData);
             }
             if (pageCount > 1)
             {
