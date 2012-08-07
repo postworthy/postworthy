@@ -38,7 +38,18 @@ namespace Postworthy.Tasks.Streaming
             {
                 try
                 {
-                    Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
+                    pushConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc => 
+                    { 
+                        if(sc.NewState == SignalR.Client.ConnectionState.Connected)
+                            Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
+                        else if(sc.NewState == SignalR.Client.ConnectionState.Disconnected)
+                            Console.WriteLine("{0}: Push Connection Lost", DateTime.Now);
+                        else if(sc.NewState == SignalR.Client.ConnectionState.Reconnecting)
+                            Console.WriteLine("{0}: Reestablishing Push Connection", DateTime.Now);
+                        else if(sc.NewState == SignalR.Client.ConnectionState.Connecting)
+                            Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
+
+                    });
                     pushConnection.Start();
                     Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
                 }
