@@ -191,7 +191,7 @@
 
         connection.received(function (data) {
             $(data).each(function (i, o) {
-                availableUpdates.push(o);
+                availableUpdates.unshift(o);
             });
             updateNotification();
         });
@@ -204,7 +204,9 @@
                 $(o).html("#" + (parseInt($(o).html().replace("#", "")) + availableUpdates.length));
             });
             $(availableUpdates).each(function (i, o) {
-                $(".filters").after(o);
+                var x = $(o);
+                $(".postIndex", x).html("#" + (availableUpdates.length - i))
+                $(".filters").after(x);
             });
             availableUpdates = new Array();
             updateLayout();

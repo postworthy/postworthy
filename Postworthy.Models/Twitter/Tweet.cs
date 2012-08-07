@@ -205,7 +205,7 @@ namespace Postworthy.Models.Twitter
                         sb.Append(" hours");
                 }
                 // Minutes?
-                else if ((int)timespan.TotalMinutes >= 1)
+                else if ((int)timespan.TotalMinutes >= 2)
                 {
                     int nMinutes = (int)timespan.TotalMinutes;
                     sb.Append(nMinutes);
@@ -214,20 +214,10 @@ namespace Postworthy.Models.Twitter
                     else
                         sb.Append(" minutes");
                 }
-                // Seconds?
-                else if ((int)timespan.TotalSeconds >= 1)
-                {
-                    int nSeconds = (int)timespan.TotalSeconds;
-                    sb.Append(nSeconds);
-                    if (nSeconds == 1)
-                        sb.Append(" second");
-                    else
-                        sb.Append(" seconds");
-                }
-                // Just say "1 second" as the smallest unit of time
+                // Moments Ago
                 else
                 {
-                    sb.Append("1 second");
+                    sb.Append("moments");
                 }
 
                 sb.Append(" ago");
