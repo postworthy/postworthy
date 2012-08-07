@@ -112,7 +112,7 @@ namespace Postworthy.Tasks.Update
         private static bool EnsureSingleLoad()
         {
             bool result;
-            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Update", out result);
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Update." + UsersCollection.PrimaryUser().TwitterScreenName, out result);
 
             return result;
         }

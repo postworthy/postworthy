@@ -9,6 +9,7 @@ using System.Configuration;
 using System.Timers;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Streaming;
+using Postworthy.Tasks.Streaming.Models;
 
 namespace Postworthy.Tasks.Streaming
 {
@@ -26,7 +27,7 @@ namespace Postworthy.Tasks.Streaming
                 return;
             }
 
-            Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
+            Console.WriteLine("{0}: Started", DateTime.Now);
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
 
             var secret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
@@ -39,6 +40,7 @@ namespace Postworthy.Tasks.Streaming
                 {
                     Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
                     pushConnection.Start();
+                    Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
                 }
                 catch
                 {
@@ -47,9 +49,13 @@ namespace Postworthy.Tasks.Streaming
                 }
             }
 
-            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
-            
-            var stream = context
+            Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, screenname);
+            Friends.Update();
+            Console.WriteLine("{0}: Finished Getting Friends for {1}", DateTime.Now, screenname);
+
+            Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
+
+            var stream = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname)
                 .UserStream
                 .Where(s=>s.Type == LinqToTwitter.UserStreamType.User)
                 .Select(strm=>strm)
@@ -71,10 +77,10 @@ namespace Postworthy.Tasks.Streaming
                     catch { }
                 }).SingleOrDefault();
 
-            var timer = new Timer(60000);
-            timer.Elapsed += new ElapsedEventHandler((x, y) =>
+            var queueTimer = new Timer(60000);
+            queueTimer.Elapsed += new ElapsedEventHandler((x, y) =>
                 {
-                    timer.Enabled = false;
+                    queueTimer.Enabled = false;
                     try
                     {
                         lock (queue_lock)
@@ -119,17 +125,38 @@ namespace Postworthy.Tasks.Streaming
                     catch { }
                     finally
                     {
-                        timer.Enabled = true;
+                        queueTimer.Enabled = true;
                     }
                 });
-            timer.Start();
-            Console.ReadLine();
+            queueTimer.Start();
+
+
+            var friendTimer = new Timer(3600000);
+            friendTimer.Elapsed += new ElapsedEventHandler((x, y) =>
+                {
+                    friendTimer.Enabled = false;
+                    try 
+                    {
+                        Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, screenname);
+                        Friends.Update();
+                        Console.WriteLine("{0}: Finished Getting Friends for {1}", DateTime.Now, screenname);
+                    }
+                    catch { }
+                    finally
+                    {
+                        friendTimer.Enabled = true;
+                    }
+                });
+            friendTimer.Start();
+
+            while(Console.ReadLine() != "exit");
+            Console.WriteLine("{0}: Exiting", DateTime.Now);
         }
 
         private static bool EnsureSingleLoad()
         {
             bool result;
-            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Streaming", out result);
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Streaming." + UsersCollection.PrimaryUser().TwitterScreenName, out result);
 
             return result;
         }

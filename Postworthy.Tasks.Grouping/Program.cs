@@ -87,7 +87,7 @@ namespace Postworthy.Tasks.Grouping
         private static bool EnsureSingleLoad()
         {
             bool result;
-            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Grouping", out result);
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Grouping." + UsersCollection.PrimaryUser().TwitterScreenName, out result);
 
             return result;
         }
