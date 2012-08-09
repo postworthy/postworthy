@@ -121,6 +121,7 @@
     <Compile Include="Models\ItemData.cs" />
     <Compile Include="Models\MobileHelper.cs" />
     <Compile Include="Models\StreamingConnection.cs" />
+    <Compile Include="Models\StreamingHub.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -205,6 +206,7 @@
     <Content Include="Views\Shared\_MobileLogOnPartial.cshtml" />
     <Content Include="Views\Mobile\ExternalFrame.cshtml" />
     <Content Include="Views\Home\_Item.cshtml" />
+    <Content Include="Views\Mobile\_Item.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Account\Personalization.cshtml" />

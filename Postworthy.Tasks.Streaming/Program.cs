@@ -32,13 +32,14 @@ namespace Postworthy.Tasks.Streaming
 
             var secret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
 
-            SignalR.Client.Connection pushConnection = (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["PushURL"])) ? new SignalR.Client.Connection(ConfigurationManager.AppSettings["PushURL"]) : null;
+            var hubConnection = (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["PushURL"])) ? new SignalR.Client.Hubs.HubConnection(ConfigurationManager.AppSettings["PushURL"]) : null;
+            var streamingHub = hubConnection.CreateProxy("streamingHub");
 
-            if (pushConnection != null)
+            if (hubConnection != null)
             {
                 try
                 {
-                    pushConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc => 
+                    hubConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc => 
                     { 
                         if(sc.NewState == SignalR.Client.ConnectionState.Connected)
                             Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
@@ -50,12 +51,12 @@ namespace Postworthy.Tasks.Streaming
                             Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
 
                     });
-                    pushConnection.Start();
+                    hubConnection.Start().Wait();
                     Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
                 }
                 catch
                 {
-                    pushConnection = null;
+                    hubConnection = null;
                     Console.WriteLine("{0}: Push Connection Currently Unavailable", DateTime.Now);
                 }
             }
@@ -118,14 +119,14 @@ namespace Postworthy.Tasks.Streaming
 
                         Repository<Tweet>.Instance.FlushChanges();
 
-                        if (pushConnection != null && pushConnection.State == SignalR.Client.ConnectionState.Connected)
+                        if (hubConnection != null && hubConnection.State == SignalR.Client.ConnectionState.Connected)
                         {
                             int retweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
                             tweets = tweets.Where(t => t.RetweetCount >= retweetThreshold).ToArray();
                             if (tweets.Length > 0)
                             {
                                 Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, tweets.Count());
-                                pushConnection.Send(new StreamItem() { Secret = secret, Data = tweets });
+                                streamingHub.Invoke("Send", new StreamItem() { Secret = secret, Data = tweets }).Wait();
                             }
                         }
 

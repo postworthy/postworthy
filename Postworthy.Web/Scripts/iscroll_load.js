@@ -10,7 +10,7 @@ function pullDownAction() {
         "/mobile/refresh",
         function (data) {
             $("#scrollerItems").html(data);
-            setupPage();
+            updateLayout();
         }
     );
 }
@@ -20,7 +20,7 @@ function pullUpAction() {
         "/mobile/more/" + ++pageID,
         function (data) {
             $("#scrollerItems").append(data);
-            setupPage();
+            updateLayout();
         }
     );
 }

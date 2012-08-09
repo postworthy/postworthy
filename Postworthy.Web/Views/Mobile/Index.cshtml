@@ -74,14 +74,63 @@
         line-height: 28px;
         padding-right: 4px;
     }
+    .update-notification
+    {
+        border-top: 0;
+        width: 100%;
+        padding-bottom: 5px;
+        padding-top: 5px;
+    }
 </style>
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
+<script src="@Url.Content("~/Scripts/jquery.signalR-0.5.2.min.js")" type="text/javascript"></script>
+<script src="@Url.Content("~/signalr/hubs")" type="text/javascript"></script>
+<script type="text/javascript">
+    var availableUpdates = new Array();
+    var stream = $.connection.streamingHub;
+
+    stream.update = function (data) {
+        $(data).each(function (i, o) {
+            availableUpdates.unshift(o);
+        });
+        updateNotification();
+    };
+
+    $.connection.hub.start();
+
+    function loadUpdates() {
+        $(".update-notification").remove();
+        $(".postIndex").each(function (i, o) {
+            $(o).html("#" + (parseInt($(o).html().replace("#", "")) + availableUpdates.length));
+        });
+        $(availableUpdates).each(function (i, o) {
+            var x = $(o);
+            $(".postIndex", x).html("#" + (availableUpdates.length - i))
+            $("#scrollerItems").prepend(x);
+        });
+        availableUpdates = new Array();
+        updateLayout();
+    }
+
+    function updateNotification() {
+        if ($(".update-notification").length > 0)
+            $(".update-notification").remove();
+
+        $("#scrollerItems").prepend($('<li class="update-notification box alert alert-info">There are ' + availableUpdates.length + ' new updates available! <a class="btn" href="#" onclick="loadUpdates();return false;">Load Updates</a></li>'));
+
+        updateLayout();
+    }
+</script>
 <script type="text/javascript">
     $('#page').live('pageshow', function (event, data) {
-        setupPage();
+        updateLayout();
     });
 
-    function setupPage() {
+    function afterImagesLoaded() {
+        setupPage();
+    }
+
+    function updateLayout() {
         try {
             $('#scroller ul').imagesLoaded(function () {
                 $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
@@ -100,6 +149,7 @@
                                 iScrollLoaded();
                         })
                         .error(function () {
+                            var parent = $(o).parent();
                             parent.remove();
                             if (--imageCount == 0)
                                 iScrollLoaded();

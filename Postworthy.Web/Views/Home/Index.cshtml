@@ -178,25 +178,25 @@
         padding-top: 5px;
     }
 </style>
-<script src="@Url.Content("~/Scripts/jquery.signalR-0.5.2.min.js")" type="text/javascript"></script>
 <script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
+<script src="@Url.Content("~/Scripts/jquery.signalR-0.5.2.min.js")" type="text/javascript"></script>
+<script src="@Url.Content("~/signalr/hubs")" type="text/javascript"></script>
 @if(page == 0) 
 {
     //Only listen for live updates in you are on the front page
     
     <script type="text/javascript">
-        var connection = $.connection('@Url.Content("~/streaming")');
-
         var availableUpdates = new Array();
+        var stream = $.connection.streamingHub;
 
-        connection.received(function (data) {
+        stream.update = function (data) {
             $(data).each(function (i, o) {
                 availableUpdates.unshift(o);
             });
             updateNotification();
-        });
-      
-        connection.start();
+        };
+
+        $.connection.hub.start();
 
         function loadUpdates() {
             $(".update-notification").remove();

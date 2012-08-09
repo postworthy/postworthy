@@ -18,6 +18,7 @@ using System.Web.Routing;
 public class StreamingConnection : PersistentConnection
 {
     public ControllerContext HomeContext { get; set; }
+
     public StreamingConnection()
         : base()
     {

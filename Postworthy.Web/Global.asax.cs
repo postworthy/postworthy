@@ -22,7 +22,7 @@ namespace Postworthy.Web
 
         public static void RegisterRoutes(RouteCollection routes)
         {
-            RouteTable.Routes.MapConnection<StreamingConnection>("streaming", "streaming/{*operation}");
+            //RouteTable.Routes.MapConnection<StreamingConnection>("streaming", "streaming/{*operation}");
 
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
             routes.IgnoreRoute("{*favicon}", new { favicon = @"(.*/)?favicon.ico(/.*)?" });
