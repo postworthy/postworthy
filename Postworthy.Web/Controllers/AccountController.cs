@@ -88,9 +88,9 @@ namespace Postworthy.Web.Controllers
             return View(model);
         }
 
+        [ValidateInput(false)]
         [AuthorizePrimaryUser]
         [HttpPost]
-        [ValidateInput(false)]
         public ActionResult Personalization(FormCollection form)
         {
 

@@ -18,7 +18,9 @@ namespace Postworthy.Tasks.Streaming
     {
         private const string TWEETS = "_tweets";
         private static object queue_lock = new object();
+        private static object queue_push_lock = new object();
         private static List<Tweet> queue = new List<Tweet>();
+        private static List<Tweet> queue_push = new List<Tweet>();
         private static Tweet[] tweets;
         static void Main(string[] args)
         {
@@ -41,14 +43,25 @@ namespace Postworthy.Tasks.Streaming
                 {
                     streamingHub = hubConnection.CreateProxy("streamingHub");
                     hubConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc => 
-                    { 
-                        if(sc.NewState == SignalR.Client.ConnectionState.Connected)
+                    {
+                        if (sc.NewState == SignalR.Client.ConnectionState.Connected)
+                        {
                             Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
-                        else if(sc.NewState == SignalR.Client.ConnectionState.Disconnected)
+                            lock (queue_push_lock)
+                            {
+                                if (queue_push.Count > 0)
+                                {
+                                    Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, queue_push.Count());
+                                    streamingHub.Invoke("Send", new StreamItem() { Secret = secret, Data = queue_push }).Wait();
+                                    queue_push.Clear();
+                                }
+                            }
+                        }
+                        else if (sc.NewState == SignalR.Client.ConnectionState.Disconnected)
                             Console.WriteLine("{0}: Push Connection Lost", DateTime.Now);
-                        else if(sc.NewState == SignalR.Client.ConnectionState.Reconnecting)
+                        else if (sc.NewState == SignalR.Client.ConnectionState.Reconnecting)
                             Console.WriteLine("{0}: Reestablishing Push Connection", DateTime.Now);
-                        else if(sc.NewState == SignalR.Client.ConnectionState.Connecting)
+                        else if (sc.NewState == SignalR.Client.ConnectionState.Connecting)
                             Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
 
                     });
@@ -76,15 +89,18 @@ namespace Postworthy.Tasks.Streaming
                 {
                     try
                     {
-                        var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
-                        if (status != null && !string.IsNullOrEmpty(status.StatusID))
+                        if (strm != null && !string.IsNullOrEmpty(strm.Content))
                         {
-                            var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
-                            lock (queue_lock)
+                            var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
+                            if (status != null && !string.IsNullOrEmpty(status.StatusID))
                             {
-                                queue.Add(tweet);
+                                var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
+                                lock (queue_lock)
+                                {
+                                    queue.Add(tweet);
+                                }
+                                Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
                             }
-                            Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
                         }
                     }
                     catch(Exception ex) 
@@ -123,14 +139,25 @@ namespace Postworthy.Tasks.Streaming
 
                         Repository<Tweet>.Instance.FlushChanges();
 
-                        if (hubConnection != null && streamingHub != null && hubConnection.State == SignalR.Client.ConnectionState.Connected)
+                        if (hubConnection != null && streamingHub != null)
                         {
+
                             int retweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
                             tweets = tweets.Where(t => t.RetweetCount >= retweetThreshold).ToArray();
-                            if (tweets.Length > 0)
+                            if (hubConnection.State == SignalR.Client.ConnectionState.Connected)
                             {
-                                Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, tweets.Count());
-                                streamingHub.Invoke("Send", new StreamItem() { Secret = secret, Data = tweets }).Wait();
+                                if (tweets.Length > 0)
+                                {
+                                    Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, tweets.Count());
+                                    streamingHub.Invoke("Send", new StreamItem() { Secret = secret, Data = tweets }).Wait();
+                                }
+                            }
+                            else
+                            {
+                                lock (queue_push_lock)
+                                {
+                                    queue_push.AddRange(tweets);
+                                }
                             }
                         }
 
