@@ -22,9 +22,14 @@ namespace Postworthy.Models.Repository
         {
             if (!string.IsNullOrEmpty(json))
             {
-                return JsonConvert.DeserializeObject<RET>(json);
+                try
+                {
+                    return JsonConvert.DeserializeObject<RET>(json);
+                }
+                catch { }
             }
-            else return default(RET);
+            
+            return default(RET);
         }
     }
 }
