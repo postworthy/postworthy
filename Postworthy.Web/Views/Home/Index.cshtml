@@ -187,16 +187,20 @@
     
     <script type="text/javascript">
         var availableUpdates = new Array();
-        var stream = $.connection.streamingHub;
+        var stream = null;
 
-        stream.update = function (data) {
-            $(data).each(function (i, o) {
-                availableUpdates.unshift(o);
-            });
-            updateNotification();
-        };
+        $(function () {
+            stream = $.connection.streamingHub;
 
-        $.connection.hub.start();
+            stream.update = function (data) {
+                $(data).each(function (i, o) {
+                    availableUpdates.unshift(o);
+                });
+                updateNotification();
+            };
+
+            $.connection.hub.start();
+        });
 
         function loadUpdates() {
             $(".update-notification").remove();

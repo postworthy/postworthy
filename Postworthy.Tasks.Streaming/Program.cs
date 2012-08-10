@@ -10,6 +10,7 @@ using System.Timers;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Streaming;
 using Postworthy.Tasks.Streaming.Models;
+using SignalR.Client.Hubs;
 
 namespace Postworthy.Tasks.Streaming
 {
@@ -33,12 +34,12 @@ namespace Postworthy.Tasks.Streaming
             var secret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
 
             var hubConnection = (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["PushURL"])) ? new SignalR.Client.Hubs.HubConnection(ConfigurationManager.AppSettings["PushURL"]) : null;
-            var streamingHub = hubConnection.CreateProxy("streamingHub");
-
+            IHubProxy streamingHub = null;
             if (hubConnection != null)
             {
                 try
                 {
+                    streamingHub = hubConnection.CreateProxy("streamingHub");
                     hubConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc => 
                     { 
                         if(sc.NewState == SignalR.Client.ConnectionState.Connected)
@@ -54,10 +55,10 @@ namespace Postworthy.Tasks.Streaming
                     hubConnection.Start().Wait();
                     Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
                 }
-                catch
+                catch(Exception ex)
                 {
                     hubConnection = null;
-                    Console.WriteLine("{0}: Push Connection Currently Unavailable", DateTime.Now);
+                    Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
                 }
             }
 
@@ -86,7 +87,10 @@ namespace Postworthy.Tasks.Streaming
                             Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
                         }
                     }
-                    catch { }
+                    catch(Exception ex) 
+                    {
+                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                    }
                 }).SingleOrDefault();
 
             var queueTimer = new Timer(60000);
@@ -119,7 +123,7 @@ namespace Postworthy.Tasks.Streaming
 
                         Repository<Tweet>.Instance.FlushChanges();
 
-                        if (hubConnection != null && hubConnection.State == SignalR.Client.ConnectionState.Connected)
+                        if (hubConnection != null && streamingHub != null && hubConnection.State == SignalR.Client.ConnectionState.Connected)
                         {
                             int retweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
                             tweets = tweets.Where(t => t.RetweetCount >= retweetThreshold).ToArray();
@@ -134,7 +138,10 @@ namespace Postworthy.Tasks.Streaming
 
                         Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                    }
                     finally
                     {
                         queueTimer.Enabled = true;
@@ -153,7 +160,10 @@ namespace Postworthy.Tasks.Streaming
                         Friends.Update();
                         Console.WriteLine("{0}: Finished Getting Friends for {1}", DateTime.Now, screenname);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                    }
                     finally
                     {
                         friendTimer.Enabled = true;

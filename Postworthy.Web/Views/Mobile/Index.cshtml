@@ -88,16 +88,7 @@
 <script src="@Url.Content("~/signalr/hubs")" type="text/javascript"></script>
 <script type="text/javascript">
     var availableUpdates = new Array();
-    var stream = $.connection.streamingHub;
-
-    stream.update = function (data) {
-        $(data).each(function (i, o) {
-            availableUpdates.unshift(o);
-        });
-        updateNotification();
-    };
-
-    $.connection.hub.start();
+    var stream = null;
 
     function loadUpdates() {
         $(".update-notification").remove();
@@ -124,6 +115,17 @@
 </script>
 <script type="text/javascript">
     $('#page').live('pageshow', function (event, data) {
+        stream = $.connection.streamingHub;
+
+        stream.update = function (data) {
+            $(data).each(function (i, o) {
+                availableUpdates.unshift(o);
+            });
+            updateNotification();
+        };
+
+        $.connection.hub.start();
+
         updateLayout();
     });
 
