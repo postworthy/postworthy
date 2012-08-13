@@ -12,6 +12,7 @@ using Postworthy.Models.Streaming;
 using Postworthy.Tasks.Streaming.Models;
 using SignalR.Client.Hubs;
 
+
 namespace Postworthy.Tasks.Streaming
 {
     class Program
@@ -21,6 +22,8 @@ namespace Postworthy.Tasks.Streaming
         private static object queue_push_lock = new object();
         private static List<Tweet> queue = new List<Tweet>();
         private static List<Tweet> queue_push = new List<Tweet>();
+        private static int streamingHubConnectAttempts = 0;
+        private static int streamProcessAttemps = 0;
         private static Tweet[] tweets;
         static void Main(string[] args)
         {
@@ -35,43 +38,53 @@ namespace Postworthy.Tasks.Streaming
 
             var secret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
 
-            var hubConnection = (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["PushURL"])) ? new SignalR.Client.Hubs.HubConnection(ConfigurationManager.AppSettings["PushURL"]) : null;
+            HubConnection hubConnection = null;
             IHubProxy streamingHub = null;
-            if (hubConnection != null)
+
+            while (streamingHubConnectAttempts++ < 3)
             {
-                try
+                if (streamingHubConnectAttempts > 1) System.Threading.Thread.Sleep(5000);
+
+                Console.WriteLine("{0}: Attempting To Connect To PushURL '{1}' (Attempt: {2})", DateTime.Now, ConfigurationManager.AppSettings["PushURL"], streamingHubConnectAttempts);
+                hubConnection = (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["PushURL"])) ? new HubConnection(ConfigurationManager.AppSettings["PushURL"]) : null;
+                
+                if (hubConnection != null)
                 {
-                    streamingHub = hubConnection.CreateProxy("streamingHub");
-                    hubConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc => 
+                    try
                     {
-                        if (sc.NewState == SignalR.Client.ConnectionState.Connected)
+                        streamingHub = hubConnection.CreateProxy("streamingHub");
+                        hubConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc =>
                         {
-                            Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
-                            lock (queue_push_lock)
+                            if (sc.NewState == SignalR.Client.ConnectionState.Connected)
                             {
-                                if (queue_push.Count > 0)
+                                Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
+                                lock (queue_push_lock)
                                 {
-                                    Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, queue_push.Count());
-                                    streamingHub.Invoke("Send", new StreamItem() { Secret = secret, Data = queue_push }).Wait();
-                                    queue_push.Clear();
+                                    if (queue_push.Count > 0)
+                                    {
+                                        Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, queue_push.Count());
+                                        streamingHub.Invoke("Send", new StreamItem() { Secret = secret, Data = queue_push }).Wait();
+                                        queue_push.Clear();
+                                    }
                                 }
                             }
-                        }
-                        else if (sc.NewState == SignalR.Client.ConnectionState.Disconnected)
-                            Console.WriteLine("{0}: Push Connection Lost", DateTime.Now);
-                        else if (sc.NewState == SignalR.Client.ConnectionState.Reconnecting)
-                            Console.WriteLine("{0}: Reestablishing Push Connection", DateTime.Now);
-                        else if (sc.NewState == SignalR.Client.ConnectionState.Connecting)
-                            Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
+                            else if (sc.NewState == SignalR.Client.ConnectionState.Disconnected)
+                                Console.WriteLine("{0}: Push Connection Lost", DateTime.Now);
+                            else if (sc.NewState == SignalR.Client.ConnectionState.Reconnecting)
+                                Console.WriteLine("{0}: Reestablishing Push Connection", DateTime.Now);
+                            else if (sc.NewState == SignalR.Client.ConnectionState.Connecting)
+                                Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
 
-                    });
-                    hubConnection.Start().Wait();
-                    Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
-                }
-                catch(Exception ex)
-                {
-                    hubConnection = null;
-                    Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                        });
+                        var startHubTask = hubConnection.Start();
+                        startHubTask.Wait();
+                        if (!startHubTask.IsFaulted) break;
+                    }
+                    catch (Exception ex)
+                    {
+                        hubConnection = null;
+                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                    }
                 }
             }
 
@@ -81,33 +94,11 @@ namespace Postworthy.Tasks.Streaming
 
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
 
-            var stream = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname)
-                .UserStream
-                .Where(s=>s.Type == LinqToTwitter.UserStreamType.User)
-                .Select(strm=>strm)
-                .StreamingCallback(strm=>
-                {
-                    try
-                    {
-                        if (strm != null && !string.IsNullOrEmpty(strm.Content))
-                        {
-                            var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
-                            if (status != null && !string.IsNullOrEmpty(status.StatusID))
-                            {
-                                var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
-                                lock (queue_lock)
-                                {
-                                    queue.Add(tweet);
-                                }
-                                Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
-                            }
-                        }
-                    }
-                    catch(Exception ex) 
-                    {
-                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
-                    }
-                }).SingleOrDefault();
+            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
+
+            context.Log = Console.Out;
+
+            var stream = StartTwitterStream(context);
 
             var queueTimer = new Timer(60000);
             queueTimer.Elapsed += new ElapsedEventHandler((x, y) =>
@@ -115,6 +106,13 @@ namespace Postworthy.Tasks.Streaming
                     queueTimer.Enabled = false;
                     try
                     {
+                        if (streamProcessAttemps++ >= 5)
+                        {
+                            streamProcessAttemps = 0;
+                            stream.CloseStream();
+                            stream = StartTwitterStream(context);
+                        }
+
                         lock (queue_lock)
                         {
                             if (queue.Count == 0) return;
@@ -200,6 +198,37 @@ namespace Postworthy.Tasks.Streaming
 
             while(Console.ReadLine() != "exit");
             Console.WriteLine("{0}: Exiting", DateTime.Now);
+        }
+
+        private static UserStream StartTwitterStream(TwitterContext context)
+        {
+            return context
+                .UserStream
+                .Where(s => s.Type == LinqToTwitter.UserStreamType.User)
+                .Select(strm => strm)
+                .StreamingCallback(strm =>
+                {
+                    try
+                    {
+                        if (strm != null && !string.IsNullOrEmpty(strm.Content))
+                        {
+                            var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
+                            if (status != null && !string.IsNullOrEmpty(status.StatusID))
+                            {
+                                var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
+                                lock (queue_lock)
+                                {
+                                    queue.Add(tweet);
+                                }
+                                Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                    }
+                }).SingleOrDefault();
         }
 
         private static bool EnsureSingleLoad()
