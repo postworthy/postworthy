@@ -23,7 +23,6 @@ namespace Postworthy.Tasks.Streaming
         private static List<Tweet> queue = new List<Tweet>();
         private static List<Tweet> queue_push = new List<Tweet>();
         private static int streamingHubConnectAttempts = 0;
-        private static int streamProcessAttemps = 0;
         private static Tweet[] tweets;
         static void Main(string[] args)
         {
@@ -106,13 +105,6 @@ namespace Postworthy.Tasks.Streaming
                     queueTimer.Enabled = false;
                     try
                     {
-                        if (streamProcessAttemps++ >= 5)
-                        {
-                            streamProcessAttemps = 0;
-                            stream.CloseStream();
-                            stream = StartTwitterStream(context);
-                        }
-
                         lock (queue_lock)
                         {
                             if (queue.Count == 0) return;
@@ -174,7 +166,10 @@ namespace Postworthy.Tasks.Streaming
                 });
             queueTimer.Start();
 
-
+            /*
+             * It appears like firing off the friends update while running the stream will 
+             * cause the stream to stop working.
+             * 
             var friendTimer = new Timer(3600000);
             friendTimer.Elapsed += new ElapsedEventHandler((x, y) =>
                 {
@@ -195,6 +190,7 @@ namespace Postworthy.Tasks.Streaming
                     }
                 });
             friendTimer.Start();
+            */
 
             while(Console.ReadLine() != "exit");
             Console.WriteLine("{0}: Exiting", DateTime.Now);
