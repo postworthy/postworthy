@@ -24,6 +24,7 @@ namespace Postworthy.Tasks.Streaming
         private static List<Tweet> queue_push = new List<Tweet>();
         private static int streamingHubConnectAttempts = 0;
         private static Tweet[] tweets;
+        private static StreamContent stream = null;
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -97,7 +98,7 @@ namespace Postworthy.Tasks.Streaming
 
             context.Log = Console.Out;
 
-            var stream = StartTwitterStream(context);
+            stream = StartTwitterStream(context);
 
             var queueTimer = new Timer(60000);
             queueTimer.Elapsed += new ElapsedEventHandler((x, y) =>
@@ -105,9 +106,15 @@ namespace Postworthy.Tasks.Streaming
                     queueTimer.Enabled = false;
                     try
                     {
+                        Console.WriteLine("{0}: Processing Queue", DateTime.Now);
+
                         lock (queue_lock)
                         {
-                            if (queue.Count == 0) return;
+                            if (queue.Count == 0)
+                            {
+                                Console.WriteLine("{0}: No Items to Process", DateTime.Now);
+                                return;
+                            }
                             tweets = new Tweet[queue.Count];
                             queue.CopyTo(tweets);
                             queue.Clear();
@@ -152,8 +159,6 @@ namespace Postworthy.Tasks.Streaming
                         }
 
                         tweets = null;
-
-                        Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
                     }
                     catch (Exception ex)
                     {
@@ -161,6 +166,7 @@ namespace Postworthy.Tasks.Streaming
                     }
                     finally
                     {
+                        Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
                         queueTimer.Enabled = true;
                     }
                 });
@@ -194,18 +200,20 @@ namespace Postworthy.Tasks.Streaming
 
             while(Console.ReadLine() != "exit");
             Console.WriteLine("{0}: Exiting", DateTime.Now);
+            stream.CloseStream();
         }
 
-        private static UserStream StartTwitterStream(TwitterContext context)
+        private static StreamContent StartTwitterStream(TwitterContext context)
         {
-            return context
-                .UserStream
+            StreamContent sc = null;
+            context.UserStream
                 .Where(s => s.Type == LinqToTwitter.UserStreamType.User)
                 .Select(strm => strm)
                 .StreamingCallback(strm =>
                 {
                     try
                     {
+                        sc = strm;
                         if (strm != null && !string.IsNullOrEmpty(strm.Content))
                         {
                             var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
@@ -225,6 +233,13 @@ namespace Postworthy.Tasks.Streaming
                         Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
                     }
                 }).SingleOrDefault();
+
+            while (sc == null)
+            {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            return sc;
         }
 
         private static bool EnsureSingleLoad()
