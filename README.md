@@ -23,7 +23,8 @@ The project is also mobile ready right out of the box to see this visit the demo
 * Automatic Content Ranking
 * NoSql
 * Memcached
-* Twitter API
+* Twitter API (REST & Streaming)
+* Real Time Client Updates (Using SignalR)
 * Runs on Mono (the demo is running on Mono)
 
 ##Tools
@@ -73,7 +74,8 @@ has both read and write access to this file.
 #####Streaming API
 
 If you chose to use the streaming service you will want to place your account information in the app.config 
-file for the Postworthy.Tasks.Streaming project so that it can connect to the twitter stream.
+file for the Postworthy.Tasks.Streaming project so that it can connect to the twitter stream. You will also want to update 
+the PushURL so that it is pointing to your web applications streaming endpoint (i.e. - http://postworthy.com/streaming).
 
 #####Memcached
 
