@@ -13,6 +13,8 @@ using Enyim.Caching;
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Configuration;
 using Postworthy.Models.Repository.Providers;
+using System.Configuration;
+using System.Reflection;
 
 namespace Postworthy.Models.Repository
 {  
@@ -37,16 +39,16 @@ namespace Postworthy.Models.Repository
         private Timer SaveTimer;
         private Timer RefreshTimer;
         private MemoryCache<TYPE> MemoryCache;
-        private DistributedSharedCache<TYPE> SharedCache;
-        private FileSystemCache<TYPE> LongTermStorageCache;
+        private RepositoryStorageProvider<TYPE> SharedCache;
+        private RepositoryStorageProvider<TYPE> LongTermStorageCache;
         private Dictionary<string, List<TYPE>> ChangeQueue;
         public event Func<string, List<TYPE>> KeyNotFound;
         public event Func<string, List<TYPE>> RefreshData;
         private Repository() 
         {
             MemoryCache = new MemoryCache<TYPE>(QueueChange);
-            LongTermStorageCache = new FileSystemCache<TYPE>();
-            SharedCache = new DistributedSharedCache<TYPE>();
+            SharedCache = GetStorageProvider("OverrideSharedStorageProvider", () => { return new DistributedSharedCache<TYPE>(); });
+            LongTermStorageCache = GetStorageProvider("OverrideLongTermStorageProvider", () => { return new FileSystemCache<TYPE>(); });
             
 
             ChangeQueue = new Dictionary<string,List<TYPE>>();
@@ -322,6 +324,25 @@ namespace Postworthy.Models.Repository
                 else
                     ChangeQueue.Add(key, new List<TYPE>{ obj});
             }
+        }
+        private RepositoryStorageProvider<TYPE> GetStorageProvider(string SettingKey, Func<RepositoryStorageProvider<TYPE>> defaultType)
+        {
+            string overrideProvider = ConfigurationManager.AppSettings[SettingKey];
+            if (!string.IsNullOrEmpty(overrideProvider))
+            {
+                var assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x=>x.GetType(overrideProvider, false) != null).FirstOrDefault();
+                if (assembly != null)
+                {
+                    var type = assembly.GetType(overrideProvider, false);
+                    if (type != null)
+                    {
+                        var provider = type.MakeGenericType(typeof(TYPE)).GetConstructor(System.Type.EmptyTypes).Invoke(null) as RepositoryStorageProvider<TYPE>;
+                        if (provider != null)
+                            return provider;
+                    }
+                }
+            }
+            return defaultType();
         }
     }
 }
