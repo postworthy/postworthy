@@ -70,7 +70,8 @@ namespace Postworthy.Web.Models
         {
             if (item.Secret == ConfigurationManager.AppSettings["TwitterCustomerSecret"])
             {
-                var topTweets = TwitterModel.Instance.Tweets(UsersCollection.PrimaryUser().TwitterScreenName).Take(50);
+                var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+                var topTweets = TwitterModel.Instance.Tweets(screenname).Take(50);
                 if (topTweets != null)
                 {
                     var tweetsToSend = item.Data.Where(t => t.TweetRank >= topTweets.Min(x => x.TweetRank) && !topTweets.Contains(t)).OrderBy(t => t.CreatedAt);
@@ -81,6 +82,9 @@ namespace Postworthy.Web.Models
                         List<string> returnValuesMobile = new List<string>();
                         ViewEngineResult viewResult = ViewEngines.Engines.FindPartialView(HomeContext, "_Item");
                         ViewEngineResult viewResultMobile = ViewEngines.Engines.FindPartialView(MobileContext, "_Item");
+
+                        var tweetCache = TwitterModel.Instance.PrimaryUserTweetCache;
+                        if (tweetCache != null) tweetCache.AddRange(tweetsToSend);
 
                         foreach (var tweet in tweetsToSend)
                         {
