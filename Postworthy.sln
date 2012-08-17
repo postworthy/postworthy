@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Web", "Postworthy.Web\Postworthy.Web.csproj", "{9F6F64B4-E114-4CFD-BE69-835F0AE57A97}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.Update", "Postworthy.Tasks.Update\Postworthy.Tasks.Update.csproj", "{74468A94-8F4C-4A40-93BF-D22585F4AA25}"
