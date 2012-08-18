@@ -114,12 +114,6 @@ namespace Postworthy.Tasks.Streaming
                             if (queue.Count == 0)
                             {
                                 Console.WriteLine("{0}: No Items to Process", DateTime.Now);
-                                //Feels hackish to have to do it this way...
-                                if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled
-                                {
-                                    Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
-                                    stream = StartTwitterStream(context);
-                                }
                                 return;
                             }
                             tweets = new Tweet[queue.Count];
@@ -174,6 +168,12 @@ namespace Postworthy.Tasks.Streaming
                     finally
                     {
                         Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
+                        //Feels hackish to have to do it this way...
+                        if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled
+                        {
+                            Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
+                            stream = StartTwitterStream(context);
+                        }
                         queueTimer.Enabled = true;
                     }
                 });
