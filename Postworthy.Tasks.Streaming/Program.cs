@@ -240,7 +240,7 @@ namespace Postworthy.Tasks.Streaming
                                     Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
                             }
                             else if (strm != null)
-                                Console.WriteLine("{0}: Twitter Keep Alive: {1}", DateTime.Now, strm.Content);
+                                Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
                             else
                                 throw new ArgumentNullException("strm", "This value should never be null!");
                         }
