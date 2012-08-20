@@ -236,7 +236,13 @@ namespace Postworthy.Tasks.Streaming
                                     }
                                     Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
                                 }
+                                else
+                                    Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
                             }
+                            else if (strm != null)
+                                Console.WriteLine("{0}: Twitter Keep Alive: {1}", DateTime.Now, strm.Content);
+                            else
+                                throw new ArgumentNullException("strm", "This value should never be null!");
                         }
                         catch (Exception ex)
                         {
