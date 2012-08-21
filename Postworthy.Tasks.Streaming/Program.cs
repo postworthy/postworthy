@@ -26,6 +26,7 @@ namespace Postworthy.Tasks.Streaming
         private static Tweet[] tweets;
         private static StreamContent stream = null;
         private static DateTime lastCallBackTime = DateTime.Now;
+        private static DateTime lastKeepAliveTime = default(DateTime);
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -240,7 +241,17 @@ namespace Postworthy.Tasks.Streaming
                                     Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
                             }
                             else if (strm != null)
+                            {
                                 Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
+                                //If we get a KeepAlive message within a few seconds of each other then there is something wrong...
+                                if (lastKeepAliveTime != default(DateTime) && Math.Abs((lastKeepAliveTime - DateTime.Now).TotalSeconds) < 5)
+                                {
+                                    //Feels hackish to have to do it this way...
+                                    Console.WriteLine("{0}: LinqToTwitter UserStream Runaway Detected Attempting to Restart It", DateTime.Now);
+                                    stream = StartTwitterStream(context);
+                                }
+                                
+                            }
                             else
                                 throw new ArgumentNullException("strm", "This value should never be null!");
                         }
