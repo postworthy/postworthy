@@ -25,6 +25,8 @@ namespace Postworthy.Tasks.Streaming
         private static int streamingHubConnectAttempts = 0;
         private static Tweet[] tweets;
         private static StreamContent stream = null;
+        private static DateTime lastCallBackTime = DateTime.Now;
+        private static DateTime lastKeepAliveTime = default(DateTime);
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -167,6 +169,12 @@ namespace Postworthy.Tasks.Streaming
                     finally
                     {
                         Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
+                        //Feels hackish to have to do it this way...
+                        if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled
+                        {
+                            Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
+                            stream = StartTwitterStream(context);
+                        }
                         queueTimer.Enabled = true;
                     }
                 });
@@ -206,34 +214,57 @@ namespace Postworthy.Tasks.Streaming
         private static StreamContent StartTwitterStream(TwitterContext context)
         {
             StreamContent sc = null;
-            context.UserStream
-                .Where(s => s.Type == LinqToTwitter.UserStreamType.User)
-                .Select(strm => strm)
-                .StreamingCallback(strm =>
-                {
-                    try
+            try
+            {
+                context.UserStream
+                    .Where(s => s.Type == LinqToTwitter.UserStreamType.User)
+                    .Select(strm => strm)
+                    .StreamingCallback(strm =>
                     {
-                        sc = strm;
-                        if (strm != null && !string.IsNullOrEmpty(strm.Content))
+                        try
                         {
-                            var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
-                            if (status != null && !string.IsNullOrEmpty(status.StatusID))
+                            lastCallBackTime = DateTime.Now;
+                            sc = strm;
+                            if (strm != null && !string.IsNullOrEmpty(strm.Content))
                             {
-                                var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
-                                lock (queue_lock)
+                                var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
+                                if (status != null && !string.IsNullOrEmpty(status.StatusID))
                                 {
-                                    queue.Add(tweet);
+                                    var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
+                                    lock (queue_lock)
+                                    {
+                                        queue.Add(tweet);
+                                    }
+                                    Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
                                 }
-                                Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
+                                else
+                                    Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
                             }
+                            else if (strm != null)
+                            {
+                                Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
+                                //If we get a KeepAlive message within a few seconds of each other then there is something wrong...
+                                if (lastKeepAliveTime != default(DateTime) && Math.Abs((lastKeepAliveTime - DateTime.Now).TotalSeconds) < 5)
+                                {
+                                    //Feels hackish to have to do it this way...
+                                    Console.WriteLine("{0}: LinqToTwitter UserStream Runaway Detected Attempting to Restart It", DateTime.Now);
+                                    stream = StartTwitterStream(context);
+                                }
+                                
+                            }
+                            else
+                                throw new ArgumentNullException("strm", "This value should never be null!");
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
-                    }
-                }).SingleOrDefault();
-
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                        }
+                    }).SingleOrDefault();
+            }
+            catch(Exception ex) 
+            {
+                Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+            }
             while (sc == null)
             {
                 System.Threading.Thread.Sleep(1000);
