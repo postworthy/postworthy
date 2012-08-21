@@ -244,12 +244,13 @@ namespace Postworthy.Tasks.Streaming
                             {
                                 Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
                                 //If we get a KeepAlive message within a few seconds of each other then there is something wrong...
-                                if (lastKeepAliveTime != default(DateTime) && Math.Abs((lastKeepAliveTime - DateTime.Now).TotalSeconds) < 5)
+                                if (lastKeepAliveTime != default(DateTime) && Math.Abs((lastKeepAliveTime - DateTime.Now).TotalSeconds) < 2)
                                 {
                                     //Feels hackish to have to do it this way...
                                     Console.WriteLine("{0}: LinqToTwitter UserStream Runaway Detected Attempting to Restart It", DateTime.Now);
                                     stream = StartTwitterStream(context);
                                 }
+                                lastKeepAliveTime = DateTime.Now;
                                 
                             }
                             else
