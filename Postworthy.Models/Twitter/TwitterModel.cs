@@ -66,6 +66,14 @@ namespace Postworthy.Models.Twitter
             }
         }
 
+        public List<ITweet> PrimaryUserTweetCache 
+        { 
+            get
+            {
+                return HttpRuntime.Cache[UsersCollection.PrimaryUser().TwitterScreenName + "_" + CACHED_TWEETS] as List<ITweet>;
+            }
+        }
+
         public List<ITweet> Tweets(string screenname, bool includeRelevantScreenNames = true)
         {
             List<ITweet> returnTweets;
