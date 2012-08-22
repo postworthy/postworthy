@@ -27,6 +27,7 @@ namespace Postworthy.Tasks.Streaming
         private static Tweet[] tweets;
         private static StreamContent stream = null;
         private static DateTime lastCallBackTime = DateTime.Now;
+        private static bool hadStreamFailure = false;
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -169,10 +170,13 @@ namespace Postworthy.Tasks.Streaming
                     finally
                     {
                         Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
-                        //Feels hackish to have to do it this way...
-                        if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled
+                        if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled or was Closed
                         {
-                            Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
+                            if (hadStreamFailure)
+                                Console.WriteLine("{0}: LinqToTwitter UserStream Was Closed Attempting to Reconnect", DateTime.Now);
+                            else
+                                Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
+
                             stream = StartTwitterStream(context);
                         }
                         queueTimer.Enabled = true;
@@ -214,6 +218,7 @@ namespace Postworthy.Tasks.Streaming
         private static StreamContent StartTwitterStream(TwitterContext context)
         {
             StreamContent sc = null;
+            hadStreamFailure = false;
             try
             {
                 context.UserStream
@@ -225,22 +230,7 @@ namespace Postworthy.Tasks.Streaming
                         {
                             lastCallBackTime = DateTime.Now;
                             sc = strm;
-                            if (strm != null && !string.IsNullOrEmpty(strm.Content))
-                            {
-                                var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
-                                if (status != null && !string.IsNullOrEmpty(status.StatusID))
-                                {
-                                    var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
-                                    lock (queue_lock)
-                                    {
-                                        queue.Add(tweet);
-                                    }
-                                    Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
-                                }
-                                else
-                                    Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
-                            }
-                            else if (strm != null)
+                            if (strm != null)
                             {
                                 if (strm.Status == TwitterErrorStatus.RequestProcessingException)
                                 {
@@ -248,8 +238,24 @@ namespace Postworthy.Tasks.Streaming
                                     if (wex != null && wex.Status == WebExceptionStatus.ConnectFailure)
                                     {
                                         Console.WriteLine("{0}: LinqToTwitter UserStream Connection Failure", DateTime.Now);
+                                        hadStreamFailure = true;
                                         //Will Be Restarted By Processing Queue
                                     }
+                                }
+                                else if (!string.IsNullOrEmpty(strm.Content))
+                                {
+                                    var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
+                                    if (status != null && !string.IsNullOrEmpty(status.StatusID))
+                                    {
+                                        var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
+                                        lock (queue_lock)
+                                        {
+                                            queue.Add(tweet);
+                                        }
+                                        Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
+                                    }
+                                    else
+                                        Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
                                 }
                                 else
                                     Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
