@@ -27,7 +27,6 @@ namespace Postworthy.Tasks.Streaming
         private static Tweet[] tweets;
         private static StreamContent stream = null;
         private static DateTime lastCallBackTime = DateTime.Now;
-        private static DateTime lastKeepAliveTime = default(DateTime);
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
