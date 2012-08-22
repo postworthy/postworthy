@@ -11,6 +11,7 @@ using Postworthy.Models.Repository;
 using Postworthy.Models.Streaming;
 using Postworthy.Tasks.Streaming.Models;
 using SignalR.Client.Hubs;
+using System.Net;
 
 
 namespace Postworthy.Tasks.Streaming
@@ -242,15 +243,17 @@ namespace Postworthy.Tasks.Streaming
                             }
                             else if (strm != null)
                             {
-                                Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
-                                //If we get a KeepAlive message within a few seconds of each other then there is something wrong...
-                                if (lastKeepAliveTime != default(DateTime) && Math.Abs((lastKeepAliveTime - DateTime.Now).TotalSeconds) < 5)
+                                if (strm.Status == TwitterErrorStatus.RequestProcessingException)
                                 {
-                                    //Feels hackish to have to do it this way...
-                                    Console.WriteLine("{0}: LinqToTwitter UserStream Runaway Detected Attempting to Restart It", DateTime.Now);
-                                    stream = StartTwitterStream(context);
+                                    var wex = strm.Error as WebException;
+                                    if (wex != null && wex.Status == WebExceptionStatus.ConnectFailure)
+                                    {
+                                        Console.WriteLine("{0}: LinqToTwitter UserStream Connection Failure", DateTime.Now);
+                                        //Will Be Restarted By Processing Queue
+                                    }
                                 }
-                                
+                                else
+                                    Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
                             }
                             else
                                 throw new ArgumentNullException("strm", "This value should never be null!");
