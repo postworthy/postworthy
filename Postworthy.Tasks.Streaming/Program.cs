@@ -98,9 +98,6 @@ namespace Postworthy.Tasks.Streaming
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
 
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
-
-            context.Log = Console.Out;
-
             stream = StartTwitterStream(context);
 
             var queueTimer = new Timer(60000);
@@ -176,7 +173,8 @@ namespace Postworthy.Tasks.Streaming
                                 Console.WriteLine("{0}: LinqToTwitter UserStream Was Closed Attempting to Reconnect", DateTime.Now);
                             else
                                 Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
-
+                            
+                            context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
                             stream = StartTwitterStream(context);
                         }
                         queueTimer.Enabled = true;
@@ -219,6 +217,9 @@ namespace Postworthy.Tasks.Streaming
         {
             StreamContent sc = null;
             hadStreamFailure = false;
+
+            context.Log = Console.Out;
+
             try
             {
                 context.UserStream
