@@ -273,8 +273,10 @@ namespace Postworthy.Tasks.Streaming
             {
                 Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
             }
+
             while (sc == null)
             {
+                Console.WriteLine("{0}: Waiting On Twitter Connection", DateTime.Now);
                 System.Threading.Thread.Sleep(1000);
             }
 
