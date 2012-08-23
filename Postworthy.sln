@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.Grouping",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.Streaming", "Postworthy.Tasks.Streaming\Postworthy.Tasks.Streaming.csproj", "{5D2855FE-3921-4912-BC4A-0AC78003ED17}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.StreamMonitor", "Postworthy.Tasks.StreamMonitor\Postworthy.Tasks.StreamMonitor.csproj", "{8230CB3C-BC4A-46D5-9074-3020F9E47E19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,16 @@ Global
 		{5D2855FE-3921-4912-BC4A-0AC78003ED17}.Release|Mixed Platforms.Build.0 = Release|x86
 		{5D2855FE-3921-4912-BC4A-0AC78003ED17}.Release|x86.ActiveCfg = Release|x86
 		{5D2855FE-3921-4912-BC4A-0AC78003ED17}.Release|x86.Build.0 = Release|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Debug|x86.ActiveCfg = Debug|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Debug|x86.Build.0 = Debug|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|Any CPU.ActiveCfg = Release|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|Mixed Platforms.Build.0 = Release|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|x86.ActiveCfg = Release|x86
+		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
