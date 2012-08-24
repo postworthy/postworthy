@@ -74,6 +74,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repository\Repository.cs" />
     <Compile Include="Repository\RepositoryEntity.cs" />
+    <Compile Include="Streaming\IProcessingStep.cs" />
     <Compile Include="Streaming\StreamItem.cs" />
     <Compile Include="Twitter\ITweet.cs" />
     <Compile Include="Twitter\ITweetExtensions.cs" />

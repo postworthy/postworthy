@@ -17,14 +17,12 @@ namespace Postworthy.Tasks.StreamMonitor
     class Program
     {
         private static object queue_lock = new object();
-        private static object queue_push_lock = new object();
         private static List<Tweet> queue = new List<Tweet>();
-        private static List<Tweet> queue_push = new List<Tweet>();
-        private static int streamingHubConnectAttempts = 0;
         private static Tweet[] tweets;
         private static StreamContent stream = null;
         private static DateTime lastCallBackTime = DateTime.Now;
         private static bool hadStreamFailure = false;
+        private static IProcessingStep processingStep = null;
 
         static void Main(string[] args)
         {
@@ -36,58 +34,6 @@ namespace Postworthy.Tasks.StreamMonitor
 
             Console.WriteLine("{0}: Started", DateTime.Now);
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
-
-            var secret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
-
-            HubConnection hubConnection = null;
-            IHubProxy streamingHub = null;
-
-            while (streamingHubConnectAttempts++ < 3)
-            {
-                if (streamingHubConnectAttempts > 1) System.Threading.Thread.Sleep(5000);
-
-                Console.WriteLine("{0}: Attempting To Connect To PushURL '{1}' (Attempt: {2})", DateTime.Now, ConfigurationManager.AppSettings["PushURL"], streamingHubConnectAttempts);
-                hubConnection = (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["PushURL"])) ? new HubConnection(ConfigurationManager.AppSettings["PushURL"]) : null;
-
-                if (hubConnection != null)
-                {
-                    try
-                    {
-                        streamingHub = hubConnection.CreateProxy("streamingHub");
-                        hubConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc =>
-                        {
-                            if (sc.NewState == SignalR.Client.ConnectionState.Connected)
-                            {
-                                Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
-                                lock (queue_push_lock)
-                                {
-                                    if (queue_push.Count > 0)
-                                    {
-                                        Console.WriteLine("{0}: Pushing {1} Tweets to Web Application", DateTime.Now, queue_push.Count());
-                                        streamingHub.Invoke("Send", new StreamItem() { Secret = secret, Data = queue_push }).Wait();
-                                        queue_push.Clear();
-                                    }
-                                }
-                            }
-                            else if (sc.NewState == SignalR.Client.ConnectionState.Disconnected)
-                                Console.WriteLine("{0}: Push Connection Lost", DateTime.Now);
-                            else if (sc.NewState == SignalR.Client.ConnectionState.Reconnecting)
-                                Console.WriteLine("{0}: Reestablishing Push Connection", DateTime.Now);
-                            else if (sc.NewState == SignalR.Client.ConnectionState.Connecting)
-                                Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
-
-                        });
-                        var startHubTask = hubConnection.Start();
-                        startHubTask.Wait();
-                        if (!startHubTask.IsFaulted) break;
-                    }
-                    catch (Exception ex)
-                    {
-                        hubConnection = null;
-                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
-                    }
-                }
-            }
 
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
 
@@ -114,21 +60,12 @@ namespace Postworthy.Tasks.StreamMonitor
                         queue.Clear();
                     }
 
-                    if (hubConnection != null && streamingHub != null && tweets.Length > 0)
-                    {
-                        if (hubConnection.State == SignalR.Client.ConnectionState.Connected)
-                        {
-                            Console.WriteLine("{0}: Pushing {1} Tweets to Web Application for Processing", DateTime.Now, tweets.Count());
-                            streamingHub.Invoke("Process", new StreamItem() { Secret = secret, Data = tweets }).Wait();
-                        }
-                        else
-                        {
-                            lock (queue_push_lock)
-                            {
-                                queue_push.AddRange(tweets);
-                            }
-                        }
-                    }
+                    Console.WriteLine("{0}: Processing {1} Tweets", DateTime.Now, tweets.Count());
+
+                    //Currently there is only one step but there could potentially be multiple user defined steps
+                    var iProcessor = GetIProcessingStep();
+                    var processingTask = iProcessor.ProcessItems(tweets);
+                    processingTask.Wait();
 
                     tweets = null;
                 }
@@ -157,6 +94,27 @@ namespace Postworthy.Tasks.StreamMonitor
             while (Console.ReadLine() != "exit") ;
             Console.WriteLine("{0}: Exiting", DateTime.Now);
             stream.CloseStream();
+        }
+
+        private static IProcessingStep GetIProcessingStep()
+        {
+            if (processingStep == null)
+            {
+                string processingType = ConfigurationManager.AppSettings["IProcessingStep"];
+                if (!string.IsNullOrEmpty(processingType) && processingType.Split(';').Length == 2)
+                {
+                    string assemblyName = processingType.Split(';')[0];
+                    string typeName = processingType.Split(';')[1];
+                    var obj = Activator.CreateInstance(assemblyName, typeName);
+                    if (obj is IProcessingStep)
+                        processingStep = obj as IProcessingStep;
+                }
+            }
+
+            if (processingStep != null)
+                return processingStep;
+            else
+                throw new Exception("Could Not Create IProcessingStep from AppSettings");
         }
 
         private static StreamContent StartTwitterStream(TwitterContext context)
