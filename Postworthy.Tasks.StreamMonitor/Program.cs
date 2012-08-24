@@ -153,10 +153,15 @@ namespace Postworthy.Tasks.StreamMonitor
                 }
             });
             queueTimer.Start();
+
+            while (Console.ReadLine() != "exit") ;
+            Console.WriteLine("{0}: Exiting", DateTime.Now);
+            stream.CloseStream();
         }
 
         private static StreamContent StartTwitterStream(TwitterContext context)
         {
+            bool firstWait = true;
             StreamContent sc = null;
             hadStreamFailure = false;
 
@@ -168,6 +173,11 @@ namespace Postworthy.Tasks.StreamMonitor
             {
                 if (string.IsNullOrEmpty(track)) 
                     throw new ArgumentNullException("AppSetting 'Track' Cannot be null!");
+                else
+                    Console.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, track);
+
+                context.StreamingUserName = ConfigurationManager.AppSettings["UserName"];
+                context.StreamingPassword = ConfigurationManager.AppSettings["Password"];
 
                 context.Streaming
                     .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == track)
@@ -224,7 +234,11 @@ namespace Postworthy.Tasks.StreamMonitor
 
             while (sc == null)
             {
-                Console.WriteLine("{0}: Waiting On Twitter Connection", DateTime.Now);
+                if (firstWait)
+                {
+                    Console.WriteLine("{0}: Waiting On Twitter Connection", DateTime.Now);
+                    firstWait = false;
+                }
                 System.Threading.Thread.Sleep(1000);
             }
 

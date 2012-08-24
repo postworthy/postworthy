@@ -215,6 +215,7 @@ namespace Postworthy.Tasks.Streaming
 
         private static StreamContent StartTwitterStream(TwitterContext context)
         {
+            bool firstWait = true;
             StreamContent sc = null;
             hadStreamFailure = false;
 
@@ -277,7 +278,11 @@ namespace Postworthy.Tasks.Streaming
 
             while (sc == null)
             {
-                Console.WriteLine("{0}: Waiting On Twitter Connection", DateTime.Now);
+                if (firstWait)
+                {
+                    Console.WriteLine("{0}: Waiting On Twitter Connection", DateTime.Now);
+                    firstWait = false;
+                }
                 System.Threading.Thread.Sleep(1000);
             }
 
