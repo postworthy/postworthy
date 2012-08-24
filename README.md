@@ -93,6 +93,6 @@ If you use Couchbase make sure that you configure it to run as a Memcached serve
 If you are developing and distributing open source applications under the GPL License, then you are free to use Postworthy under the GPL License.
 <a href="http://www.gnu.org/licenses/gpl-faq.html">GPL FAQ</a>
 
-#####Commercial and Enterprise
+#####Commercial and Enterprise and Government Projects
 
-Contact me at Landon.Key@gmail.com for more information on Commercial & Enterprise Use of the Postworthy tools.
+Contact me at Landon.Key@gmail.com for more information on Commercial, Enterprise, and Government use of the Postworthy tools.
