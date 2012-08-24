@@ -84,3 +84,15 @@ and Memcached allows for scalability as well as a speedy place to store frequent
 the memcached instance to be running local and be available on port 11211.
 
 If you use Couchbase make sure that you configure it to run as a Memcached server.
+
+##Software Licensing Policy
+==================================
+
+#####For Open Source Projects
+
+If you are developing and distributing open source applications under the GPL License, then you are free to use Postworthy under the GPL License.
+<a href="http://www.gnu.org/licenses/gpl-faq.html">GPL FAQ</a>
+
+#####Commercial and Enterprise
+
+Contact me at Landon.Key@gmail.com for more information on Commercial & Enterprise Use of the Postworthy tools.
