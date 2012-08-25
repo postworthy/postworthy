@@ -35,6 +35,9 @@ namespace Postworthy.Tasks.StreamMonitor
             Console.WriteLine("{0}: Started", DateTime.Now);
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
 
+            Console.WriteLine("{0}: Initializing IProcessingStep", DateTime.Now);
+            GetIProcessingStep().Init(Console.Out);
+
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
 
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
@@ -60,13 +63,11 @@ namespace Postworthy.Tasks.StreamMonitor
                         queue.Clear();
                     }
 
-                    Console.WriteLine("{0}: Processing {1} Tweets", DateTime.Now, tweets.Count());
+                    Console.WriteLine("{0}: Processing {1} Items from Queue", DateTime.Now, tweets.Length);
 
                     //Currently there is only one step but there could potentially be multiple user defined steps
-                    var iProcessor = GetIProcessingStep();
-                    var processingTask = iProcessor.ProcessItems(tweets);
-                    processingTask.Wait();
-
+                    GetIProcessingStep().ProcessItems(tweets).Wait();
+                    
                     tweets = null;
                 }
                 catch (Exception ex)
@@ -105,7 +106,7 @@ namespace Postworthy.Tasks.StreamMonitor
                 {
                     string assemblyName = processingType.Split(';')[0];
                     string typeName = processingType.Split(';')[1];
-                    var obj = Activator.CreateInstance(assemblyName, typeName);
+                    var obj = Activator.CreateInstance(assemblyName, typeName).Unwrap();
                     if (obj is IProcessingStep)
                         processingStep = obj as IProcessingStep;
                 }
