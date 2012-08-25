@@ -106,6 +106,10 @@ namespace Postworthy.Tasks.StreamMonitor
                 {
                     string assemblyName = processingType.Split(';')[0];
                     string typeName = processingType.Split(';')[1];
+
+                    if (assemblyName.ToLower().EndsWith(".dll")) 
+                        assemblyName = string.Join(".", assemblyName.Split('.').Reverse().Skip(1).Reverse());
+
                     var obj = Activator.CreateInstance(assemblyName, typeName).Unwrap();
                     if (obj is IProcessingStep)
                         processingStep = obj as IProcessingStep;
