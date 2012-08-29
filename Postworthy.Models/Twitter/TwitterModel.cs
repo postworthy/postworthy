@@ -157,10 +157,11 @@ namespace Postworthy.Models.Twitter
                 .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
                 .OrderByDescending(t => t.TweetRank)
-                .Distinct();
+                .Distinct()
+                .ToList();
 
             if(!string.IsNullOrEmpty(UsersCollection.PrimaryUser().Track))
-                tweets.ToList().AddRange(Repository<Tweet>.Instance.Query(TRACKER + TWEETS, limit: Repository<Tweet>.Limit.Limit1000, where: where) ?? new List<Tweet>());
+                tweets.AddRange(Repository<Tweet>.Instance.Query(TRACKER + TWEETS, limit: Repository<Tweet>.Limit.Limit1000, where: where) ?? new List<Tweet>());
 
             return tweets.Cast<ITweet>().ToList();
         }
