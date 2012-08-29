@@ -130,12 +130,12 @@ namespace Postworthy.Tasks.StreamMonitor
 
             context.Log = Console.Out;
 
-            string track = ConfigurationManager.AppSettings["Track"] ?? "";
+            string track = UsersCollection.PrimaryUser().Track ?? "";
 
             try
             {
                 if (string.IsNullOrEmpty(track)) 
-                    throw new ArgumentNullException("AppSetting 'Track' Cannot be null!");
+                    throw new ArgumentNullException("UserCollection Property 'Track' Cannot be Null or Empty!");
                 else
                     Console.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, track);
 

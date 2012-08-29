@@ -32,6 +32,7 @@ namespace Postworthy.Models.Repository
             Limit80 = 80,
             Limit90 = 90,
             Limit100 = 100,
+            Limit1000 = 1000
         }
         private static volatile Repository<TYPE> instance;
         private static object instance_lock = new object();

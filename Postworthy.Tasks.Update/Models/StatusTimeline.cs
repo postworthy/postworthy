@@ -13,8 +13,6 @@ namespace Postworthy.Tasks.Update.Models
 {
     public static class StatusTimeline
     {
-        private const string TWEETS = "_tweets";
-
         public static List<Tweet> Get()
         {
             return Get(UsersCollection.PrimaryUser().TwitterScreenName, 0);
@@ -34,7 +32,7 @@ namespace Postworthy.Tasks.Update.Models
             List<Tweet> tweets = new List<Tweet>();
             screenNames.ForEach(name =>
             {
-                var t = Repository<Tweet>.Instance.Query(name + TWEETS);
+                var t = Repository<Tweet>.Instance.Query(name + TwitterModel.TWEETS);
                 if (t != null) tweets.AddRange(t);
             });
             if (tweets != null)

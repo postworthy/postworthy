@@ -15,8 +15,6 @@ namespace Postworthy.Tasks.Update
 {
     class Program
     {
-        private const string TWEETS = "_tweets";
-
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -53,7 +51,7 @@ namespace Postworthy.Tasks.Update
                     .ToList()
                     .ForEach(g =>
                     {
-                        Repository<Tweet>.Instance.Save(g.Key + TWEETS, g.Select(x => x).ToList());
+                        Repository<Tweet>.Instance.Save(g.Key + TwitterModel.TWEETS, g.Select(x => x).ToList());
                         Console.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, g.Count(), g.Key);
                     });
 
@@ -70,7 +68,7 @@ namespace Postworthy.Tasks.Update
 
             foreach (var screenName in screenNames)
             {
-                var tweetsToUpdate = Repository<Tweet>.Instance.Query(screenName + TWEETS, where: t => t.CreatedAt > DateTime.Now.AddHours(-48));
+                var tweetsToUpdate = Repository<Tweet>.Instance.Query(screenName + TwitterModel.TWEETS, where: t => t.CreatedAt > DateTime.Now.AddHours(-48));
                 if (tweetsToUpdate != null && tweetsToUpdate.Count > 1)
                 {
                     tweetsToUpdate = tweetsToUpdate.Except(tweets).OrderByDescending(t => t.Status.CreatedAt).ToList();

@@ -18,7 +18,6 @@ namespace Postworthy.Tasks.Streaming
 {
     class Program
     {
-        private const string TWEETS = "_tweets";
         private static object queue_lock = new object();
         private static object queue_push_lock = new object();
         private static List<Tweet> queue = new List<Tweet>();
@@ -130,7 +129,7 @@ namespace Postworthy.Tasks.Streaming
                             .ToList()
                             .ForEach(g =>
                         {
-                            Repository<Tweet>.Instance.Save(g.Key + TWEETS, g.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
+                            Repository<Tweet>.Instance.Save(g.Key + TwitterModel.TWEETS, g.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
                             Console.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, g.Count(), g.Key);
                         });
 

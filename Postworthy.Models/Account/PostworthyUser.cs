@@ -51,6 +51,9 @@ namespace Postworthy.Models.Account
         [Display(Name = "Minimum Retweeted Count")]
         public int RetweetThreshold { get; set; }
 
+        [Display(Name = "Track These Key Words (Comma Delimited)")]
+        public string Track { get; set; }
+
         public bool CanAuthorize
         {
             get

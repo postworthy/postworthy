@@ -14,9 +14,6 @@ namespace Postworthy.Tasks.Grouping
 {
     class Program
     {
-        private const string TWEETS = "_tweets";
-        private const string GROUPING = "GROUPING_RESULTS";
-
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -29,7 +26,7 @@ namespace Postworthy.Tasks.Grouping
             Console.WriteLine("{0}: Started", start);
 
             Console.WriteLine("{0}: Deleting old groups from files from storage", DateTime.Now);
-            Repository<TweetGroup>.Instance.Delete(GROUPING);
+            Repository<TweetGroup>.Instance.Delete(TwitterModel.GROUPING);
             /*
             var fileNames = Directory.GetFiles(FileUtility.GetPath("tweetgroup_*.json"));
             foreach (var fn in fileNames)
@@ -57,7 +54,7 @@ namespace Postworthy.Tasks.Grouping
 
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
-                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
+                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TwitterModel.TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
                 .OrderByDescending(t => t.TweetRank);
 
@@ -65,7 +62,7 @@ namespace Postworthy.Tasks.Grouping
                 //Group similar tweets (the ordering is done first so that the earliest tweet gets credit)
                 .GroupSimilar()
                 //Convert groups into something we can display
-                .Select(g => new TweetGroup(g) { RepositoryKey = GROUPING })
+                .Select(g => new TweetGroup(g) { RepositoryKey = TwitterModel.GROUPING })
                 //For the sake of space we only want to store groups that have more than 1 item
                 .Where(g=>g.GroupStatusIDs.Count > 1);
 
@@ -77,7 +74,7 @@ namespace Postworthy.Tasks.Grouping
             Console.WriteLine("Storing data in repository");
             if (results != null && results.Count > 0)
             {
-                Repository<TweetGroup>.Instance.Save(GROUPING, results);
+                Repository<TweetGroup>.Instance.Save(TwitterModel.GROUPING, results);
             }
 
             var end = DateTime.Now;

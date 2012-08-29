@@ -98,6 +98,7 @@ namespace Postworthy.Web.Controllers
 
             prevModel.SiteName = form["SiteName"];
             prevModel.About = form["About"];
+            prevModel.Track = form["Track"];
             prevModel.IncludeFriends = bool.Parse(form["IncludeFriends"].Split(',').First());
             prevModel.OnlyTweetsWithLinks = bool.Parse(form["OnlyTweetsWithLinks"].Split(',').First());
             prevModel.AnalyticsScript = form["AnalyticsScript"];

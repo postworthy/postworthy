@@ -77,7 +77,6 @@
     <Compile Include="Models\ExtensionMethods.cs" />
     <Compile Include="Models\Friends.cs" />
     <Compile Include="Models\StatusTimeline.cs" />
-    <Compile Include="Program_OLD.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

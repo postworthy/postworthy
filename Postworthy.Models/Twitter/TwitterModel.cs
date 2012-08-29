@@ -25,10 +25,11 @@ namespace Postworthy.Models.Twitter
         private static object instance_lock = new object();
         private static object tweets_lock = new object();
 
-        private const string CACHED_TWEETS = "CachedTweets";
-        private const string TWEETS = "_tweets";
-        private const string FRIENDS = "_friends";
-        private const string GROUPING = "GROUPING_RESULTS";
+        public const string CACHED_TWEETS = "CachedTweets";
+        public const string TRACKER = "PostworthyTracker";
+        public const string TWEETS = "_tweets";
+        public const string FRIENDS = "_friends";
+        public const string GROUPING = "GROUPING_RESULTS";
 
         private TwitterModel()
         {
@@ -157,6 +158,9 @@ namespace Postworthy.Models.Twitter
                 //Order all tweets based on rank
                 .OrderByDescending(t => t.TweetRank)
                 .Distinct();
+
+            if(!string.IsNullOrEmpty(UsersCollection.PrimaryUser().Track))
+                tweets.ToList().AddRange(Repository<Tweet>.Instance.Query(TRACKER + TWEETS, limit: Repository<Tweet>.Limit.Limit1000, where: where) ?? new List<Tweet>());
 
             return tweets.Cast<ITweet>().ToList();
         }

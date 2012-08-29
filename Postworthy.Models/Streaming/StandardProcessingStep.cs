@@ -14,16 +14,15 @@ namespace Postworthy.Models.Streaming
 {
     public class StandardProcessingStep : IProcessingStep
     {
-        private const string TWEETS = "_tweets";
-        private static object queue_push_lock = new object();
-        private static List<Tweet> queue_push = new List<Tweet>();
-        private TextWriter log;
-        private string secret;
-        private static int streamingHubConnectAttempts = 0;
-        HubConnection hubConnection = null;
-        IHubProxy streamingHub = null;
+        protected static object queue_push_lock = new object();
+        protected static List<Tweet> queue_push = new List<Tweet>();
+        protected TextWriter log;
+        protected string secret;
+        protected static int streamingHubConnectAttempts = 0;
+        protected HubConnection hubConnection = null;
+        protected IHubProxy streamingHub = null;
 
-        public void Init(TextWriter log)
+        public virtual void Init(TextWriter log)
         {
             this.log = log;
             secret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
@@ -76,23 +75,14 @@ namespace Postworthy.Models.Streaming
             }
         }
 
-        public Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets)
+        public virtual Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets)
         {
             var task = Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
             {
                 var tp = new TweetProcessor(tweets, true);
                 tp.Start();
 
-                tweets
-                    .GroupBy(t => t.User.Identifier.ScreenName)
-                    .ToList()
-                    .ForEach(g =>
-                    {
-                        Repository<Tweet>.Instance.Save(g.Key + TWEETS, g.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
-                        log.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, g.Count(), g.Key);
-                    });
-
-                Repository<Tweet>.Instance.FlushChanges();
+                StoreInRepository(tweets);
 
                 if (hubConnection != null && streamingHub != null)
                 {
@@ -118,10 +108,22 @@ namespace Postworthy.Models.Streaming
 
                 return tweets;
             }));
-            
-            task.Start();
 
             return task;
+        }
+
+        protected virtual void StoreInRepository(IEnumerable<Tweet> tweets)
+        {
+            tweets
+                .GroupBy(t => t.User.Identifier.ScreenName)
+                .ToList()
+                .ForEach(g =>
+                {
+                    Repository<Tweet>.Instance.Save(g.Key + TwitterModel.TWEETS, g.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
+                    log.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, g.Count(), g.Key);
+                });
+
+            Repository<Tweet>.Instance.FlushChanges();
         }
     }
 }
