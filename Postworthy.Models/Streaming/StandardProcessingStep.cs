@@ -77,7 +77,7 @@ namespace Postworthy.Models.Streaming
 
         public virtual Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets)
         {
-            var task = Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
+            return Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
             {
                 var tp = new TweetProcessor(tweets, true);
                 tp.Start();
@@ -108,8 +108,6 @@ namespace Postworthy.Models.Streaming
 
                 return tweets;
             }));
-
-            return task;
         }
 
         protected virtual void StoreInRepository(IEnumerable<Tweet> tweets)

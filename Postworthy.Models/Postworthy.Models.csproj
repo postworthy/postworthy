@@ -81,6 +81,7 @@
     <Compile Include="Streaming\StandardProcessingStep.cs" />
     <Compile Include="Streaming\StreamItem.cs" />
     <Compile Include="Streaming\TrackerProcessingStep.cs" />
+    <Compile Include="Streaming\TweetBotProcessingStep.cs" />
     <Compile Include="Twitter\ITweet.cs" />
     <Compile Include="Twitter\ITweetExtensions.cs" />
     <Compile Include="Twitter\Tweep.cs" />

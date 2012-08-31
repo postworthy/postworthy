@@ -189,25 +189,33 @@ namespace Postworthy.Models.Twitter
             return friends;
         }
 
-        public void UpdateStatus(string statusText, string screenname)
+        public void UpdateStatus(string statusText, string screenname = null, bool processStatus = true)
         {
-            var status = GetAuthorizedTwitterContext(screenname).UpdateStatus(statusText);
-            status = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname)
-                            .Status
-                            .Where(s => s.StatusID == status.StatusID && s.ScreenName == screenname && s.IncludeEntities == true && s.Type == StatusType.User && s.Count == 1)
-                            .ToList().FirstOrDefault();
+            if (string.IsNullOrEmpty(screenname)) screenname = UsersCollection.PrimaryUser().TwitterScreenName;
 
-            if (status != null)
+            var status = GetAuthorizedTwitterContext(screenname).UpdateStatus(statusText);
+
+            if (processStatus)
             {
-                var tweet = new Tweet(status);
-                var tp = new TweetProcessor(new List<Tweet> { tweet }, true);
-                tp.Start();
-                Repository<Tweet>.Instance.Save(screenname + TWEETS, tweet);
+                status = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname)
+                                .Status
+                                .Where(s => s.StatusID == status.StatusID && s.ScreenName == screenname && s.IncludeEntities == true && s.Type == StatusType.User && s.Count == 1)
+                                .ToList().FirstOrDefault();
+
+                if (status != null)
+                {
+                    var tweet = new Tweet(status);
+                    var tp = new TweetProcessor(new List<Tweet> { tweet }, true);
+                    tp.Start();
+                    Repository<Tweet>.Instance.Save(screenname + TWEETS, tweet);
+                }
             }
         }
 
-        public void Retweet(string statusId, string screenname)
+        public void Retweet(string statusId, string screenname = null)
         {
+            if (string.IsNullOrEmpty(screenname)) screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+
             var status = GetAuthorizedTwitterContext(screenname).Retweet(statusId);
         }
 
