@@ -80,9 +80,9 @@ namespace Postworthy.Tasks.StreamMonitor
                     if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled or was Closed
                     {
                         if (hadStreamFailure)
-                            Console.WriteLine("{0}: LinqToTwitter UserStream Was Closed Attempting to Reconnect", DateTime.Now);
+                            Console.WriteLine("{0}: LinqToTwitter Stream Was Closed Attempting to Reconnect", DateTime.Now);
                         else
-                            Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
+                            Console.WriteLine("{0}: LinqToTwitter Stream Stalled Attempting to Restart It", DateTime.Now);
 
                         context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
                         stream = StartTwitterStream(context);
@@ -124,6 +124,14 @@ namespace Postworthy.Tasks.StreamMonitor
 
         private static StreamContent StartTwitterStream(TwitterContext context)
         {
+            if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["StreamType"]) && ConfigurationManager.AppSettings["StreamType"].ToLower() == "userstream")
+                return StartTwitterUserStream(context);
+            else
+                return StartTwitterTrackerStream(context);
+        }
+
+        private static StreamContent StartTwitterTrackerStream(TwitterContext context)
+        {
             bool firstWait = true;
             StreamContent sc = null;
             hadStreamFailure = false;
@@ -135,7 +143,7 @@ namespace Postworthy.Tasks.StreamMonitor
             try
             {
                 if (string.IsNullOrEmpty(track)) 
-                    throw new ArgumentNullException("UserCollection Property 'Track' Cannot be Null or Empty!");
+                    throw new ArgumentNullException("UserCollection Property 'Track' Cannot be Null or Empty for PrimaryUser!");
                 else
                     Console.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, track);
 
@@ -144,6 +152,82 @@ namespace Postworthy.Tasks.StreamMonitor
 
                 context.Streaming
                     .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == track)
+                    .Select(strm => strm)
+                    .StreamingCallback(strm =>
+                    {
+                        try
+                        {
+                            lastCallBackTime = DateTime.Now;
+                            sc = strm;
+                            if (strm != null)
+                            {
+                                if (strm.Status == TwitterErrorStatus.RequestProcessingException)
+                                {
+                                    var wex = strm.Error as WebException;
+                                    if (wex != null && wex.Status == WebExceptionStatus.ConnectFailure)
+                                    {
+                                        Console.WriteLine("{0}: LinqToTwitter Stream Connection Failure", DateTime.Now);
+                                        hadStreamFailure = true;
+                                        //Will Be Restarted By Processing Queue
+                                    }
+                                }
+                                else if (!string.IsNullOrEmpty(strm.Content))
+                                {
+                                    var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
+                                    if (status != null && !string.IsNullOrEmpty(status.StatusID))
+                                    {
+                                        var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
+                                        lock (queue_lock)
+                                        {
+                                            queue.Add(tweet);
+                                        }
+                                        Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
+                                    }
+                                    else
+                                        Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
+                                }
+                                else
+                                    Console.WriteLine("{0}: Twitter Keep Alive", DateTime.Now);
+                            }
+                            else
+                                throw new ArgumentNullException("strm", "This value should never be null!");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+                        }
+                    }).SingleOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
+            }
+
+            while (sc == null)
+            {
+                if (firstWait)
+                {
+                    Console.WriteLine("{0}: Waiting On Twitter Connection", DateTime.Now);
+                    firstWait = false;
+                }
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            return sc;
+        }
+
+        private static StreamContent StartTwitterUserStream(TwitterContext context)
+        {
+            bool firstWait = true;
+            StreamContent sc = null;
+            hadStreamFailure = false;
+
+            context.Log = Console.Out;
+
+            try
+            {
+                context.UserStream
+                    .Where(s => s.Type == LinqToTwitter.UserStreamType.User)
                     .Select(strm => strm)
                     .StreamingCallback(strm =>
                     {
