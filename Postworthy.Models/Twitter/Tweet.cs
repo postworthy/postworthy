@@ -6,10 +6,13 @@ using Postworthy.Models.Repository;
 using LinqToTwitter;
 using Postworthy.Models.Core;
 using System.Text.RegularExpressions;
+using System.Drawing;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace Postworthy.Models.Twitter
 {
-    public class Tweet : RepositoryEntity, ISimilarText, ITweet
+    public class Tweet : RepositoryEntity, ISimilarText, ISimilarImage, ITweet
     {
         private Status _Status;
 
@@ -109,6 +112,45 @@ namespace Postworthy.Models.Twitter
                 return _WordLetterPairHash;
             }
             protected set { SetNotifyingProperty("WordLetterPairHash", ref _WordLetterPairHash, value); }
+        }
+
+        #endregion
+
+        #region ISimilarImage Members
+
+        private void EncodeImage(Bitmap bmp)
+        {
+            Bitmap result = new Bitmap(16, 16);
+            using (Graphics g = Graphics.FromImage((Image)result))
+            {
+                g.DrawImage(bmp, 0, 0, 16, 16);
+            }
+            bmp.Dispose();
+
+            var stream = new MemoryStream();
+            result.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
+            ImageBase64Encoded = Convert.ToBase64String(stream.ToArray());
+        }
+
+        private Bitmap DecodeImage(string ImageBase64Encoded)
+        {
+            if(_Image == null && !string.IsNullOrEmpty(ImageBase64Encoded))
+                _Image = (Bitmap)Bitmap.FromStream(new MemoryStream(Convert.FromBase64String(ImageBase64Encoded)));
+
+            return _Image;
+        }
+
+        public string ImageBase64Encoded 
+        { 
+            get; set; 
+        }
+
+        private Bitmap _Image;
+        [JsonIgnore]
+        public Bitmap Image
+        {
+            get { return DecodeImage(ImageBase64Encoded); }
+            set { EncodeImage(value); }
         }
 
         #endregion

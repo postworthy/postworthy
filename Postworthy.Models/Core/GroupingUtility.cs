@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Collections;
+using AForge.Imaging;
 
 namespace Postworthy.Models.Core
 {
@@ -16,20 +17,20 @@ namespace Postworthy.Models.Core
         private const decimal GOOD = .46M;
         private const decimal STRONG = .75M;
 
-        private class SimilarObject<T> where T : ISimilarText
+        private class SimilarObject<T> where T : ISimilarText, ISimilarImage
         {
             public T Object { get; set; }
             public T ParentObject { get; set; }
             public decimal SimilarityIndex { get; set; }
         }
 
-        public class SimilarObjects<T> : List<T>, IGrouping<T, T> where T : ISimilarText
+        public class SimilarObjects<T> : List<T>, IGrouping<T, T> where T : ISimilarText, ISimilarImage
         {
             public T Key { get; set; }
         }
 
 
-        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t) where T : ISimilarText
+        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t) where T : ISimilarText, ISimilarImage
         {
             #region Variable Definitions
             var input = t.ToList();
@@ -93,6 +94,20 @@ namespace Postworthy.Models.Core
                                     {
                                         so[j].ParentObject = so[i].Object;
                                         so[j].SimilarityIndex = si;
+                                        break;
+                                    }
+                                }
+                                #endregion
+                                #region Compare Images and Assign Similarity (Pass 2)
+                                if(so[i].Object.Image != null && so[j].Object.Image != null)
+                                {
+                                    var etm = new ExhaustiveTemplateMatching(0);
+                                    TemplateMatch[] matchings = etm.ProcessImage(so[i].Object.Image, so[j].Object.Image);
+                                    if (matchings[0].Similarity > 0.90)
+                                    {
+                                        so[j].ParentObject = so[i].Object;
+                                        so[j].SimilarityIndex = Convert.ToDecimal(matchings[0].Similarity);
+                                        break;
                                     }
                                 }
                                 #endregion

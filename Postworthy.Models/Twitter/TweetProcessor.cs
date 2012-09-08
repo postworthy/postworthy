@@ -10,6 +10,7 @@ using System.IO;
 using Postworthy.Models.Core;
 using System.Configuration;
 using Postworthy.Models.Account;
+using System.Drawing;
 
 namespace Postworthy.Models.Twitter
 {
@@ -112,6 +113,11 @@ namespace Postworthy.Models.Twitter
             if (m is UrlMention || m is MediaMention)
             {
                 tweet.TweetText = tweet.Status.Text.Replace(((dynamic)m).Url, "<a target=\"_blank\" href=\"" + l.Uri + "\">[" + l.Title + "]</a>");
+            }
+
+            if (l.Image != null && tweet.Image == null)
+            {
+                tweet.Image = (Bitmap)Bitmap.FromStream(l.Image.GetWebRequest().GetResponse().GetResponseStream());
             }
         }
 
