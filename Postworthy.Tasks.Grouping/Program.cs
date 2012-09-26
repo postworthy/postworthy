@@ -25,6 +25,8 @@ namespace Postworthy.Tasks.Grouping
             var start = DateTime.Now;
             Console.WriteLine("{0}: Started", start);
 
+            var primaryUserName = UsersCollection.PrimaryUser().TwitterScreenName;
+
             Console.WriteLine("{0}: Deleting old groups from files from storage", DateTime.Now);
             Repository<TweetGroup>.Instance.Delete(TwitterModel.GROUPING);
             /*
