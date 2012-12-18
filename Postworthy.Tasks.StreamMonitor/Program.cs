@@ -33,17 +33,28 @@ namespace Postworthy.Tasks.StreamMonitor
             }
 
             Console.WriteLine("{0}: Started", DateTime.Now);
-            var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
 
             Console.WriteLine("{0}: Initializing IProcessingStep", DateTime.Now);
             GetIProcessingStep().Init(Console.Out);
 
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
 
+            var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
             stream = StartTwitterStream(context);
 
-            var queueTimer = new Timer(60000);
+            StartProcessingQueue(context);
+
+            while (Console.ReadLine() != "exit") ;
+            Console.WriteLine("{0}: Exiting", DateTime.Now);
+            stream.CloseStream();
+        }
+
+        private static void StartProcessingQueue(TwitterContext context)
+        {
+            var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+            var queueTime = int.Parse(ConfigurationManager.AppSettings["QueueTime"] ?? "60000");
+            var queueTimer = new Timer(queueTime);
             queueTimer.Elapsed += new ElapsedEventHandler((x, y) =>
             {
                 queueTimer.Enabled = false;
@@ -67,7 +78,7 @@ namespace Postworthy.Tasks.StreamMonitor
 
                     //Currently there is only one step but there could potentially be multiple user defined steps
                     GetIProcessingStep().ProcessItems(tweets).Wait();
-                    
+
                     tweets = null;
                 }
                 catch (Exception ex)
@@ -90,11 +101,10 @@ namespace Postworthy.Tasks.StreamMonitor
                     queueTimer.Enabled = true;
                 }
             });
-            queueTimer.Start();
 
-            while (Console.ReadLine() != "exit") ;
-            Console.WriteLine("{0}: Exiting", DateTime.Now);
-            stream.CloseStream();
+            Console.WriteLine("{0}: Processing Queue every {1} milliseconds", DateTime.Now, queueTime);
+
+            queueTimer.Start();
         }
 
         private static IProcessingStep GetIProcessingStep()
