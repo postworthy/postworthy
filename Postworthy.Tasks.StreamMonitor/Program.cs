@@ -145,17 +145,22 @@ namespace Postworthy.Tasks.StreamMonitor
             bool firstWait = true;
             StreamContent sc = null;
             hadStreamFailure = false;
+            List<string> trackList = null;
 
             context.Log = Console.Out;
 
-            string track = UsersCollection.PrimaryUser().Track ?? "";
+            string track = ConfigurationManager.AppSettings["Track"] ?? (UsersCollection.PrimaryUser().Track ?? "");
+
+            int minFollowers = int.Parse(ConfigurationManager.AppSettings["MinFollowerCount"] ?? "0");
 
             try
             {
                 if (string.IsNullOrEmpty(track)) 
-                    throw new ArgumentNullException("UserCollection Property 'Track' Cannot be Null or Empty for PrimaryUser!");
+                    throw new ArgumentNullException("AppSetting or UserCollection Property 'Track' Cannot be Null or Empty!");
                 else
                     Console.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, track);
+
+                trackList = track.ToLower().Split(',').ToList();
 
                 context.StreamingUserName = ConfigurationManager.AppSettings["UserName"];
                 context.StreamingPassword = ConfigurationManager.AppSettings["Password"];
@@ -186,12 +191,18 @@ namespace Postworthy.Tasks.StreamMonitor
                                     var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
                                     if (status != null && !string.IsNullOrEmpty(status.StatusID))
                                     {
-                                        var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
-                                        lock (queue_lock)
+                                        if (
+                                            trackList.Any(x => status.Text.ToLower().Contains(x)) && //Looking for exact matches
+                                            status.User.FollowersCount >= minFollowers //Meets the follower cutoff
+                                            ) 
                                         {
-                                            queue.Add(tweet);
+                                            var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
+                                            lock (queue_lock)
+                                            {
+                                                queue.Add(tweet);
+                                            }
+                                            Console.WriteLine("{0}: Added Item to Queue: @{1} said [{2}]", DateTime.Now, tweet.User.Identifier.ScreenName, tweet.TweetText);
                                         }
-                                        Console.WriteLine("{0}: Added Item to Queue: {1}", DateTime.Now, tweet.TweetText);
                                     }
                                     else
                                         Console.WriteLine("{0}: Unhandled Item in Stream: {1}", DateTime.Now, strm.Content);
