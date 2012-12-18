@@ -1,0 +1,181 @@
+﻿@model List<Postworthy.Models.Twitter.ITweet>
+@{
+    Layout = "~/Views/Shared/_MobileLayout.cshtml";
+    ViewBag.Title = ViewBag.Brand ?? "Postworthy";
+    ViewBag.Home = true;
+}
+<style>
+    .profile-image-small
+    {
+        width: 25px;
+        height: 25px;
+        float: left;
+        padding-right: 3px;
+        padding-bottom: 5px;
+    }
+    .tweet-info
+    {
+        height: 25px;
+        float: left;
+        font-size: 10px;
+        padding-bottom: 5px;
+        line-height: 12px;
+    }
+    .btn-tweet
+    {
+        float: right;
+        margin: 5px 0px 5px 0px;
+    }
+    #characterCount
+    {
+        float: right;
+        font-size: 16px;
+        font-weight: bold;
+        color: #ccc;
+        line-height: 28px;
+        padding-right: 4px;
+        margin: 5px 0px 5px 0px;
+    }
+    .box
+    {
+        border-top: 4px solid #DCB;
+    }
+    .box a
+    {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .colFull
+    {
+        width: 100%;
+    }
+    .newest
+    {
+        background-color: #E6F0F5;
+    }
+    .top10
+    {
+        font-family: bold;
+    }
+    .top20
+    {
+        font-weight: bold;
+    }
+    .top30
+    {
+        font-weight: bold;
+    }
+    .postIndex
+    {
+        float: right;
+        font-size: 16px;
+        font-weight: bold;
+        color: #ccc;
+        line-height: 28px;
+        padding-right: 4px;
+    }
+    .update-notification
+    {
+        border-top: 0;
+        width: 100%;
+        padding-bottom: 5px;
+        padding-top: 5px;
+        font-weight: bold;
+    }
+</style>
+<script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
+<script src="@Url.Content("~/Scripts/jquery.signalR-0.5.3.min.js")" type="text/javascript"></script>
+<script src="@Url.Content("~/signalr/hubs")" type="text/javascript"></script>
+<script type="text/javascript">
+    var availableUpdates = new Array();
+    var stream = null;
+
+    function loadUpdates() {
+        $(".update-notification").remove();
+        $(".postIndex").each(function (i, o) {
+            $(o).html("#" + (parseInt($(o).html().replace("#", "")) + availableUpdates.length));
+        });
+        $(availableUpdates).each(function (i, o) {
+            var x = $(o);
+            $(".postIndex", x).html("#" + (availableUpdates.length - i))
+            $("#scrollerItems").prepend(x);
+        });
+        availableUpdates = new Array();
+        updateLayout();
+    }
+
+    function updateNotification() {
+        if ($(".update-notification").length > 0)
+            $(".update-notification").remove();
+
+        $("#scrollerItems").prepend($('<li class="update-notification box alert alert-info">There are ' + availableUpdates.length + ' new updates available! <a class="btn" href="#" onclick="loadUpdates();return false;">Load Updates</a></li>'));
+
+        updateLayout();
+    }
+</script>
+<script type="text/javascript">
+    $('#page').live('pageshow', function (event, data) {
+        stream = $.connection.streamingHub;
+
+        stream.update = function (data) {
+            $(data).each(function (i, o) {
+                availableUpdates.unshift(o);
+            });
+            updateNotification();
+        };
+
+        $.connection.hub.start();
+
+        updateLayout();
+    });
+
+    function afterImagesLoaded() {
+        setupPage();
+    }
+
+    function updateLayout() {
+        try {
+            $('#scroller ul').imagesLoaded(function () {
+                $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
+                imageCount = $(".tweet-image-div img").size();
+                $(".tweet-image-div img").each(function (i, o) {
+                    $("<img/>")
+                        .attr("src", $(o).attr("src"))
+                        .load(function () {
+                            var box = $(o).parent().closest(".box");
+                            var parent = $(o).parent();
+                            if (this.width >= 310) {
+                                parent.css("width", "310px");
+                                parent.css('max-height', '150px').css('height', 'auto');
+                            }
+                            if (--imageCount == 0)
+                                iScrollLoaded();
+                        })
+                        .error(function () {
+                            var parent = $(o).parent();
+                            parent.remove();
+                            if (--imageCount == 0)
+                                iScrollLoaded();
+                        });
+                });
+
+                iScrollLoaded();
+            });
+        } catch (err) {
+
+        }
+    }
+</script>
+<div id="wrapper">
+    <div id="scroller">
+        <div id="pullDown"  style="clear:both;">
+            <span class="pullDownIcon"></span><span class="pullDownLabel">Pull down to refresh...</span>
+        </div>
+        <ul id="scrollerItems">
+            @{ Html.RenderPartial("_ItemsList", Model); }
+        </ul>
+        <div id="pullUp" style="clear:both;">
+            <span class="pullUpIcon"></span><span class="pullUpLabel">Pull up to load mores...</span>
+        </div>
+    </div>
+</div>

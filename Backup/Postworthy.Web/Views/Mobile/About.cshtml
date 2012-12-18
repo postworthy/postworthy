@@ -1,0 +1,22 @@
+﻿@model Postworthy.Models.Account.PostworthyUser
+@{
+    Layout = "~/Views/Shared/_MobileLayout.cshtml";
+    ViewBag.Title = "About Us";
+    ViewBag.About = true;
+}
+
+<fieldset>
+    <legend>About @( "@" + Model.TwitterScreenName)</legend>
+    @if (Model.About == null && Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize)
+    {
+        <p>
+            @Html.ActionLink("Update your about text in the personalization section of the site", "Personalization", new { controller = "Account", action = "Personalization", id = UrlParameter.Optional })
+        </p>
+    }
+    else
+    {
+        <p>
+            @Html.Raw(Model.About ?? "@" + Model.TwitterScreenName + " has not yet updated their about page.")
+        </p>
+    }
+</fieldset>

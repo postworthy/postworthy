@@ -1,0 +1,57 @@
+﻿@model IEnumerable<Postworthy.Models.Twitter.Tweep>
+@{
+    ViewBag.Title = "Friends";
+    ViewBag.Account = true;
+}
+<div class="span12">
+    <fieldset class="span3">
+        <legend>Mutual Friends</legend>
+        <div class="control-group">
+            <div class="controls">
+            @if (Model != null)
+            {
+                foreach (var item in Model.Where(m => m.Type == Postworthy.Models.Twitter.Tweep.TweepType.Mutual))
+                {
+                    <div style="padding: 5px;">
+                        <img style="width:25px;height:25px;" src="@item.User.ProfileImageUrl" alt="@item.User.Name" /> @item.User.Name
+                    </div>
+                }
+            }
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="span3">
+        <legend>Followers</legend>
+        <div class="control-group">
+            <div class="controls">
+            @if (Model != null)
+            {
+                foreach (var item in Model.Where(m => m.Type == Postworthy.Models.Twitter.Tweep.TweepType.Follower))
+                {
+                    <div style="padding: 5px;">
+                        <img style="width:25px;height:25px;" src="@item.User.ProfileImageUrl" alt="@item.User.Name" /> @item.User.Name
+                    </div>
+                }
+            }
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="span3">
+        <legend>Following</legend>
+        <div class="control-group">
+            <div class="controls">
+            @if (Model != null)
+            {
+                foreach (var item in Model.Where(m => m.Type == Postworthy.Models.Twitter.Tweep.TweepType.Following))
+                {
+                    <div style="padding: 5px;">
+                        <img style="width:25px;height:25px;" src="@item.User.ProfileImageUrl" alt="@item.User.Name" /> @item.User.Name
+                    </div>
+                }
+            }
+            </div>
+        </div>
+    </fieldset>
+</div>

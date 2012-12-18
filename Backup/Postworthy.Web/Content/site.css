@@ -1,0 +1,32 @@
+﻿body
+{
+    padding-top: 50px;
+}
+
+.tweet-image-div
+{
+    width:100px;
+    height:100px;
+    overflow:hidden;
+    float:left;
+    margin-right:3px;
+}
+.tweet-image-div img
+{
+    width: 100%;
+}
+
+.tweet-text
+{
+    float:left;
+}
+
+.with-image
+{
+    width: 270px;
+}
+
+.field-validation-error
+{
+    color: #B94A48;
+}
