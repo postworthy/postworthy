@@ -44,7 +44,7 @@ namespace Postworthy.Models.Streaming
 
         public class MessageSettings : ConfigurationSection
         {
-            private static MessageSettings messages = ConfigurationManager.GetSection("Messages") as MessageSettings;
+            private static MessageSettings messages = ConfigurationManager.GetSection("MessageSettings") as MessageSettings;
 
             public static MessageSettings Settings { get { return messages; } }
 
