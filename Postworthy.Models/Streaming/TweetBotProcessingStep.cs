@@ -49,7 +49,7 @@ namespace Postworthy.Models.Streaming
             public static MessageSettings Settings { get { return messages; } }
 
             [ConfigurationProperty("Messages", IsKey = true, IsRequired = true)]
-            public MessageCollection Messages { get; set; }
+            public MessageCollection Messages { get { return (MessageCollection)base["Messages"]; } }
         }
 
         public class MessageCollection : ConfigurationElementCollection
@@ -75,9 +75,9 @@ namespace Postworthy.Models.Streaming
 
         public class Message : ConfigurationElement
         {
-            [ConfigurationProperty("Key", IsKey = true, IsRequired = true)]
+            [ConfigurationProperty("key", IsKey = true, IsRequired = true)]
             public string Key { get { return (string)base["key"]; } set { base["key"] = value; } }
-            [ConfigurationProperty("Value", IsKey = true, IsRequired = true)]
+            [ConfigurationProperty("value", IsKey = true, IsRequired = true)]
             public string Value { get { return (string)base["value"]; } set { base["value"] = value; } }
         }
     }
