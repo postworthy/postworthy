@@ -12,14 +12,14 @@ namespace Postworthy.Models.Streaming
 {
     public class TweetBotProcessingStep : IProcessingStep
     {
-        protected string Message = "";
+        protected string[] Messages = null;
         public void Init(TextWriter log)
         {
-            Message = ConfigurationManager.AppSettings["TweetBotMessage"];
-            if (string.IsNullOrEmpty(Message))
+            Messages = ConfigurationManager.AppSettings.GetValues("TweetBotMessage");
+            if (Messages == null)
                 throw new ArgumentNullException("'TweetBotMessage' must be defined in the appSettings section of the configuration file!");
             else
-                log.WriteLine("{0}: TweetBot will respond with: {1}", DateTime.Now, Message);
+                log.WriteLine("{0}: TweetBot will respond with: {1}", DateTime.Now, string.Join(Environment.NewLine, Messages));
         }
 
         public Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets)
@@ -32,7 +32,8 @@ namespace Postworthy.Models.Streaming
                     {
                         if (t.User.Identifier.ScreenName.ToLower() != user.TwitterScreenName.ToLower())
                         {
-                            TwitterModel.Instance.UpdateStatus("@" + t.User.Identifier.ScreenName + " " + Message, processStatus: false);
+                            string message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+                            TwitterModel.Instance.UpdateStatus(message + "RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
                             repliedTo.Add(t);
                         }
                     }
