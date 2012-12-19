@@ -7,6 +7,7 @@ using Postworthy.Models.Twitter;
 using Postworthy.Models.Account;
 using System.Threading.Tasks;
 using System.IO;
+using System.Collections;
 
 namespace Postworthy.Models.Streaming
 {
@@ -15,7 +16,7 @@ namespace Postworthy.Models.Streaming
         protected string[] Messages = null;
         public void Init(TextWriter log)
         {
-            Messages = ConfigurationManager.AppSettings.GetValues("TweetBotMessage");
+            Messages = Enumerable.Range(0, MessageSettings.Settings.Messages.Count - 1).Select(i => MessageSettings.Settings.Messages[i].Value).ToArray();
             if (Messages == null)
                 throw new ArgumentNullException("'TweetBotMessage' must be defined in the appSettings section of the configuration file!");
             else
@@ -39,6 +40,45 @@ namespace Postworthy.Models.Streaming
                     }
                     return repliedTo;
                 }));
+        }
+
+        public class MessageSettings : ConfigurationSection
+        {
+            private static MessageSettings messages = ConfigurationManager.GetSection("Messages") as MessageSettings;
+
+            public static MessageSettings Settings { get { return messages; } }
+
+            [ConfigurationProperty("Messages", IsKey = true, IsRequired = true)]
+            public MessageCollection Messages { get; set; }
+        }
+
+        public class MessageCollection : ConfigurationElementCollection
+        {
+            protected override ConfigurationElement CreateNewElement()
+            {
+                return new Message();
+            }
+
+            protected override object GetElementKey(ConfigurationElement element)
+            {
+                return ((Message)element).Key;
+            }
+
+            public Message this[int idx]
+            {
+                get
+                {
+                    return (Message)BaseGet(idx);
+                }
+            }
+        }
+
+        public class Message : ConfigurationElement
+        {
+            [ConfigurationProperty("Key", IsKey = true, IsRequired = true)]
+            public string Key { get { return (string)base["key"]; } set { base["key"] = value; } }
+            [ConfigurationProperty("Value", IsKey = true, IsRequired = true)]
+            public string Value { get { return (string)base["value"]; } set { base["value"] = value; } }
         }
     }
 }
