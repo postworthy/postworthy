@@ -18,7 +18,7 @@ namespace Postworthy.Models.Streaming
         {
             Messages = Enumerable.Range(0, MessageSettings.Settings.Messages.Count - 1).Select(i => MessageSettings.Settings.Messages[i].Value).ToArray();
             if (Messages == null)
-                throw new ArgumentNullException("'TweetBotMessage' must be defined in the appSettings section of the configuration file!");
+                throw new ArgumentNullException("'MessageSettings' must be defined in the app.config file!");
             else
                 log.WriteLine("{0}: TweetBot will respond with: {1}", DateTime.Now, string.Join(Environment.NewLine, Messages));
         }
