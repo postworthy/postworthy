@@ -150,7 +150,7 @@ namespace Postworthy.Tasks.StreamMonitor
             context.Log = Console.Out;
 
             string track = ConfigurationManager.AppSettings["Track"] ?? (UsersCollection.PrimaryUser().Track ?? "");
-            string[] ignore = (ConfigurationManager.AppSettings["Ignore"] ?? "").Split(',');
+            string[] ignore = (ConfigurationManager.AppSettings["Ignore"] ?? "").ToLower().Split(',');
 
             int minFollowers = int.Parse(ConfigurationManager.AppSettings["MinFollowerCount"] ?? "0");
 
