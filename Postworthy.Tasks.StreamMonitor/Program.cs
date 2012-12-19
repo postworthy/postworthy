@@ -150,6 +150,7 @@ namespace Postworthy.Tasks.StreamMonitor
             context.Log = Console.Out;
 
             string track = ConfigurationManager.AppSettings["Track"] ?? (UsersCollection.PrimaryUser().Track ?? "");
+            string[] ignore = (ConfigurationManager.AppSettings["Ignore"] ?? "").Split(',');
 
             int minFollowers = int.Parse(ConfigurationManager.AppSettings["MinFollowerCount"] ?? "0");
 
@@ -191,9 +192,11 @@ namespace Postworthy.Tasks.StreamMonitor
                                     var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
                                     if (status != null && !string.IsNullOrEmpty(status.StatusID))
                                     {
+                                        string statusText = status.Text.ToLower();
                                         if (
-                                            trackList.Any(x => status.Text.ToLower().Contains(x)) && //Looking for exact matches
-                                            status.User.FollowersCount >= minFollowers //Meets the follower cutoff
+                                            trackList.Any(x => statusText.Contains(x)) && //Looking for exact matches
+                                            status.User.FollowersCount >= minFollowers && //Meets the follower cutoff
+                                            !ignore.Any(x => statusText.Contains(x)) //Ignore these
                                             ) 
                                         {
                                             var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
