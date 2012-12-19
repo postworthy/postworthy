@@ -13,9 +13,11 @@ namespace Postworthy.Models.Streaming
 {
     public class TweetBotProcessingStep : IProcessingStep
     {
-        protected string[] Messages = null;
+        private List<string> NoTweetList = new List<string>();
+        private string[] Messages = null;
         public void Init(TextWriter log)
         {
+            NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
             Messages = Enumerable.Range(0, MessageSettings.Settings.Messages.Count - 1).Select(i => MessageSettings.Settings.Messages[i].Value).ToArray();
             if (Messages == null)
                 throw new ArgumentNullException("'MessageSettings' must be defined in the app.config file!");
@@ -28,13 +30,20 @@ namespace Postworthy.Models.Streaming
             return Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
                 {
                     var repliedTo = new List<Tweet>();
-                    var user = UsersCollection.PrimaryUser();
                     foreach (var t in tweets)
                     {
-                        if (t.User.Identifier.ScreenName.ToLower() != user.TwitterScreenName.ToLower() && !t.TweetText.ToLower().Contains(user.TwitterScreenName.ToLower()))
+                        string tweetedBy = t.User.Identifier.ScreenName.ToLower();
+                        if (!NoTweetList.Any(x => x == tweetedBy) && !t.TweetText.ToLower().Contains(NoTweetList[0]))
                         {
+                            //Dont want to keep hitting the same person over and over so add them to the ignore list
+                            NoTweetList.Add(tweetedBy);
+                            //If they were mentioned in a tweet they get ignored in the future just in case they reply
+                            NoTweetList.AddRange(t.Status.Entities.UserMentions.Where(um => !string.IsNullOrEmpty(um.ScreenName)).Select(um => um.ScreenName)); 
+                            //Randomly select response from list of possible responses
                             string message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
-                            TwitterModel.Instance.UpdateStatus(message + "RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+                            //Tweet it
+                            TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+
                             repliedTo.Add(t);
                         }
                         System.Threading.Thread.Sleep(120000); //Wait at least 2 minutes between tweets so it doesnt look bot-ish with fast retweets.
