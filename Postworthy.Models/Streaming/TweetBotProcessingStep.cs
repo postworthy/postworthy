@@ -31,7 +31,7 @@ namespace Postworthy.Models.Streaming
                     var user = UsersCollection.PrimaryUser();
                     foreach (var t in tweets)
                     {
-                        if (t.User.Identifier.ScreenName.ToLower() != user.TwitterScreenName.ToLower())
+                        if (t.User.Identifier.ScreenName.ToLower() != user.TwitterScreenName.ToLower() && !t.TweetText.ToLower().Contains(user.TwitterScreenName.ToLower()))
                         {
                             string message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
                             TwitterModel.Instance.UpdateStatus(message + "RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
