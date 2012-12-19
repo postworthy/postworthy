@@ -45,8 +45,10 @@ namespace Postworthy.Models.Streaming
                             TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
 
                             repliedTo.Add(t);
+
+                            //Wait at least 2 minutes between tweets so it doesnt look bot-ish with fast retweets.
+                            System.Threading.Thread.Sleep(120000); 
                         }
-                        System.Threading.Thread.Sleep(120000); //Wait at least 2 minutes between tweets so it doesnt look bot-ish with fast retweets.
                     }
                     return repliedTo;
                 }));
