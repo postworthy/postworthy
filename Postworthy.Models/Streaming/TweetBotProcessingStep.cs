@@ -41,44 +41,44 @@ namespace Postworthy.Models.Streaming
                     return repliedTo;
                 }));
         }
+    }
+    public class MessageSettings : ConfigurationSection
+    {
+        private static MessageSettings messages = ConfigurationManager.GetSection("MessageSettings") as MessageSettings;
 
-        public class MessageSettings : ConfigurationSection
+        public static MessageSettings Settings { get { return messages; } }
+
+        [ConfigurationProperty("Messages", IsKey = true, IsRequired = true)]
+        public MessageCollection Messages { get { return (MessageCollection)base["Messages"]; } }
+    }
+
+    public class MessageCollection : ConfigurationElementCollection
+    {
+        protected override ConfigurationElement CreateNewElement()
         {
-            private static MessageSettings messages = ConfigurationManager.GetSection("MessageSettings") as MessageSettings;
-
-            public static MessageSettings Settings { get { return messages; } }
-
-            [ConfigurationProperty("Messages", IsKey = true, IsRequired = true)]
-            public MessageCollection Messages { get { return (MessageCollection)base["Messages"]; } }
+            return new Message();
         }
 
-        public class MessageCollection : ConfigurationElementCollection
+        protected override object GetElementKey(ConfigurationElement element)
         {
-            protected override ConfigurationElement CreateNewElement()
-            {
-                return new Message();
-            }
-
-            protected override object GetElementKey(ConfigurationElement element)
-            {
-                return ((Message)element).Key;
-            }
-
-            public Message this[int idx]
-            {
-                get
-                {
-                    return (Message)BaseGet(idx);
-                }
-            }
+            return ((Message)element).Key;
         }
 
-        public class Message : ConfigurationElement
+        public Message this[int idx]
         {
-            [ConfigurationProperty("key", IsKey = true, IsRequired = true)]
-            public string Key { get { return (string)base["key"]; } set { base["key"] = value; } }
-            [ConfigurationProperty("value", IsKey = true, IsRequired = true)]
-            public string Value { get { return (string)base["value"]; } set { base["value"] = value; } }
+            get
+            {
+                return (Message)BaseGet(idx);
+            }
         }
     }
+
+    public class Message : ConfigurationElement
+    {
+        [ConfigurationProperty("key", IsKey = true, IsRequired = true)]
+        public string Key { get { return (string)base["key"]; } set { base["key"] = value; } }
+        [ConfigurationProperty("value", IsKey = true, IsRequired = true)]
+        public string Value { get { return (string)base["value"]; } set { base["value"] = value; } }
+    }
 }
+
