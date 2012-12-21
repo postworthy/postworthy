@@ -16,9 +16,11 @@ namespace Postworthy.Models.Streaming
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
         private bool OnlyWithMentions = false;
+        private TextWriter log = null;
 
         public void Init(TextWriter log)
         {
+            this.log = log;
             NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
             Messages = Enumerable.Range(0, TweetBotSettings.Settings.Messages.Count - 1)
                 .Select(i => TweetBotSettings.Settings.Messages[i].Value).ToArray();
@@ -67,7 +69,7 @@ namespace Postworthy.Models.Streaming
                             {
                                 TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
                             }
-                            catch { }
+                            catch(Exception ex) { log.WriteLine("{0}: TweetBot Error: {1}", DateTime.Now, ex.ToString()); }
 
                             repliedTo.Add(t);
 
