@@ -63,7 +63,11 @@ namespace Postworthy.Models.Streaming
                                 message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
 
                             //Tweet it
-                            TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+                            try
+                            {
+                                TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+                            }
+                            catch { }
 
                             repliedTo.Add(t);
 
