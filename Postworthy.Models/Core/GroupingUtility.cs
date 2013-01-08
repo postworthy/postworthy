@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Collections;
 using AForge.Imaging;
+using System.IO;
 
 namespace Postworthy.Models.Core
 {
@@ -22,6 +23,7 @@ namespace Postworthy.Models.Core
             public T Object { get; set; }
             public T ParentObject { get; set; }
             public decimal SimilarityIndex { get; set; }
+            public int PassNumber { get; set; }
         }
 
         public class SimilarObjects<T> : List<T>, IGrouping<T, T> where T : ISimilarText, ISimilarImage
@@ -30,7 +32,7 @@ namespace Postworthy.Models.Core
         }
 
 
-        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t) where T : ISimilarText, ISimilarImage
+        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t, TextWriter log = null) where T : ISimilarText, ISimilarImage
         {
             #region Variable Definitions
             var input = t.ToList();
@@ -50,6 +52,9 @@ namespace Postworthy.Models.Core
             {
                 soLength = input.Count();
 
+                if (log != null) 
+                    log.WriteLine("{0}: [GroupSimilar] Initializing SimilarityObjects", DateTime.Now); 
+
                 #region Initialize SimilarityObjects
                 so = new SimilarObject<T>[soLength];
 
@@ -61,7 +66,10 @@ namespace Postworthy.Models.Core
                 }
                 #endregion
 
-                #region Pass 1
+                if (log != null) 
+                    log.WriteLine("{0}: [GroupSimilar] Comparing {1} items", DateTime.Now, soLength);
+
+                #region Compare Objects
                 for (int i = 0; i < soLength; i++)
                 {
                     if (so[i].ParentObject == null) // Only Tweets that are not already assigned to a parent should be processed
@@ -94,6 +102,7 @@ namespace Postworthy.Models.Core
                                     {
                                         so[j].ParentObject = so[i].Object;
                                         so[j].SimilarityIndex = si;
+                                        so[j].PassNumber = 1;
                                         break;
                                     }
                                 }
@@ -107,6 +116,7 @@ namespace Postworthy.Models.Core
                                     {
                                         so[j].ParentObject = so[i].Object;
                                         so[j].SimilarityIndex = Convert.ToDecimal(matchings[0].Similarity);
+                                        so[j].PassNumber = 2;
                                         break;
                                     }
                                 }
@@ -116,10 +126,23 @@ namespace Postworthy.Models.Core
                     }
                 }
                 #endregion
+
+                if (log != null)
+                {
+                    log.WriteLine("{0}: [GroupSimilar] Compared {1} items and found {2} with similar text and {3} with similar images", 
+                        DateTime.Now, 
+                        soLength, 
+                        so.Count(x=>x.PassNumber == 1),
+                        so.Count(x => x.PassNumber == 2));
+                }
             }
             #endregion
 
             #region Create Groups
+            
+            if (log != null)
+                log.WriteLine("{0}: [GroupSimilar] Creating Groups", DateTime.Now, soLength);
+
             if (so != null && soLength > 0)
             {
                 for (int i = 0; i < soLength; i++)
@@ -140,6 +163,9 @@ namespace Postworthy.Models.Core
                 }
             }
             #endregion
+
+            if (log != null)
+                log.WriteLine("{0}: [GroupSimilar] Returning Groups", DateTime.Now, soLength);
 
             return groups;
         }

@@ -57,12 +57,14 @@ namespace Postworthy.Tasks.Grouping
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
                 .SelectMany(x => Repository<Tweet>.Instance.Query(x + TwitterModel.TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
-                //Order all tweets based on rank
-                .OrderByDescending(t => t.TweetRank);
+                //Order all tweets based on rank (TweetRank takes into acount many important factors, i.e. - time, mentions, hotness, ect.)
+                .OrderByDescending(t => t.TweetRank)
+                //Just to make sure we are not trying to group a very very large number of items
+                .Take(1000);
 
             var groups = tweets
                 //Group similar tweets (the ordering is done first so that the earliest tweet gets credit)
-                .GroupSimilar()
+                .GroupSimilar(Console.Out)
                 //Convert groups into something we can display
                 .Select(g => new TweetGroup(g) { RepositoryKey = TwitterModel.GROUPING })
                 //For the sake of space we only want to store groups that have more than 1 item
