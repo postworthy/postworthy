@@ -136,7 +136,7 @@ namespace Postworthy.Models.Twitter
             return returnTweets.OrderByTweetRank().ToList();
         }
 
-        private List<ITweet> GetTweets(string screenname, bool includeRelevantScreenNames, List<ulong> excludeStatisIDs = null)
+        private List<ITweet> GetTweets(string screenname, bool includeRelevantScreenNames, List<ulong> excludeStatusIDs = null)
         {
             List<string> screenNames = null;
 
@@ -151,7 +151,7 @@ namespace Postworthy.Models.Twitter
 
             Expression<Func<Tweet, bool>> where = t =>
                 //If there are any IDs we want to filter out
-                (excludeStatisIDs == null || !excludeStatisIDs.Contains(t.StatusID)) &&
+                (excludeStatusIDs == null || !excludeStatusIDs.Contains(t.StatusID)) &&
                 //Should everything be displayed or do you only want content
                 (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) &&
                 //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)

@@ -9,7 +9,7 @@
     int.TryParse(Request.QueryString["page"], out page);
     page = page > -1 ? page : 0;
 }
-<style>
+<style type="text/css">
     .profile-image-tiny
     {
         width: 20px;
@@ -51,11 +51,6 @@
     .box
     {
         border-top: 4px solid #DCB;
-    }
-    .adbox
-    {
-        margin-left: 101px;
-        border: none;
     }
     .box a
     {
@@ -121,21 +116,97 @@
         position: absolute;
         right: 0px;
     }
-    .col1
-    {
-        width: 225px;
+    
+    @@media (max-width: 767px) {
+        .col1, .col2, .col3, .col4, .listViewOverride
+        {
+            width: 100%;
+        }
     }
-    .col2
-    {
-        width: 460px;
+    @@media (min-width: 768px) and (max-width: 979px) {
+        .adbox
+        {
+            margin-left: -2px;
+            border: none;
+        }
+        .col1
+        {
+            width: 225px;
+        }
+        .col2
+        {
+            width: 460px;
+        }
+        .col3
+        {
+            width: 695px;
+        }
+        .col4
+        {
+            width: 695px;
+        }
+       	.listViewOverride
+	    {
+		    width: 460px;
+	    }
     }
-    .col3
-    {
-        width: 695px;
+    @@media (min-width: 980px) and (max-width:1199px){
+        .adbox
+        {
+            margin-left: 101px;
+            border: none;
+        }
+        .col1
+        {
+            width: 225px;
+        }
+        .col2
+        {
+            width: 460px;
+        }
+        .col3
+        {
+            width: 695px;
+        }
+        .col4
+        {
+            width: 930px;
+        }
+       	.listViewOverride
+	    {
+		    width: 695px;
+	    }
     }
-    .col4
-    {
-        width: 930px;
+    @@media(min-width:1200px){
+        .adbox
+        {
+            margin-left: 218px;
+            border: none;
+        }
+        .col1
+        {
+            width: 225px;
+        }
+        .col2
+        {
+            width: 460px;
+        }
+        .col3
+        {
+            width: 930px;
+        }
+        .col4
+        {
+            width: 1165px;
+        }
+       	.listViewOverride
+	    {
+		    width: 930px;
+	    }
+        .container 
+        {
+            width: 1175px;
+        }
     }
     .newest
     {
@@ -162,10 +233,6 @@
         line-height: 28px;
         padding-right: 4px;
     }
-	.listViewOverride
-	{
-		width: 695px;
-	}
 	.pagination a 
     { 
         padding: 0 10px 0 10px;
@@ -231,6 +298,12 @@
 	$(function () {
 		$('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
 
+		$(window).resize(function () {
+		    if ($(document).width() < 768) updateLayout('list-only');
+		    else updateLayout('grid');
+		    
+		});
+
 		afterImagesLoad();
 	});
 
@@ -269,7 +342,7 @@
     }
 
 	var currentLayout = "@(Request.QueryString["layout"])";
-	function updateLayout(layout) {
+    function updateLayout(layout) {
 		if (layout) {
 			currentLayout = layout;
 		}
@@ -288,6 +361,17 @@
 					}
 				});
 				break;
+		    case "list-only":
+		        $(".listview").removeClass("active");
+		        $(".gridview").removeClass("active");
+		        $("#container .post").addClass("listViewOverride");
+		        $("#container").masonry("reload");
+				
+		        $(".pagination a").each(function (i, o) {
+		            if ($(o).attr("href"))
+		                $(o).attr("href", $(o).attr("href").replace("&layout=list", ""));
+		        });
+                break;
 			default:
 				$(".gridview").addClass("active");
 				$(".listview").removeClass("active");
@@ -301,7 +385,7 @@
 		}
 	}
 </script>
-<div id="container">
+<div id="container" style="overflow:hidden;">
     <div>
         @if (Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.PrimaryUser().CanAuthorize)
         {
@@ -346,7 +430,7 @@
             {
             <div class="box col3">
                 <div style="padding: 5px 5px 5px 5px;">
-                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 685px; border: 0;"></textarea>
+                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 100%; border: 0;"></textarea>
                     <button id="btnTweet" type="submit" class="btn btn-primary btn-tweet" disabled>
                         <i class="icon-comment icon-white"></i>Tweet
                     </button>
@@ -387,7 +471,7 @@
 
             if (UserFilters.Count() > 1)
             {
-            <div class="box col1 filters">
+            <div class="box col1 filters hidden-phone">
 				<div style="border-bottom: 4px solid #DCB; padding-top: 5px; padding-bottom: 5px;height:32px;">
 					<div class="addthis_toolbox addthis_default_style addthis_32x32_style">
                         <a class="addthis_button_preferred_1"></a>

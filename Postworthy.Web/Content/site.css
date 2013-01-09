@@ -3,6 +3,11 @@
     padding-top: 50px;
 }
 
+.navbar-fixed-top 
+{
+    position: fixed;
+}
+
 .tweet-image-div
 {
     width:100px;
