@@ -89,12 +89,11 @@ namespace Postworthy.Models.Twitter
                 returnTweets = cachedResponse;
             else
             {
-                var sharedResult = Repository<TweetGroup>.Instance.Query(GROUPING);
+                var sharedResult = Repository<TweetGroup>.Instance.Query(GROUPING, (Repository<TweetGroup>.Limit)0);
                 //Check to see if we have a recent grouping available (by recent it must be within the last 30 minutes)
                 //This is what the Grouping task does for us in the background
-                if (sharedResult != null &&
-                    sharedResult.Count() > 0 &&
-                    sharedResult[0].CreatedOn.AddMinutes(30) > DateTime.Now)
+                var useShared = sharedResult != null && sharedResult.Count() > 0 && sharedResult[0].CreatedOn.AddMinutes(30) > DateTime.Now;
+                if (useShared)
                 {
                     lock (tweets_lock)
                     {

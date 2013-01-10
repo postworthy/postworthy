@@ -183,15 +183,6 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\jquery.unobtrusive-ajax.min.js" />
-    <Content Include="Web.config">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
     <Content Include="Content\site.css" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Account\LogOn.cshtml" />
@@ -199,6 +190,8 @@
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <None Include="Content\images\pw2.svg" />
+    <Content Include="Web.config" />
+    <Content Include="Example.UsersCollection.config" />
     <None Include="Example.Web.config" />
     <None Include="Views\Home\_Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
