@@ -2,7 +2,7 @@
 {
     var user = Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name);
     <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">
-        <i class="icon-user @((ViewBag.Account == true) ? "icon-white" : "")"></i> @User.Identity.Name
+        <i class="icon-user @((ViewBag.Account == true) ? "icon-white" : "")"></i> <span class="hidden-phone">@User.Identity.Name</span>
         <b class="caret"></b></a>
         <ul class="dropdown-menu">
             @if (user.IsPrimaryUser)

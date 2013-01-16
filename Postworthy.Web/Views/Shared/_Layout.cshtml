@@ -18,8 +18,8 @@
             <div class="container">
                 <a class="brand" href="@Url.Content("~/")">@(ViewBag.Brand ?? "Postworthy")</a>
                 <ul class="nav">
-                    <li class="@((ViewBag.Home == true) ? "active" : "")"><a href="@Url.Content("~/")"><i class="icon-home @((ViewBag.Home == true) ? "icon-white" : "")"></i> Home</a></li>
-                    <li class="@((ViewBag.About == true)? "active" : "")"><a href="@(Url.Content("~/home/about"))"><i class="icon-info-sign @((ViewBag.About == true) ? "icon-white" : "")"></i> About</a></li>
+                    <li class="@((ViewBag.Home == true) ? "active" : "")"><a href="@Url.Content("~/")"><i class="icon-home @((ViewBag.Home == true) ? "icon-white" : "")"></i><span class="hidden-phone"> Home</span></a></li>
+                    <li class="@((ViewBag.About == true)? "active" : "")"><a href="@(Url.Content("~/home/about"))"><i class="icon-info-sign @((ViewBag.About == true) ? "icon-white" : "")"></i><span class="hidden-phone"> About</span></a></li>
                 </ul>
                 <ul class="nav pull-right">
                     @Html.Partial("_LogOnPartial")

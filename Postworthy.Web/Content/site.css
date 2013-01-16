@@ -8,6 +8,21 @@
     position: fixed;
 }
 
+@media (max-width: 767px) {
+    .navbar-fixed-top 
+    {
+        margin: 0;
+        padding: 0;
+    }
+    .pagination {
+        height: auto;
+    }
+    body {
+        padding-right: 0;
+        padding-left: 0;
+    }
+}
+
 .tweet-image-div
 {
     width:100px;
