@@ -29,7 +29,7 @@ namespace Postworthy.Models.Twitter
         public const string TRACKER = "PostworthyTracker";
         public const string TWEETS = "_tweets";
         public const string FRIENDS = "_friends";
-        protected const string GROUPING_RESULTS = "_GROUPING_RESULTS";
+        private const string GROUPING_RESULTS = "_GROUPING_RESULTS";
 
         public static string GROUPING 
         {
