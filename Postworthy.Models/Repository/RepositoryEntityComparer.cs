@@ -9,16 +9,15 @@ namespace Postworthy.Models.Repository
     {
         public bool Equals(RepositoryEntity re1, RepositoryEntity re2)
         {
-            if (re1.UniqueKey == re2.UniqueKey)
+            if (re1.IsEqual(re2))
                 return true;
             else
                 return false;
         }
 
-
         public int GetHashCode(RepositoryEntity re)
         {
-            return re.UniqueKey.GetHashCode();
+            return re.GetHashCode();
         }
     }
 }
