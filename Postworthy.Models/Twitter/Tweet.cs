@@ -65,10 +65,25 @@ namespace Postworthy.Models.Twitter
             if (other is Tweet)
             {
                 var otherTweet = other as Tweet;
-                return this.StatusID == otherTweet.StatusID;
+                if (this.StatusID == otherTweet.StatusID)
+                    return true;
+                /*
+                 * Here we want to compate the text as fast as possible
+                 * to do this we compare the precomputed letter hashes
+                 * if we mis we return as soon as possible.
+                 */
+                else if (this.WordLetterPairHash.Count == otherTweet.WordLetterPairHash.Count)
+                {
+                    for (int i = 0; i < this.WordLetterPairHash.Count; i++)
+                    {
+                        if (this.WordLetterPairHash[i] != otherTweet.WordLetterPairHash[i])
+                            return false;
+                    }
+                    return true;
+                }
             }
-            else
-                return false;
+            
+            return false;
         }
 
         public override string UniqueKey
