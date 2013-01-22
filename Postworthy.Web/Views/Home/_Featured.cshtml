@@ -1,0 +1,57 @@
+﻿@model IEnumerable<Postworthy.Models.Twitter.ITweet>
+@{
+    IEnumerable<Postworthy.Models.Twitter.ITweet> tweets = Model;
+    int featuredIndex = 0;
+}
+<style type="text/css">
+    @@media (max-width: 767px) {
+    }
+    @@media (min-width: 768px) {
+    }
+    @@media (min-width: 980px) {
+        .Featured1 {
+            width: 460px;
+        }
+    }
+    @@media (min-width:1200px) {
+        .Featured2 {
+            width: 460px;
+        }
+        /*.Featured3 {
+            width: 460px;
+        }*/
+    }
+</style>
+@if(tweets.Count() > 0)
+{
+    foreach(var tweet in tweets){
+        featuredIndex++;
+        Postworthy.Models.Core.UriEx randomImage = tweet.Links.Where(l => l.Image != null).OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+    
+    <!--STATUS_ID: @tweet.StatusID -->
+    <div class="@tweet.User.Identifier.ID box col1 Featured@(featuredIndex)">
+        <div style="padding: 5px;">
+            <a href="@tweet.User.Url" title="@tweet.User.Identifier.ScreenName" target="_blank">
+                <img alt="@tweet.User.Identifier.ScreenName" title="@tweet.User.Identifier.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
+            </a>
+            <div class="tweet-info">
+                Created @tweet.TweetTime
+                <br />
+                <i class="icon-retweet" title="Shares"></i>@Html.Raw((tweet.RetweetCount > 0) ? "&nbsp;<strong>" + tweet.RetweetCount + "</strong>" : "Not yet shared")
+                [<a title="Retweet This" href="@(Url.Content("~/home/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
+            </div>
+            <span class="postIndex">F@(featuredIndex)</span>
+            <hr style="clear: both; margin: 0;" />
+            @if (randomImage != null)
+            {
+                <div class="tweet-image-div">
+                    <img src="@randomImage.Image.ToString()" />
+                </div>
+            }
+        
+            @Html.Raw(tweet.TweetText)
+        </div>
+    </div>
+    }
+    <div class="box col4" style="border:none;"></div>
+}

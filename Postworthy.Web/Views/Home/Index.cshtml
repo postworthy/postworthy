@@ -177,7 +177,7 @@
 		    width: 695px;
 	    }
     }
-    @@media(min-width:1200px){
+    @@media (min-width:1200px){
         .adbox
         {
             margin-left: 218px;
@@ -450,6 +450,12 @@
 			var ranked = Model
 				.Take(1000)
 				.Distinct();
+            var featured = ranked
+                .Where(x => x.User.Identifier.ScreenName.ToLower() == "mashable")
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(3);
+            //Postworthy.Models.Account.UsersCollection.PrimaryUser().TwitterScreenName.ToLower()
+            ranked = ranked.Except(featured);
             var top10 = ranked.Take(10);
             var top20 = ranked.Skip(10).Take(10);
             var top30 = ranked.Skip(20).Take(10);
@@ -469,6 +475,8 @@
                 .OrderByDescending(x=>x.HotTweets)
                 .ThenBy(x=>x.UserName);
 
+            Html.RenderPartial("_Featured", featured);
+            
             if (UserFilters.Count() > 1)
             {
             <div class="box col1 filters hidden-phone">
