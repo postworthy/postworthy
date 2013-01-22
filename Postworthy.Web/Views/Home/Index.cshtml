@@ -452,6 +452,7 @@
 				.Distinct();
             var featured = ranked
                 .Where(x => x.User.Identifier.ScreenName.ToLower() == Postworthy.Models.Account.UsersCollection.PrimaryUser().TwitterScreenName.ToLower())
+                .ToList()
                 .OrderByDescending(x => x.CreatedAt)
                 .Take(3);
             
