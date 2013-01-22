@@ -40,7 +40,7 @@
                 <i class="icon-retweet" title="Shares"></i>@Html.Raw((tweet.RetweetCount > 0) ? "&nbsp;<strong>" + tweet.RetweetCount + "</strong>" : "Not yet shared")
                 [<a title="Retweet This" href="@(Url.Content("~/home/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
             </div>
-            <span class="postIndex">F@(featuredIndex)</span>
+            <span class="postIndex"></span>
             <hr style="clear: both; margin: 0;" />
             @if (randomImage != null)
             {

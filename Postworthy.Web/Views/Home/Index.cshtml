@@ -451,10 +451,10 @@
 				.Take(1000)
 				.Distinct();
             var featured = ranked
-                .Where(x => x.User.Identifier.ScreenName.ToLower() == "mashable")
+                .Where(x => x.User.Identifier.ScreenName.ToLower() == Postworthy.Models.Account.UsersCollection.PrimaryUser().TwitterScreenName.ToLower())
                 .OrderByDescending(x => x.CreatedAt)
                 .Take(3);
-            //Postworthy.Models.Account.UsersCollection.PrimaryUser().TwitterScreenName.ToLower()
+            
             ranked = ranked.Except(featured);
             var top10 = ranked.Take(10);
             var top20 = ranked.Skip(10).Take(10);
