@@ -194,6 +194,7 @@
     <Content Include="Example.UsersCollection.config" />
     <None Include="Example.Web.config" />
     <Content Include="Views\Home\_Featured.cshtml" />
+    <None Include="Properties\PublishProfiles\Strongestman.pubxml" />
     <None Include="Views\Home\_Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_LogOnPartial.cshtml" />
