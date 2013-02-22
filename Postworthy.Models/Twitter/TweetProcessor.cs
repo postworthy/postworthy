@@ -117,7 +117,11 @@ namespace Postworthy.Models.Twitter
 
             if (l.Image != null && tweet.Image == null)
             {
-                tweet.Image = (Bitmap)Bitmap.FromStream(l.Image.GetWebRequest().GetResponse().GetResponseStream());
+                try
+                {
+                    tweet.Image = (Bitmap)Bitmap.FromStream(l.Image.GetWebRequest().GetResponse().GetResponseStream());
+                }
+                catch { }
             }
         }
 
