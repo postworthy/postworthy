@@ -119,7 +119,21 @@ namespace Postworthy.Models.Twitter
             {
                 try
                 {
-                    tweet.Image = (Bitmap)Bitmap.FromStream(l.Image.GetWebRequest().GetResponse().GetResponseStream());
+                    using (var response = l.Image.GetWebRequest().GetResponse())
+                    {
+                        using (var responseStream = response.GetResponseStream())
+                        {
+                            if (responseStream != null && responseStream.CanRead)
+                            {
+                                var imgData = new byte[responseStream.Length];
+                                responseStream.Read(imgData, 0, imgData.Length);
+                                using (var memstrm = new MemoryStream(imgData))
+                                {
+                                    tweet.Image = (Bitmap)Bitmap.FromStream(memstrm);
+                                }
+                            }
+                        }
+                    }
                 }
                 catch { }
             }
