@@ -34,3 +34,6 @@ Postworthy.Web/Web.Release.config
 Postworthy.Web/UsersCollection.config
 Postworthy.Web.Publish.xml
 Postworthy.Web/Postworthy.Publish.xml
+*.pubxml
+*.pubxml.user
+PublishProfiles
