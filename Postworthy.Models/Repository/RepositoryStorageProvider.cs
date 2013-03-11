@@ -16,7 +16,16 @@ namespace Postworthy.Models.Repository
 
         protected string Serialize(object obj)
         {
-            return JsonConvert.SerializeObject(obj);
+            try
+            {
+                return JsonConvert.SerializeObject(obj);
+            }
+            catch(System.ArgumentException ex) 
+            {
+                if (ex.Message == "dateTime is invalid and Kind is Local")
+                    return "";
+                else throw;
+            }
         }
         protected RET Deserialize<RET>(string json)
         {
