@@ -24,6 +24,8 @@ namespace Postworthy.Tasks.StreamMonitor
         private static bool hadStreamFailure = false;
         private static IProcessingStep processingStep = null;
 
+        private static Timer queueTimer = null;
+
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -54,7 +56,9 @@ namespace Postworthy.Tasks.StreamMonitor
         {
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
             var queueTime = int.Parse(ConfigurationManager.AppSettings["QueueTime"] ?? "60000");
-            var queueTimer = new Timer(queueTime);
+            
+            queueTimer = new Timer(queueTime);
+
             queueTimer.Elapsed += new ElapsedEventHandler((x, y) =>
             {
                 queueTimer.Enabled = false;
@@ -87,18 +91,25 @@ namespace Postworthy.Tasks.StreamMonitor
                 }
                 finally
                 {
-                    Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
-                    if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled or was Closed
+                    try
                     {
-                        if (hadStreamFailure)
-                            Console.WriteLine("{0}: LinqToTwitter Stream Was Closed Attempting to Reconnect", DateTime.Now);
-                        else
-                            Console.WriteLine("{0}: LinqToTwitter Stream Stalled Attempting to Restart It", DateTime.Now);
+                        if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled or was Closed
+                        {
+                            if (hadStreamFailure)
+                                Console.WriteLine("{0}: LinqToTwitter Stream Was Closed Attempting to Reconnect", DateTime.Now);
+                            else
+                                Console.WriteLine("{0}: LinqToTwitter Stream Stalled Attempting to Restart It", DateTime.Now);
 
-                        context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
-                        stream = StartTwitterStream(context);
+                            context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
+                            stream = StartTwitterStream(context);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
                     }
                     queueTimer.Enabled = true;
+                    Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
                 }
             });
 

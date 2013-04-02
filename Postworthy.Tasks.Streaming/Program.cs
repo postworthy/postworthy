@@ -27,6 +27,7 @@ namespace Postworthy.Tasks.Streaming
         private static StreamContent stream = null;
         private static DateTime lastCallBackTime = DateTime.Now;
         private static bool hadStreamFailure = false;
+        private static Timer queueTimer = null;
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -99,7 +100,7 @@ namespace Postworthy.Tasks.Streaming
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
             stream = StartTwitterStream(context);
 
-            var queueTimer = new Timer(60000);
+            queueTimer = new Timer(60000);
             queueTimer.Elapsed += new ElapsedEventHandler((x, y) =>
                 {
                     queueTimer.Enabled = false;
@@ -165,18 +166,25 @@ namespace Postworthy.Tasks.Streaming
                     }
                     finally
                     {
-                        Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
-                        if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled or was Closed
+                        try
                         {
-                            if (hadStreamFailure)
-                                Console.WriteLine("{0}: LinqToTwitter UserStream Was Closed Attempting to Reconnect", DateTime.Now);
-                            else
-                                Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
-                            
-                            context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
-                            stream = StartTwitterStream(context);
+                            if (Math.Abs((lastCallBackTime - DateTime.Now).TotalSeconds) > 90) //The Stream Stalled or was Closed
+                            {
+                                if (hadStreamFailure)
+                                    Console.WriteLine("{0}: LinqToTwitter UserStream Was Closed Attempting to Reconnect", DateTime.Now);
+                                else
+                                    Console.WriteLine("{0}: LinqToTwitter UserStream Stalled Attempting to Restart It", DateTime.Now);
+
+                                context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
+                                stream = StartTwitterStream(context);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("{0}: Error: {1}", DateTime.Now, ex.ToString());
                         }
                         queueTimer.Enabled = true;
+                        Console.WriteLine("{0}: Completed Processing Queue", DateTime.Now);
                     }
                 });
             queueTimer.Start();
