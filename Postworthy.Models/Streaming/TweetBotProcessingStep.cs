@@ -28,7 +28,8 @@ namespace Postworthy.Models.Streaming
                 TweetBotSettings.Settings.Filters["OnlyWithMentions"].Value : 
                 false;
             if (Messages == null)
-                throw new ArgumentNullException("'TweetBotSettings' section must be defined in the app.config file!");
+                log.WriteLine("{0}: 'TweetBotSettings' configuration section is missing Messages. No responses will be sent.", 
+                    DateTime.Now);
             else
             {
                 log.WriteLine("{0}: TweetBot will respond with: {1}", 
@@ -41,47 +42,89 @@ namespace Postworthy.Models.Streaming
         {
             return Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
                 {
-                    var repliedTo = new List<Tweet>();
-                    foreach (var t in tweets)
-                    {
-                        string tweetedBy = t.User.Identifier.ScreenName.ToLower();
-                        if (!NoTweetList.Any(x => x == tweetedBy) && //Don't bug people with constant retweets
-                            !t.TweetText.ToLower().Contains(NoTweetList[0]) && //Don't bug them even if they are mentioned in the tweet
-                            (!OnlyWithMentions || t.Status.Entities.UserMentions.Count > 0) //OPTIONAL: Only respond to tweets that mention someone
-                            ) 
-                        {
-                            //Dont want to keep hitting the same person over and over so add them to the ignore list
-                            NoTweetList.Add(tweetedBy);
-                            //If they were mentioned in a tweet they get ignored in the future just in case they reply
-                            NoTweetList.AddRange(t.Status.Entities.UserMentions.Where(um => !string.IsNullOrEmpty(um.ScreenName)).Select(um => um.ScreenName)); 
-                            
-                            string message = "";
-                            if(t.User.FollowersCount > 9999)
-                                //TODO: It would be very cool to have the code branch here for custom tweets to popular twitter accounts
-                                //IDEA: Maybe have it text you for a response
-                                message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
-                            else
-                                //Randomly select response from list of possible responses
-                                message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+                    IEnumerable<Tweet> respondedTo = null;
+                    if(Messages != null)
+                         respondedTo = RespondToTweets(tweets);
 
-                            //Tweet it
-                            try
-                            {
-                                TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
-                            }
-                            catch(Exception ex) { log.WriteLine("{0}: TweetBot Error: {1}", DateTime.Now, ex.ToString()); }
+                    IEnumerable<Tweep> newTweeps = FindTweepsToFollow(tweets);
 
-                            repliedTo.Add(t);
+                    log.WriteLine("{0}: Sending friends requests to: {1}",
+                        DateTime.Now,
+                        string.Join(", ", newTweeps.Select(x => x.User.Identifier.ScreenName)));
 
-                            //Wait at least 1 minute between tweets so it doesnt look bot-ish with fast retweets
-                            //Add some extra random timing somewhere between 0-2 minutes
-                            //The shortest wait will be 1 minute the longest will be 3
-                            int randomTime = 60000 + (1000 * Enumerable.Range(0, 120).OrderBy(x => Guid.NewGuid()).FirstOrDefault());
-                            System.Threading.Thread.Sleep(randomTime); 
-                        }
-                    }
-                    return repliedTo;
+                    return tweets;
                 }));
+        }
+
+        private IEnumerable<Tweep> FindTweepsToFollow(IEnumerable<Tweet> tweets)
+        {
+            var tweet_tweep_pairs = tweets
+                .Select(x => new { tweet = x, tweep = x.Tweep(), weight = 0.0 })
+                .Where(x => x.tweep.Clout() > GetMinClout());
+
+            tweet_tweep_pairs = tweet_tweep_pairs.Select(x =>
+                new
+                {
+                    tweet = x.tweet,
+                    tweep = x.tweep,
+                    weight = x.tweet.RetweetCount / (1.0 + x.tweep.Clout())
+                }).Where(x => x.weight >= GetMinWeight());
+
+            return null;
+        }
+
+        private int GetMinClout()
+        {
+            throw new NotImplementedException("This should return a value based on current followers. Any new friends must have more clout than current friends. We only move up...");
+        }
+
+        private double GetMinWeight()
+        {
+            throw new NotImplementedException("This should return a value based on current followers. Any new friends must have a similar retweet rate as existing friends");
+        }
+
+        private IEnumerable<Tweet> RespondToTweets(IEnumerable<Tweet> tweets)
+        {
+            var repliedTo = new List<Tweet>();
+            foreach (var t in tweets)
+            {
+                string tweetedBy = t.User.Identifier.ScreenName.ToLower();
+                if (!NoTweetList.Any(x => x == tweetedBy) && //Don't bug people with constant retweets
+                    !t.TweetText.ToLower().Contains(NoTweetList[0]) && //Don't bug them even if they are mentioned in the tweet
+                    (!OnlyWithMentions || t.Status.Entities.UserMentions.Count > 0) //OPTIONAL: Only respond to tweets that mention someone
+                    )
+                {
+                    //Dont want to keep hitting the same person over and over so add them to the ignore list
+                    NoTweetList.Add(tweetedBy);
+                    //If they were mentioned in a tweet they get ignored in the future just in case they reply
+                    NoTweetList.AddRange(t.Status.Entities.UserMentions.Where(um => !string.IsNullOrEmpty(um.ScreenName)).Select(um => um.ScreenName));
+
+                    string message = "";
+                    if (t.User.FollowersCount > 9999)
+                        //TODO: It would be very cool to have the code branch here for custom tweets to popular twitter accounts
+                        //IDEA: Maybe have it text you for a response
+                        message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+                    else
+                        //Randomly select response from list of possible responses
+                        message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+
+                    //Tweet it
+                    try
+                    {
+                        TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+                    }
+                    catch (Exception ex) { log.WriteLine("{0}: TweetBot Error: {1}", DateTime.Now, ex.ToString()); }
+
+                    repliedTo.Add(t);
+
+                    //Wait at least 1 minute between tweets so it doesnt look bot-ish with fast retweets
+                    //Add some extra random timing somewhere between 0-2 minutes
+                    //The shortest wait will be 1 minute the longest will be 3
+                    int randomTime = 60000 + (1000 * Enumerable.Range(0, 120).OrderBy(x => Guid.NewGuid()).FirstOrDefault());
+                    System.Threading.Thread.Sleep(randomTime);
+                }
+            }
+            return repliedTo;
         }
     }
 
