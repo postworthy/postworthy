@@ -9,7 +9,6 @@ using System.Configuration;
 using System.Timers;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Streaming;
-using Postworthy.Tasks.Streaming.Models;
 using SignalR.Client.Hubs;
 using System.Net;
 
@@ -92,7 +91,7 @@ namespace Postworthy.Tasks.Streaming
             }
 
             Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, screenname);
-            Friends.Update();
+            Friends.UpdateForPrimaryUser();
             Console.WriteLine("{0}: Finished Getting Friends for {1}", DateTime.Now, screenname);
 
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);

@@ -14,5 +14,10 @@ namespace Postworthy.Models.Twitter
                 .OrderByDescending(x => x.WeightedTweetRank)
                 .Select(x => x.Tweet);
         }
+
+        public static Tweep Tweep(this ITweet tweet)
+        {
+            return new Tweep(tweet.User, Twitter.Tweep.TweepType.None);
+        }
     }
 }

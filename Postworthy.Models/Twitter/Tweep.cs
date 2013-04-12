@@ -13,7 +13,8 @@ namespace Postworthy.Models.Twitter
         {
             Mutual,
             Follower,
-            Following
+            Following,
+            None
         }
 
         private User _User;
@@ -33,6 +34,7 @@ namespace Postworthy.Models.Twitter
                 Type = type;
         }
 
+        #region RepositoryEntity Members
         public override bool IsEqual(RepositoryEntity other)
         {
             if (other is Tweep)
@@ -50,6 +52,26 @@ namespace Postworthy.Models.Twitter
             {
                 return "tweep_" + this.User.UserID;
             }
+        }
+        #endregion
+
+        private List<Tweep> _Followers = null;
+        public List<Tweep> Followers
+        {
+            get
+            {
+                if (_Followers == null)
+                    _Followers = Friends.GetFollowers(User.Identifier.ScreenName) ?? new List<Tweep>();
+
+                return _Followers;
+            }
+        }
+
+        public int Clout(bool includeFollowers = false)
+        {
+            var clout = this.User.FollowersCount + ((includeFollowers) ? Followers.Sum(x => 0.1 * x.User.FollowersCount) : 0.0);
+
+            return (int)Math.Floor(clout);
         }
     }
 }
