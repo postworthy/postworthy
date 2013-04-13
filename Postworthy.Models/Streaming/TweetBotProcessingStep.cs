@@ -50,7 +50,7 @@ namespace Postworthy.Models.Streaming
 
                     log.WriteLine("{0}: Sending friends requests to: {1}",
                         DateTime.Now,
-                        string.Join(", ", newTweeps.Select(x => x.User.Identifier.ScreenName)));
+                        Environment.NewLine + string.Join(Environment.NewLine, newTweeps.Select(x => x.User.Identifier.ScreenName)));
 
                     return tweets;
                 }));
@@ -58,9 +58,11 @@ namespace Postworthy.Models.Streaming
 
         private IEnumerable<Tweep> FindTweepsToFollow(IEnumerable<Tweet> tweets)
         {
+            var minClout = GetMinClout();
+            var minWeight = GetMinWeight();
             var tweet_tweep_pairs = tweets
                 .Select(x => new { tweet = x, tweep = x.Tweep(), weight = 0.0 })
-                .Where(x => x.tweep.Clout() > GetMinClout());
+                .Where(x => x.tweep.Clout() > minClout);
 
             tweet_tweep_pairs = tweet_tweep_pairs.Select(x =>
                 new
@@ -68,19 +70,24 @@ namespace Postworthy.Models.Streaming
                     tweet = x.tweet,
                     tweep = x.tweep,
                     weight = x.tweet.RetweetCount / (1.0 + x.tweep.Clout())
-                }).Where(x => x.weight >= GetMinWeight());
+                }).Where(x => x.weight >= minWeight);
 
             return null;
         }
 
         private int GetMinClout()
         {
-            throw new NotImplementedException("This should return a value based on current followers. Any new friends must have more clout than current friends. We only move up...");
+            var friends = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName)
+                .Where(x => x.Type == Tweep.TweepType.Follower || x.Type == Tweep.TweepType.Mutual);
+            double minClout = friends.Count() + 1.0;
+            return (int)Math.Max(minClout, Math.Floor(friends.Average(x => x.Clout())));
         }
 
         private double GetMinWeight()
         {
-            throw new NotImplementedException("This should return a value based on current followers. Any new friends must have a similar retweet rate as existing friends");
+            log.WriteLine("{0}: 'GetMinWeight()' should return a value based on current followers. Any new friends must have a similar retweet rate as existing friends. Currently just returning a hardcoded 5%",
+                    DateTime.Now);
+            return .05;
         }
 
         private IEnumerable<Tweet> RespondToTweets(IEnumerable<Tweet> tweets)

@@ -33,7 +33,7 @@ namespace Postworthy.Tasks.Update
             var primaryUser = UsersCollection.PrimaryUser();
 
             Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, primaryUser.TwitterScreenName);
-            Friends.Update();
+            Postworthy.Models.Twitter.Friends.UpdateForPrimaryUser();
 
             Console.WriteLine("{0}: Getting Tweets for {1}", DateTime.Now, primaryUser.TwitterScreenName);
             tweets = StatusTimeline.Get();
