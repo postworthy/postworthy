@@ -22,8 +22,10 @@ namespace Postworthy.Models.Streaming
         {
             this.log = log;
             NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
-            Messages = Enumerable.Range(0, TweetBotSettings.Settings.Messages.Count - 1)
-                .Select(i => TweetBotSettings.Settings.Messages[i].Value).ToArray();
+            Messages = TweetBotSettings.Settings.Messages.Count == 0 ? 
+                null :
+                Enumerable.Range(0, TweetBotSettings.Settings.Messages.Count - 1)
+                    .Select(i => TweetBotSettings.Settings.Messages[i].Value).ToArray();
             OnlyWithMentions = TweetBotSettings.Settings.Filters["OnlyWithMentions"] != null ? 
                 TweetBotSettings.Settings.Filters["OnlyWithMentions"].Value : 
                 false;
