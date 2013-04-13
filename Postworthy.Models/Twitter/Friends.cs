@@ -41,7 +41,7 @@ namespace Postworthy.Models.Twitter
 
         public static List<Tweep> GetFollowers(string screenname)
         {
-            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
+            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
 
             try
             {

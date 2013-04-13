@@ -56,20 +56,17 @@ namespace Postworthy.Models.Twitter
         #endregion
 
         private List<Tweep> _Followers = null;
-        public List<Tweep> Followers
+        public List<Tweep> Followers()
         {
-            get
-            {
-                if (_Followers == null)
-                    _Followers = Friends.GetFollowers(User.Identifier.ScreenName) ?? new List<Tweep>();
+            if (_Followers == null)
+                _Followers = Friends.GetFollowers(User.Identifier.ScreenName) ?? new List<Tweep>();
 
-                return _Followers;
-            }
+            return _Followers;
         }
 
         public int Clout(bool includeFollowers = false)
         {
-            var clout = this.User.FollowersCount + ((includeFollowers) ? Followers.Sum(x => 0.1 * x.User.FollowersCount) : 0.0);
+            var clout = this.User.FollowersCount + ((includeFollowers) ? Followers().Sum(x => 0.1 * x.User.FollowersCount) : 0.0);
 
             return (int)Math.Floor(clout);
         }

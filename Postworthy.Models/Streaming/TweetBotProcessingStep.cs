@@ -50,10 +50,16 @@ namespace Postworthy.Models.Streaming
 
                     IEnumerable<Tweep> newTweeps = FindTweepsToFollow(tweets);
 
-                    log.WriteLine("{0}: Sending friends requests to: {1}",
-                        DateTime.Now,
-                        Environment.NewLine + string.Join(Environment.NewLine, newTweeps.Select(x => x.User.Identifier.ScreenName)));
-
+                    if (newTweeps != null && newTweeps.Count() > 0)
+                    {
+                        log.WriteLine("****************************");
+                        log.WriteLine("****************************");
+                        log.WriteLine("{0}: Sending friends requests to: {1}",
+                            DateTime.Now,
+                            Environment.NewLine + string.Join(Environment.NewLine, newTweeps.Select(x => x.User.Identifier.ScreenName)));
+                        log.WriteLine("****************************");
+                        log.WriteLine("****************************");
+                    }
                     return tweets;
                 }));
         }
@@ -62,8 +68,20 @@ namespace Postworthy.Models.Streaming
         {
             var minClout = GetMinClout();
             var minWeight = GetMinWeight();
+            var friendsAndFollows = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName);
             var tweet_tweep_pairs = tweets
-                .Select(x => new { tweet = x, tweep = x.Tweep(), weight = 0.0 })
+                .Select(x =>
+                    x.Status.Retweeted ?
+                    new { 
+                        tweet = new Tweet(x.Status.RetweetedStatus), 
+                        tweep = new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None), 
+                        weight = 0.0 }
+                    :
+                    new { 
+                        tweet = x, 
+                        tweep = x.Tweep(), 
+                        weight = 0.0 })
+                .Where(x => !friendsAndFollows.Contains(x.tweep))
                 .Where(x => x.tweep.Clout() > minClout);
 
             tweet_tweep_pairs = tweet_tweep_pairs.Select(x =>
@@ -74,7 +92,7 @@ namespace Postworthy.Models.Streaming
                     weight = x.tweet.RetweetCount / (1.0 + x.tweep.Clout())
                 }).Where(x => x.weight >= minWeight);
 
-            return null;
+            return tweet_tweep_pairs.Select(x => x.tweep);
         }
 
         private int GetMinClout()
