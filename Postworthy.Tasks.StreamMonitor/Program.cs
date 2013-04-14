@@ -207,7 +207,7 @@ namespace Postworthy.Tasks.StreamMonitor
                                         if (
                                             trackList.Any(x => statusText.Contains(x)) && //Looking for exact matches
                                             status.User.FollowersCount >= minFollowers && //Meets the follower cutoff
-                                            !ignore.Any(x => statusText.Contains(x)) //Ignore these
+                                            !ignore.Any(x => x != "" && statusText.Contains(x)) //Ignore these
                                             ) 
                                         {
                                             var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
