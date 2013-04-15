@@ -17,6 +17,7 @@ namespace Postworthy.Models.Streaming
         private string[] Messages = null;
         private bool OnlyWithMentions = false;
         private TextWriter log = null;
+        private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
 
         public void Init(TextWriter log)
         {
@@ -82,6 +83,7 @@ namespace Postworthy.Models.Streaming
                         tweep = x.Tweep(), 
                         weight = 0.0 })
                 .Where(x => !friendsAndFollows.Contains(x.tweep))
+                .Where(x => x.tweep.User.LangResponse == PrimaryTweep.User.LangResponse)
                 .Where(x => x.tweep.Clout() > minClout);
 
             tweet_tweep_pairs = tweet_tweep_pairs.Select(x =>

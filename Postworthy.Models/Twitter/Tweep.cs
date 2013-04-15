@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Postworthy.Models.Repository;
 using LinqToTwitter;
+using Postworthy.Models.Account;
 
 namespace Postworthy.Models.Twitter
 {
@@ -29,6 +30,17 @@ namespace Postworthy.Models.Twitter
         {
             User = user;
             if (type == TweepType.Follower && user.Following)
+                Type = TweepType.Mutual;
+            else
+                Type = type;
+        }
+
+        public Tweep(PostworthyUser postworthyUser, TweepType type)
+        {
+            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
+            User = context.User.Where(x => x.ScreenName == postworthyUser.TwitterScreenName && x.Type == UserType.Lookup).ToList().FirstOrDefault();
+            if (User == null) throw new Exception("Could not Find Twitter User!");
+            if (type == TweepType.Follower && User.Following)
                 Type = TweepType.Mutual;
             else
                 Type = type;
