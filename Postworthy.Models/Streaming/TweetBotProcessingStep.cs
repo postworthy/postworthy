@@ -18,6 +18,7 @@ namespace Postworthy.Models.Streaming
         private bool OnlyWithMentions = false;
         private TextWriter log = null;
         private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
+        private double averageWeight = 0.0;
 
         public void Init(TextWriter log)
         {
@@ -94,6 +95,12 @@ namespace Postworthy.Models.Streaming
                     weight = x.tweet.RetweetCount / (1.0 + x.tweep.Clout())
                 }).Where(x => x.weight >= minWeight);
 
+            if (tweet_tweep_pairs.Count() > 0)
+            {
+                averageWeight = averageWeight > 0.0 ?
+                    (averageWeight + tweet_tweep_pairs.Average(x => x.weight)) / 2 : tweet_tweep_pairs.Average(x => x.weight);
+            }
+
             return tweet_tweep_pairs.Select(x => x.tweep);
         }
 
@@ -107,9 +114,7 @@ namespace Postworthy.Models.Streaming
 
         private double GetMinWeight()
         {
-            log.WriteLine("{0}: 'GetMinWeight()' should return a value based on current followers. Any new friends must have a similar retweet rate as existing friends. Currently just returning a hardcoded 5%",
-                    DateTime.Now);
-            return .05;
+            return averageWeight;
         }
 
         private IEnumerable<Tweet> RespondToTweets(IEnumerable<Tweet> tweets)
