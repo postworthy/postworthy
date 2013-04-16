@@ -102,7 +102,7 @@ namespace Postworthy.Models.Streaming
             var friends = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName)
                 .Where(x => x.Type == Tweep.TweepType.Follower || x.Type == Tweep.TweepType.Mutual);
             double minClout = friends.Count() + 1.0;
-            return (int)Math.Max(minClout, Math.Floor(friends.Average(x => x.Clout())));
+            return (int)Math.Max(minClout, friends.Count() > 0 ? Math.Floor(friends.Average(x => x.Clout())) : 0);
         }
 
         private double GetMinWeight()

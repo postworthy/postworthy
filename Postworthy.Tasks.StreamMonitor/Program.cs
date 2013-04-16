@@ -39,9 +39,15 @@ namespace Postworthy.Tasks.StreamMonitor
             Console.WriteLine("{0}: Initializing IProcessingStep", DateTime.Now);
             GetIProcessingStep().Init(Console.Out);
 
+            var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+
+            Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, screenname);
+            Friends.UpdateForPrimaryUser();
+            Console.WriteLine("{0}: Finished Getting Friends for {1}", DateTime.Now, screenname);
+
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);
 
-            var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+            
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
             stream = StartTwitterStream(context);
 
