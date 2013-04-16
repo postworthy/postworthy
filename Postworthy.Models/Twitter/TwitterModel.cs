@@ -190,7 +190,7 @@ namespace Postworthy.Models.Twitter
                 friends = Repository<Tweep>.Instance.Find(screenname + FRIENDS);
             }
              * */
-            return friends;
+            return friends ?? new List<Tweep>();
         }
 
         public void UpdateStatus(string statusText, string screenname = null, bool processStatus = true)
