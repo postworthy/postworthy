@@ -92,7 +92,7 @@ namespace Postworthy.Models.Streaming
                 if (RuntimeSettings.PotentialTweets.Count == POTENTIAL_TWEET_BUFFER_MAX)
                 {
                     var tweet = RuntimeSettings.PotentialTweets.First();
-                    RuntimeSettings.Tweeted.Add(tweet);
+                    RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
                     RuntimeSettings.TweetsSentSinceLastFriendRequest++;
                     RuntimeSettings.PotentialTweets.Remove(tweet);
 
@@ -105,7 +105,7 @@ namespace Postworthy.Models.Streaming
                 if (RuntimeSettings.PotentialReTweets.Count == POTENTIAL_TWEET_BUFFER_MAX)
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
-                    RuntimeSettings.Tweeted.Add(tweet);
+                    RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
                     RuntimeSettings.TweetsSentSinceLastFriendRequest++;
                     RuntimeSettings.PotentialReTweets.Remove(tweet);
 
@@ -226,7 +226,7 @@ namespace Postworthy.Models.Streaming
                 RuntimeSettings.PotentialReTweets = tweet_tweep_pairs
                     .Where(x => friendsAndFollows.Contains(x.tweep))
                     .Select(x => x.tweet)
-                    .Union(RuntimeSettings.PotentialReTweets)
+                    .Union(RuntimeSettings.PotentialReTweets, Tweet.GetTweetTextComparer())
                     .OrderByDescending(x => x.RetweetCount)
                     .Take(POTENTIAL_TWEET_BUFFER_MAX)
                     .ToList();
@@ -236,7 +236,7 @@ namespace Postworthy.Models.Streaming
                         //x.tweet.Status.Entities.UserMentions.Count() == 0 &&
                         (x.tweet.Status.Entities.UrlMentions.Count() > 0 || x.tweet.Status.Entities.MediaMentions.Count() > 0))
                     .Select(x => x.tweet)
-                    .Union(RuntimeSettings.PotentialTweets)
+                    .Union(RuntimeSettings.PotentialTweets, Tweet.GetTweetTextComparer())
                     .OrderByDescending(x => x.RetweetCount)
                     .Take(POTENTIAL_TWEET_BUFFER_MAX)
                     .ToList();

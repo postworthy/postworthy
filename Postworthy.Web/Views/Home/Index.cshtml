@@ -452,7 +452,7 @@
             
 			var ranked = Model
 				.Take(1000)
-				.Distinct();
+				.Distinct(Tweet.GetITweetTextComparer());
             
             if (!isPrimaryLoggedIn)
             {

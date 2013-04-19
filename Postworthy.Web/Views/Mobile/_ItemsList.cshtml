@@ -7,7 +7,7 @@
 {
     var ranked = Model
                 .Take(1000)
-                .Distinct();
+                .Distinct(Tweet.GetITweetTextComparer());
     var top10 = ranked.Take(10);
     var top20 = ranked.Skip(10).Take(10);
     var top30 = ranked.Skip(20).Take(10);

@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="Account\PostworthyUser.cs" />
     <Compile Include="Account\UsersCollection.cs" />
+    <Compile Include="Core\GenericEqualityComparer.cs" />
     <Compile Include="Core\ISimilarImage.cs" />
     <Compile Include="Core\CustomTaskScheduler.cs" />
     <Compile Include="Core\FileUtility.cs" />

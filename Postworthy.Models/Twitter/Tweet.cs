@@ -12,7 +12,7 @@ using System.IO;
 
 namespace Postworthy.Models.Twitter
 {
-    public class Tweet : RepositoryEntity, ISimilarText, ISimilarImage, ITweet
+    public class Tweet : RepositoryEntity, ISimilarText, ISimilarImage, ITweet, IEquatable<Tweet>
     {
         private Status _Status;
 
@@ -313,5 +313,28 @@ namespace Postworthy.Models.Twitter
             get { return (Status != null) ? Status.User : null; }
         }
         #endregion
+
+        #region IEquatable<Tweet> Members
+
+        public bool Equals(Tweet other)
+        {
+            return IsEqual(other);
+        }
+
+        #endregion
+
+        public static IEqualityComparer<ITweet> GetITweetTextComparer()
+        {
+            return GenericEqualityComparerFactory<ITweet>.Build(
+                (x, y) => x.TweetText == y.TweetText,
+                x => x.TweetText.GetHashCode());
+        }
+
+        public static IEqualityComparer<Tweet> GetTweetTextComparer()
+        {
+            return GenericEqualityComparerFactory<Tweet>.Build(
+                (x, y) => x.IsEqual(y),
+                x => x.TweetText.GetHashCode());
+        }
     }
 }

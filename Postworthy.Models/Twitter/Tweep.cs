@@ -8,7 +8,7 @@ using Postworthy.Models.Account;
 
 namespace Postworthy.Models.Twitter
 {
-    public class Tweep : RepositoryEntity
+    public class Tweep : RepositoryEntity, IEquatable<Tweep>
     {
         public enum TweepType
         {
@@ -82,5 +82,14 @@ namespace Postworthy.Models.Twitter
 
             return (int)Math.Floor(clout);
         }
+
+        #region IEquatable<Tweep> Members
+
+        public bool Equals(Tweep other)
+        {
+            return IsEqual(other);
+        }
+
+        #endregion
     }
 }

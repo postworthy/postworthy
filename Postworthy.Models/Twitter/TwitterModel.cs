@@ -161,7 +161,7 @@ namespace Postworthy.Models.Twitter
                 .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
                 .OrderByDescending(t => t.TweetRank)
-                .Distinct()
+                .Distinct(Tweet.GetTweetTextComparer())
                 .ToList();
 
             if(!string.IsNullOrEmpty(UsersCollection.PrimaryUser().Track))

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Postworthy.Models.Core
 {
-    public class UriEx : INotifyPropertyChanged
+    public class UriEx : INotifyPropertyChanged, IEquatable<UriEx>
     {
         private Uri _Uri;
         private string _Title;
@@ -85,5 +85,17 @@ namespace Postworthy.Models.Core
         }
 
         #endregion
+
+
+        public bool Equals(UriEx other)
+        {
+            return Uri.Equals(other.Uri);
+        }
+
+        public override int GetHashCode()
+        {
+            return Uri.GetHashCode();
+        }
+
     }
 }
