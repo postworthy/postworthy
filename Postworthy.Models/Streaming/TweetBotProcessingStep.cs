@@ -71,7 +71,14 @@ namespace Postworthy.Models.Streaming
 
                     DebugConsoleLog();
 
-                    repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
+                    try
+                    {
+                        repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
+                    }
+                    catch (Enyim.Caching.Memcached.MemcachedException mcex) {
+                        RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Skip(RuntimeSettings.Tweeted.Count() / 2).ToList();
+                        repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
+                    }
 
                     return tweets;
                 }));
