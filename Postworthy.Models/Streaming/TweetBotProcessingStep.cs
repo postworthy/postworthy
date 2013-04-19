@@ -8,36 +8,45 @@ using Postworthy.Models.Account;
 using System.Threading.Tasks;
 using System.IO;
 using System.Collections;
+using Postworthy.Models.Repository;
 
 namespace Postworthy.Models.Streaming
 {
     public class TweetBotProcessingStep : IProcessingStep
     {
+        private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
+        private const int POTENTIAL_TWEET_BUFFER_MAX = 10;
+        private const int POTENTIAL_TWEEP_BUFFER_MAX = 50;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
         private bool OnlyWithMentions = false;
         private TextWriter log = null;
         private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
-        private double averageWeight = 0.0;
+        private TweetBotRuntimeSettings RuntimeSettings = null;
+        private Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
 
         public void Init(TextWriter log)
         {
             this.log = log;
+
+            RuntimeSettings = (repo.Query(RUNTIME_REPO_KEY)
+                ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
+
             NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
-            Messages = TweetBotSettings.Settings.Messages.Count == 0 ? 
+            Messages = TweetBotSettings.Settings.Messages.Count == 0 ?
                 null :
                 Enumerable.Range(0, TweetBotSettings.Settings.Messages.Count - 1)
                     .Select(i => TweetBotSettings.Settings.Messages[i].Value).ToArray();
-            OnlyWithMentions = TweetBotSettings.Settings.Filters["OnlyWithMentions"] != null ? 
-                TweetBotSettings.Settings.Filters["OnlyWithMentions"].Value : 
+            OnlyWithMentions = TweetBotSettings.Settings.Filters["OnlyWithMentions"] != null ?
+                TweetBotSettings.Settings.Filters["OnlyWithMentions"].Value :
                 false;
             if (Messages == null)
-                log.WriteLine("{0}: 'TweetBotSettings' configuration section is missing Messages. No responses will be sent.", 
+                log.WriteLine("{0}: 'TweetBotSettings' configuration section is missing Messages. No responses will be sent.",
                     DateTime.Now);
             else
             {
-                log.WriteLine("{0}: TweetBot will respond with: {1}", 
-                    DateTime.Now, 
+                log.WriteLine("{0}: TweetBot will respond with: {1}",
+                    DateTime.Now,
                     Environment.NewLine + string.Join(Environment.NewLine, Messages));
             }
         }
@@ -47,26 +56,187 @@ namespace Postworthy.Models.Streaming
             return Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
                 {
                     IEnumerable<Tweet> respondedTo = null;
-                    if(Messages != null)
-                         respondedTo = RespondToTweets(tweets);
+                    if (Messages != null)
+                        respondedTo = RespondToTweets(tweets);
 
-                    IEnumerable<Tweep> newTweeps = FindTweepsToFollow(tweets);
+                    FindPotentialTweets(tweets);
 
-                    if (newTweeps != null && newTweeps.Count() > 0)
-                    {
-                        log.WriteLine("****************************");
-                        log.WriteLine("****************************");
-                        log.WriteLine("{0}: Sending friends requests to: {1}",
-                            DateTime.Now,
-                            Environment.NewLine + string.Join(Environment.NewLine, newTweeps.Select(x => x.User.Identifier.ScreenName)));
-                        log.WriteLine("****************************");
-                        log.WriteLine("****************************");
-                    }
+                    FindTweepsToFollow(tweets);
+
+                    UpdateAverageWeight(tweets);
+
+                    SendTweets();
+
+                    SendFriendRequests();
+
+                    DebugConsoleLog();
+
+                    repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
+
                     return tweets;
                 }));
         }
 
-        private IEnumerable<Tweep> FindTweepsToFollow(IEnumerable<Tweet> tweets)
+        private void SendTweets()
+        {
+            if (RuntimeSettings.TweetOrRetweet)
+            {
+                RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
+                if (RuntimeSettings.PotentialTweets.Count == POTENTIAL_TWEET_BUFFER_MAX)
+                {
+                    var tweet = RuntimeSettings.PotentialTweets.First();
+                    RuntimeSettings.Tweeted.Add(tweet);
+                    RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                    RuntimeSettings.PotentialTweets.Remove(tweet);
+
+                    RuntimeSettings.PotentialTweets.RemoveAll(x=> x.RetweetCount < (tweet.RetweetCount * 0.8));
+                }
+            }
+            else
+            {
+                RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
+                if (RuntimeSettings.PotentialReTweets.Count == POTENTIAL_TWEET_BUFFER_MAX)
+                {
+                    var tweet = RuntimeSettings.PotentialReTweets.First();
+                    RuntimeSettings.Tweeted.Add(tweet);
+                    RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                    RuntimeSettings.PotentialReTweets.Remove(tweet);
+
+                    RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.5));
+                }
+            }
+        }
+
+        private void SendFriendRequests()
+        {
+            if (RuntimeSettings.TweetsSentSinceLastFriendRequest == 20)
+            {
+                RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
+
+                log.WriteLine("{0}: Friend Request Sent", DateTime.Now);
+            }
+        }
+
+        private void DebugConsoleLog()
+        {
+            log.WriteLine("****************************");
+            log.WriteLine("****************************");
+            if (RuntimeSettings.PotentialFollows.Count() > 0)
+            {
+                log.WriteLine("{0}: Potential Tweets: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweets.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
+            }
+            if (RuntimeSettings.PotentialReTweets.Count() > 0)
+            {
+                log.WriteLine("{0}: Potential Retweets: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialReTweets.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
+            }
+            if (RuntimeSettings.Tweeted.Count() > 0)
+            {
+                log.WriteLine("{0}: Past Tweets: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Tweeted.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
+            }
+            if (RuntimeSettings.PotentialFollows.Count() > 0)
+            {
+                log.WriteLine("{0}: Potential Follows: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialFollows.Select(x => x.User.Identifier.ScreenName)));
+            }
+
+            log.WriteLine("{0}: Average Weight: {1:F5}",
+                DateTime.Now,
+                RuntimeSettings.AverageWeight);
+            
+            log.WriteLine("****************************");
+            log.WriteLine("****************************");
+        }
+
+        private void UpdateAverageWeight(IEnumerable<Tweet> tweets)
+        {
+            var minClout = GetMinClout();
+            var minWeight = GetMinWeight();
+            var friendsAndFollows = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName);
+
+            var tweet_tweep_pairs = tweets
+                .Select(x =>
+                    x.Status.Retweeted ?
+                    new
+                    {
+                        tweet = new Tweet(x.Status.RetweetedStatus),
+                        tweep = new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None),
+                        weight = x.RetweetCount / (1.0 + new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None).Clout())
+                    }
+                    :
+                    new
+                    {
+                        tweet = x,
+                        tweep = x.Tweep(),
+                        weight = x.RetweetCount / (1.0 + x.Tweep().Clout())
+                    })
+                .Where(x => x.tweep.Clout() > minClout)
+                .Where(x => x.weight >= minWeight);
+
+            if (tweet_tweep_pairs.Count() > 0)
+            {
+                RuntimeSettings.AverageWeight = RuntimeSettings.AverageWeight > 0.0 ?
+                    (RuntimeSettings.AverageWeight + tweet_tweep_pairs.Average(x => x.weight)) / 2.0 : tweet_tweep_pairs.Average(x => x.weight);
+            }
+            else
+            {
+                RuntimeSettings.AverageWeight = RuntimeSettings.AverageWeight > 0.0 ?
+                    (RuntimeSettings.AverageWeight) / 2.0 : 0.0;
+            }
+        }
+
+        private void FindPotentialTweets(IEnumerable<Tweet> tweets)
+        {
+            var minWeight = GetMinWeight();
+            var friendsAndFollows = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName);
+
+            var tweet_tweep_pairs = tweets
+                .Select(x =>
+                    x.Status.Retweeted ?
+                    new
+                    {
+                        tweet = new Tweet(x.Status.RetweetedStatus),
+                        tweep = new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None),
+                        weight = x.RetweetCount / (1.0 + new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None).Clout())
+                    }
+                    :
+                    new
+                    {
+                        tweet = x,
+                        tweep = x.Tweep(),
+                        weight = x.RetweetCount / (1.0 + x.Tweep().Clout())
+                    })
+                    .Where(x => x.weight >= minWeight);
+
+            if (tweet_tweep_pairs.Count() > 0)
+            {
+                RuntimeSettings.PotentialReTweets = tweet_tweep_pairs
+                    .Where(x => friendsAndFollows.Contains(x.tweep))
+                    .Select(x => x.tweet)
+                    .Union(RuntimeSettings.PotentialReTweets)
+                    .OrderByDescending(x => x.RetweetCount)
+                    .Take(POTENTIAL_TWEET_BUFFER_MAX)
+                    .ToList();
+
+                RuntimeSettings.PotentialTweets = tweet_tweep_pairs
+                    .Where(x => !friendsAndFollows.Contains(x.tweep) && 
+                        //x.tweet.Status.Entities.UserMentions.Count() == 0 &&
+                        (x.tweet.Status.Entities.UrlMentions.Count() > 0 || x.tweet.Status.Entities.MediaMentions.Count() > 0))
+                    .Select(x => x.tweet)
+                    .Union(RuntimeSettings.PotentialTweets)
+                    .OrderByDescending(x => x.RetweetCount)
+                    .Take(POTENTIAL_TWEET_BUFFER_MAX)
+                    .ToList();
+            }
+        }
+
+        private void FindTweepsToFollow(IEnumerable<Tweet> tweets)
         {
             var minClout = GetMinClout();
             var minWeight = GetMinWeight();
@@ -74,34 +244,30 @@ namespace Postworthy.Models.Streaming
             var tweet_tweep_pairs = tweets
                 .Select(x =>
                     x.Status.Retweeted ?
-                    new { 
-                        tweet = new Tweet(x.Status.RetweetedStatus), 
-                        tweep = new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None), 
-                        weight = 0.0 }
+                    new
+                    {
+                        tweet = new Tweet(x.Status.RetweetedStatus),
+                        tweep = new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None),
+                        weight = x.RetweetCount / (1.0 + new Tweep(x.Status.RetweetedStatus.User, Tweep.TweepType.None).Clout())
+                    }
                     :
-                    new { 
-                        tweet = x, 
-                        tweep = x.Tweep(), 
-                        weight = 0.0 })
+                    new
+                    {
+                        tweet = x,
+                        tweep = x.Tweep(),
+                        weight = x.RetweetCount / (1.0 + x.Tweep().Clout())
+                    })
                 .Where(x => !friendsAndFollows.Contains(x.tweep))
                 .Where(x => x.tweep.User.LangResponse == PrimaryTweep.User.LangResponse)
-                .Where(x => x.tweep.Clout() > minClout);
+                .Where(x => x.tweep.Clout() > minClout)
+                .Where(x => x.weight >= minWeight);
 
-            tweet_tweep_pairs = tweet_tweep_pairs.Select(x =>
-                new
-                {
-                    tweet = x.tweet,
-                    tweep = x.tweep,
-                    weight = x.tweet.RetweetCount / (1.0 + x.tweep.Clout())
-                }).Where(x => x.weight >= minWeight);
-
-            if (tweet_tweep_pairs.Count() > 0)
-            {
-                averageWeight = averageWeight > 0.0 ?
-                    (averageWeight + tweet_tweep_pairs.Average(x => x.weight)) / 2 : tweet_tweep_pairs.Average(x => x.weight);
-            }
-
-            return tweet_tweep_pairs.Select(x => x.tweep);
+            RuntimeSettings.PotentialFollows = tweet_tweep_pairs
+                    .Select(x => x.tweep)
+                    .Union(RuntimeSettings.PotentialFollows)
+                    .OrderByDescending(x => x.Clout())
+                    .Take(POTENTIAL_TWEEP_BUFFER_MAX)
+                    .ToList();
         }
 
         private int GetMinClout()
@@ -114,7 +280,7 @@ namespace Postworthy.Models.Streaming
 
         private double GetMinWeight()
         {
-            return averageWeight;
+            return RuntimeSettings.AverageWeight;
         }
 
         private IEnumerable<Tweet> RespondToTweets(IEnumerable<Tweet> tweets)
@@ -195,7 +361,7 @@ namespace Postworthy.Models.Streaming
                 return (Filter)BaseGet(idx);
             }
         }
-        
+
         public Filter this[string key]
         {
             get
@@ -241,6 +407,40 @@ namespace Postworthy.Models.Streaming
         [ConfigurationProperty("value", IsKey = false, IsRequired = true)]
         public string Value { get { return (string)base["value"]; } set { base["value"] = value; } }
     }
+
+    public class TweetBotRuntimeSettings : RepositoryEntity
+    {
+        public Guid SettingsGuid { get; set; }
+
+        public double AverageWeight { get; set; }
+        public DateTime LastTweetTime { get; set; }
+        public bool TweetOrRetweet { get; set; }
+        public int TweetsSentSinceLastFriendRequest { get; set; }
+        public List<Tweet> PotentialTweets { get; set; }
+        public List<Tweet> PotentialReTweets { get; set; }
+        public List<Tweet> Tweeted { get; set; }
+        public List<Tweep> PotentialFollows { get; set; }
+
+        public TweetBotRuntimeSettings()
+        {
+            SettingsGuid = Guid.NewGuid();
+            PotentialTweets = new List<Tweet>();
+            PotentialReTweets = new List<Tweet>();
+            Tweeted = new List<Tweet>();
+            PotentialFollows = new List<Tweep>();
+        }
+
+        public override string UniqueKey
+        {
+            get { return SettingsGuid.ToString(); }
+        }
+
+        public override bool IsEqual(RepositoryEntity other)
+        {
+            return other.UniqueKey == this.UniqueKey;
+        }
+    }
+
     #endregion
 }
 
