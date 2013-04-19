@@ -132,7 +132,7 @@ namespace Postworthy.Models.Repository.Providers
             var objects = GetSharedCacheItemKeys(key);
 
             if (objects != null)
-                objects.Add(obj.UniqueKey);
+                objects = objects.Union(new List<string> { obj.UniqueKey }).ToList();
             else
                 objects = new List<string> { obj.UniqueKey };
 
@@ -146,12 +146,7 @@ namespace Postworthy.Models.Repository.Providers
             var objects = GetSharedCacheItemKeys(key);
 
             if (objects != null)
-            {
-                obj.ForEach(o =>
-                {
-                    objects.Add(o.UniqueKey);
-                });
-            }
+                objects = objects.Union(obj.Select(o => o.UniqueKey)).ToList();
             else
                 objects = obj.Select(x => x.UniqueKey).ToList();
 

@@ -31,7 +31,7 @@ app.config
 Postworthy.Web/Web.config
 Postworthy.Web/Web.Debug.config
 Postworthy.Web/Web.Release.config
-Postworthy.Web/UsersCollection.config
+UsersCollection.config
 Postworthy.Web.Publish.xml
 Postworthy.Web/Postworthy.Publish.xml
 *.pubxml
