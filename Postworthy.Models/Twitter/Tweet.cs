@@ -68,7 +68,7 @@ namespace Postworthy.Models.Twitter
                 if (this.StatusID == otherTweet.StatusID)
                     return true;
                 /*
-                 * Here we want to compate the text as fast as possible
+                 * Here we want to compute the text as fast as possible
                  * to do this we compare the precomputed letter hashes
                  * if we mis we return as soon as possible.
                  */

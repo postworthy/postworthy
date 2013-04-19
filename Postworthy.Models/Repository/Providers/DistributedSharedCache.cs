@@ -108,6 +108,9 @@ namespace Postworthy.Models.Repository.Providers
                         var ltObj = Deserialize<TYPE>(GetLocal(o.key) as string);
                         if (ltObj != null)
                         {
+                            //It is possible an object was to big for cache and you could get an error here.
+                            //One possible solution could be to eat the error and always let it pull large objects from Local
+                            //For Now I will leave this unhandled
                             SharedCache.Store(StoreMode.Set, ltObj.UniqueKey.ToString(), Serialize(ltObj));
                             ltObjects.Add(new { key = o.key, obj = ltObj });
                         }
