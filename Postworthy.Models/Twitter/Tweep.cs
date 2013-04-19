@@ -52,7 +52,7 @@ namespace Postworthy.Models.Twitter
             if (other is Tweep)
             {
                 var otherTweep = other as Tweep;
-                return this.User.UserID == otherTweep.User.UserID;
+                return this.User.Identifier.UserID == otherTweep.User.Identifier.UserID;
             }
             else
                 return false;
@@ -62,7 +62,7 @@ namespace Postworthy.Models.Twitter
         {
             get
             {
-                return "tweep_" + this.User.UserID;
+                return "tweep_" + this.User.Identifier.UserID;
             }
         }
         #endregion

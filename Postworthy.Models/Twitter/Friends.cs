@@ -56,7 +56,7 @@ namespace Postworthy.Models.Twitter
                     .SocialGraph
                     .Where(g => g.ScreenName == screenname && g.Type == SocialGraphType.Friends && g.Cursor == "-1")
                     .SelectMany(g => g.IDs)
-                    .Except(friends.Select(u => u.User.UserID))
+                    .Except(friends.Select(u => u.User.Identifier.UserID))
                     .Select(s => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == s).First(), Tweep.TweepType.Following)));
 
                 return friends;
