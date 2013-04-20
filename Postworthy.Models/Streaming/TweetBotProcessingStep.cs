@@ -102,14 +102,14 @@ namespace Postworthy.Models.Streaming
             else
             {
                 RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialReTweets.Count == POTENTIAL_TWEET_BUFFER_MAX)
+                if (RuntimeSettings.PotentialReTweets.Count > 2)
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
                     RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
                     RuntimeSettings.TweetsSentSinceLastFriendRequest++;
                     RuntimeSettings.PotentialReTweets.Remove(tweet);
 
-                    RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.5));
+                    RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.3));
                 }
             }
         }
@@ -130,33 +130,43 @@ namespace Postworthy.Models.Streaming
             log.WriteLine("****************************");
             if (RuntimeSettings.PotentialFollows.Count() > 0)
             {
+                log.WriteLine("####################");
                 log.WriteLine("{0}: Potential Tweets: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweets.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
+                log.WriteLine("####################");
             }
             if (RuntimeSettings.PotentialReTweets.Count() > 0)
             {
+                log.WriteLine("####################");
                 log.WriteLine("{0}: Potential Retweets: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialReTweets.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
+                log.WriteLine("####################");
             }
             if (RuntimeSettings.Tweeted.Count() > 0)
             {
+                log.WriteLine("####################");
                 log.WriteLine("{0}: Past Tweets: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Tweeted.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
+                log.WriteLine("####################");
             }
             if (RuntimeSettings.PotentialFollows.Count() > 0)
             {
+                log.WriteLine("####################");
                 log.WriteLine("{0}: Potential Follows: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialFollows.Select(x => x.User.Identifier.ScreenName)));
+                log.WriteLine("####################");
             }
 
+            log.WriteLine("####################");
             log.WriteLine("{0}: Average Weight: {1:F5}",
                 DateTime.Now,
                 RuntimeSettings.AverageWeight);
-            
+            log.WriteLine("####################");
+
             log.WriteLine("****************************");
             log.WriteLine("****************************");
         }
@@ -219,6 +229,7 @@ namespace Postworthy.Models.Streaming
                         tweep = x.Tweep(),
                         weight = x.RetweetCount / (1.0 + x.Tweep().Clout())
                     })
+                    .Where(x=>x.tweet.TweetText.Select(y=>y).Where(y=>y == '?').Count() > 3) //Why would you need so many question marks????
                     .Where(x => x.weight >= minWeight);
 
             if (tweet_tweep_pairs.Count() > 0)
