@@ -70,9 +70,9 @@ namespace Postworthy.Models.Twitter
         #endregion
 
         private List<Tweep> _Followers = null;
-        public List<Tweep> Followers()
+        public List<Tweep> Followers(bool forceRefresh = false)
         {
-            if (_Followers == null)
+            if (_Followers == null || forceRefresh)
                 _Followers = Friends.GetFollowers(User.Identifier.ScreenName) ?? new List<Tweep>();
 
             return _Followers;
