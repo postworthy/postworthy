@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Collections;
 using Postworthy.Models.Repository;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Models.Streaming
 {
@@ -75,7 +76,8 @@ namespace Postworthy.Models.Streaming
                     {
                         repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
                     }
-                    catch (Enyim.Caching.Memcached.MemcachedException mcex) {
+                    catch (Enyim.Caching.Memcached.MemcachedException mcex)
+                    {
                         RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Skip(RuntimeSettings.Tweeted.Count() / 2).ToList();
                         repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
                     }
@@ -92,11 +94,22 @@ namespace Postworthy.Models.Streaming
                 if (RuntimeSettings.PotentialTweets.Count == POTENTIAL_TWEET_BUFFER_MAX)
                 {
                     var tweet = RuntimeSettings.PotentialTweets.First();
-                    RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                    RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                    RuntimeSettings.PotentialTweets.Remove(tweet);
-
-                    RuntimeSettings.PotentialTweets.RemoveAll(x=> x.RetweetCount < (tweet.RetweetCount * 0.8));
+                    var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                        .GroupSimilar(log: log)
+                        .Select(g => new TweetGroup(g))
+                        .Where(g=>g.GroupStatusIDs.Count() > 1);
+                    if (groups.Any(x => x.GroupStatusIDs.Contains(tweet.StatusID)))
+                    {
+                        //Ignore Tweets that are very similar
+                        RuntimeSettings.PotentialTweets.Remove(tweet);
+                    }
+                    else
+                    {
+                        RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                        RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                        RuntimeSettings.PotentialTweets.Remove(tweet);
+                        RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.8));
+                    }
                 }
             }
             else
@@ -105,11 +118,23 @@ namespace Postworthy.Models.Streaming
                 if (RuntimeSettings.PotentialReTweets.Count > 2)
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
-                    RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                    RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                    RuntimeSettings.PotentialReTweets.Remove(tweet);
+                     var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                        .GroupSimilar(log: log)
+                        .Select(g => new TweetGroup(g))
+                        .Where(g=>g.GroupStatusIDs.Count() > 1);
+                     if (groups.Any(x => x.GroupStatusIDs.Contains(tweet.StatusID)))
+                     {
+                         //Ignore Tweets that are very similar
+                         RuntimeSettings.PotentialReTweets.Remove(tweet);
+                     }
+                     else
+                     {
+                         RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                         RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                         RuntimeSettings.PotentialReTweets.Remove(tweet);
 
-                    RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.3));
+                         RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.3));
+                     }
                 }
             }
         }
@@ -128,7 +153,7 @@ namespace Postworthy.Models.Streaming
         {
             log.WriteLine("****************************");
             log.WriteLine("****************************");
-            if (RuntimeSettings.PotentialFollows.Count() > 0)
+            if (RuntimeSettings.PotentialTweets.Count() > 0)
             {
                 log.WriteLine("####################");
                 log.WriteLine("{0}: Potential Tweets: {1}",
@@ -152,12 +177,12 @@ namespace Postworthy.Models.Streaming
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Tweeted.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
                 log.WriteLine("####################");
             }
-            if (RuntimeSettings.PotentialFollows.Count() > 0)
+            if (RuntimeSettings.PotentialTweeps.Count() > 0)
             {
                 log.WriteLine("####################");
-                log.WriteLine("{0}: Potential Follows: {1}",
+                log.WriteLine("{0}: Potential Tweeps: {1}",
                     DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialFollows.Select(x => x.User.Identifier.ScreenName)));
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweeps.Select(x => x.Item1 + ":" + x.Item2.User.Identifier.ScreenName)));
                 log.WriteLine("####################");
             }
 
@@ -229,7 +254,7 @@ namespace Postworthy.Models.Streaming
                         tweep = x.Tweep(),
                         weight = x.RetweetCount / (1.0 + x.Tweep().Clout())
                     })
-                    .Where(x=>x.tweet.TweetText.Select(y=>y).Where(y=>y == '?').Count() > 3) //Why would you need so many question marks????
+                    .Where(x => Encoding.UTF8.GetByteCount(x.tweet.TweetText) == x.tweet.TweetText.Length) //Only ASCII for me...
                     .Where(x => x.weight >= minWeight);
 
             if (tweet_tweep_pairs.Count() > 0)
@@ -243,7 +268,7 @@ namespace Postworthy.Models.Streaming
                     .ToList();
 
                 RuntimeSettings.PotentialTweets = tweet_tweep_pairs
-                    .Where(x => !friendsAndFollows.Contains(x.tweep) && 
+                    .Where(x => !friendsAndFollows.Contains(x.tweep) &&
                         //x.tweet.Status.Entities.UserMentions.Count() == 0 &&
                         (x.tweet.Status.Entities.UrlMentions.Count() > 0 || x.tweet.Status.Entities.MediaMentions.Count() > 0))
                     .Select(x => x.tweet)
@@ -280,12 +305,36 @@ namespace Postworthy.Models.Streaming
                 .Where(x => x.tweep.Clout() > minClout)
                 .Where(x => x.weight >= minWeight);
 
-            RuntimeSettings.PotentialFollows = tweet_tweep_pairs
+            //Update Existing
+            tweet_tweep_pairs
                     .Select(x => x.tweep)
-                    .Union(RuntimeSettings.PotentialFollows)
-                    .OrderByDescending(x => x.Clout())
-                    .Take(POTENTIAL_TWEEP_BUFFER_MAX)
-                    .ToList();
+                    .ToList()
+                    .ForEach(x =>
+                    {
+                        for (int i = 0; i < RuntimeSettings.PotentialTweeps.Count(); i++)
+                        {
+                            if (RuntimeSettings.PotentialTweeps[i].Item2.Equals(x))
+                                RuntimeSettings.PotentialTweeps[i] = new Tuple<int, Tweep>(
+                                    RuntimeSettings.PotentialTweeps[i].Item1 + 1,
+                                    RuntimeSettings.PotentialTweeps[i].Item2);
+                        }
+                    });
+
+            //Add New
+            tweet_tweep_pairs
+                    .Select(x => x.tweep)
+                    .Except(RuntimeSettings.PotentialTweeps.Select(x => x.Item2))
+                    .ToList()
+                    .ForEach(x =>
+                    {
+                        RuntimeSettings.PotentialTweeps.Add(new Tuple<int, Tweep>(1, x));
+                    });
+
+            //Limit
+            RuntimeSettings.PotentialTweeps = RuntimeSettings.PotentialTweeps
+                .OrderByDescending(x => x.Item2.Clout())
+                .Take(POTENTIAL_TWEEP_BUFFER_MAX)
+                .ToList();
         }
 
         private int GetMinClout()
@@ -298,6 +347,7 @@ namespace Postworthy.Models.Streaming
 
         private double GetMinWeight()
         {
+            if (RuntimeSettings.AverageWeight < 0.00001) RuntimeSettings.AverageWeight = 0.0;
             return RuntimeSettings.AverageWeight;
         }
 
@@ -437,7 +487,7 @@ namespace Postworthy.Models.Streaming
         public List<Tweet> PotentialTweets { get; set; }
         public List<Tweet> PotentialReTweets { get; set; }
         public List<Tweet> Tweeted { get; set; }
-        public List<Tweep> PotentialFollows { get; set; }
+        public List<Tuple<int, Tweep>> PotentialTweeps { get; set; }
 
         public TweetBotRuntimeSettings()
         {
@@ -445,7 +495,7 @@ namespace Postworthy.Models.Streaming
             PotentialTweets = new List<Tweet>();
             PotentialReTweets = new List<Tweet>();
             Tweeted = new List<Tweet>();
-            PotentialFollows = new List<Tweep>();
+            PotentialTweeps = new List<Tuple<int, Tweep>>();
         }
 
         public override string UniqueKey

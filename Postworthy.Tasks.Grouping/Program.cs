@@ -64,7 +64,7 @@ namespace Postworthy.Tasks.Grouping
 
             var groups = tweets
                 //Group similar tweets (the ordering is done first so that the earliest tweet gets credit)
-                .GroupSimilar(Console.Out)
+                .GroupSimilar(log: Console.Out)
                 //Convert groups into something we can display
                 .Select(g => new TweetGroup(g) { RepositoryKey = TwitterModel.GROUPING })
                 //For the sake of space we only want to store groups that have more than 1 item

@@ -32,7 +32,7 @@ namespace Postworthy.Models.Core
         }
 
 
-        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t, TextWriter log = null) where T : ISimilarText, ISimilarImage
+        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t, decimal MinSimilarity = GOOD, TextWriter log = null) where T : ISimilarText, ISimilarImage
         {
             #region Variable Definitions
             var input = t.ToList();
@@ -98,7 +98,7 @@ namespace Postworthy.Models.Core
                                         }
                                     }
                                     si = (2.0M * intersection) / union;
-                                    if (si >= GOOD)
+                                    if (si >= MinSimilarity)
                                     {
                                         so[j].ParentObject = so[i].Object;
                                         so[j].SimilarityIndex = si;
