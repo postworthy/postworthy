@@ -91,7 +91,7 @@ namespace Postworthy.Models.Streaming
             if (RuntimeSettings.TweetOrRetweet)
             {
                 RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialTweets.Count == POTENTIAL_TWEET_BUFFER_MAX)
+                if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX)
                 {
                     var tweet = RuntimeSettings.PotentialTweets.First();
                     var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
@@ -115,7 +115,7 @@ namespace Postworthy.Models.Streaming
             else
             {
                 RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialReTweets.Count > 2)
+                if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX)
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
                      var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
