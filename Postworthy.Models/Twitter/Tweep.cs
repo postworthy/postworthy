@@ -15,7 +15,9 @@ namespace Postworthy.Models.Twitter
             Mutual,
             Follower,
             Following,
-            None
+            Target,
+            Ignore,
+            None,
         }
 
         private User _User;
@@ -91,5 +93,10 @@ namespace Postworthy.Models.Twitter
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return this.User.Identifier.ScreenName + " (" + Enum.GetName(typeof(TweepType), this.Type) + ") (" + this.User.FollowersCount + ")";
+        }
     }
 }
