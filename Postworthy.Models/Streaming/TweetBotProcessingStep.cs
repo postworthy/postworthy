@@ -141,7 +141,7 @@ namespace Postworthy.Models.Streaming
 
         private void SendFriendRequests()
         {
-            if (RuntimeSettings.TweetsSentSinceLastFriendRequest == 20)
+            if (RuntimeSettings.TweetsSentSinceLastFriendRequest >= 20)
             {
                 RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
 
