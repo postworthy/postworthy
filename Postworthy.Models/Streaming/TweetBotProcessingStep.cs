@@ -145,6 +145,31 @@ namespace Postworthy.Models.Streaming
             {
                 RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
 
+                var tweeps = RuntimeSettings.PotentialTweeps
+                    .Where(x => x.Item1 > 5)
+                    .Where(x => x.Item2.Type == Tweep.TweepType.None);
+
+                tweeps.ToList().ForEach(x=>{
+                    var followers = x.Item2.Followers();
+                    var primaryFollowers = PrimaryTweep.Followers();
+
+                    if (followers.Union(primaryFollowers).Count() != (followers.Count() + primaryFollowers.Count()))
+                    {
+                        x.Item2.Type = Tweep.TweepType.Target;
+
+                        /*
+                         * Uncomment if you want the bot to make friendships...
+                         * 
+                        var follow = TwitterModel.Instance.CreateFriendship(x.Item2);
+
+                        if (follow.Type == Tweep.TweepType.Following)
+                            PrimaryTweep.Followers(true);
+                         */
+                    }
+                    else
+                        x.Item2.Type = Tweep.TweepType.Ignore;
+                });
+
                 log.WriteLine("{0}: Friend Request Sent", DateTime.Now);
             }
         }
@@ -182,7 +207,7 @@ namespace Postworthy.Models.Streaming
                 log.WriteLine("####################");
                 log.WriteLine("{0}: Potential Tweeps: {1}",
                     DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweeps.Select(x => x.Item1 + ":" + x.Item2.User.Identifier.ScreenName)));
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweeps.Select(x => x.Item1 + ":" + x.Item2)));
                 log.WriteLine("####################");
             }
 
@@ -200,7 +225,7 @@ namespace Postworthy.Models.Streaming
         {
             var minClout = GetMinClout();
             var minWeight = GetMinWeight();
-            var friendsAndFollows = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName);
+            var friendsAndFollows = PrimaryTweep.Followers();
 
             var tweet_tweep_pairs = tweets
                 .Select(x =>
@@ -236,7 +261,7 @@ namespace Postworthy.Models.Streaming
         private void FindPotentialTweets(IEnumerable<Tweet> tweets)
         {
             var minWeight = GetMinWeight();
-            var friendsAndFollows = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName);
+            var friendsAndFollows = PrimaryTweep.Followers();
 
             var tweet_tweep_pairs = tweets
                 .Select(x =>
@@ -283,7 +308,7 @@ namespace Postworthy.Models.Streaming
         {
             var minClout = GetMinClout();
             var minWeight = GetMinWeight();
-            var friendsAndFollows = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName);
+            var friendsAndFollows = PrimaryTweep.Followers();
             var tweet_tweep_pairs = tweets
                 .Select(x =>
                     x.Status.Retweeted ?
@@ -339,7 +364,7 @@ namespace Postworthy.Models.Streaming
 
         private int GetMinClout()
         {
-            var friends = TwitterModel.Instance.Friends(UsersCollection.PrimaryUser().TwitterScreenName)
+            var friends = PrimaryTweep.Followers()
                 .Where(x => x.Type == Tweep.TweepType.Follower || x.Type == Tweep.TweepType.Mutual);
             double minClout = friends.Count() + 1.0;
             return (int)Math.Max(minClout, friends.Count() > 0 ? Math.Floor(friends.Average(x => x.Clout())) : 0);
