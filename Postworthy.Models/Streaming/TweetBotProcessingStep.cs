@@ -56,9 +56,7 @@ namespace Postworthy.Models.Streaming
         {
             return Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
                 {
-                    IEnumerable<Tweet> respondedTo = null;
-                    if (Messages != null)
-                        respondedTo = RespondToTweets(tweets);
+                    RespondToTweets(tweets);
 
                     FindPotentialTweets(tweets);
 
@@ -68,22 +66,27 @@ namespace Postworthy.Models.Streaming
 
                     SendTweets();
 
-                    SendFriendRequests();
+                    EstablishTargets();
 
                     DebugConsoleLog();
 
-                    try
-                    {
-                        repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
-                    }
-                    catch (Enyim.Caching.Memcached.MemcachedException mcex)
-                    {
-                        RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Skip(RuntimeSettings.Tweeted.Count() / 2).ToList();
-                        repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
-                    }
+                    SaveRuntimeSettings();
 
                     return tweets;
                 }));
+        }
+
+        private void SaveRuntimeSettings()
+        {
+            try
+            {
+                repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
+            }
+            catch (Enyim.Caching.Memcached.MemcachedException mcex)
+            {
+                RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Skip(RuntimeSettings.Tweeted.Count() / 2).ToList();
+                repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
+            }
         }
 
         private void SendTweets()
@@ -105,10 +108,15 @@ namespace Postworthy.Models.Streaming
                     }
                     else
                     {
-                        RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                        RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                        RuntimeSettings.PotentialTweets.Remove(tweet);
-                        RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.8));
+                        if (SendTweet(tweet, false))
+                        {
+                            RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                            RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                            RuntimeSettings.PotentialTweets.Remove(tweet);
+                            RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.8));
+                        }
+                        else
+                            RuntimeSettings.PotentialReTweets.Remove(tweet);
                     }
                 }
             }
@@ -129,17 +137,48 @@ namespace Postworthy.Models.Streaming
                      }
                      else
                      {
-                         RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                         RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                         RuntimeSettings.PotentialReTweets.Remove(tweet);
-
-                         RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.3));
+                         if (SendTweet(tweet, true))
+                         {
+                             RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                             RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                             RuntimeSettings.PotentialReTweets.Remove(tweet);
+                             RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.3));
+                         }
+                         else
+                             RuntimeSettings.PotentialReTweets.Remove(tweet);
                      }
                 }
             }
         }
 
-        private void SendFriendRequests()
+        private bool SendTweet(Tweet tweet, bool isRetweet)
+        {
+            return true; //Short this call out until ready to release into the wild...
+
+            if (!isRetweet)
+            {
+                tweet.PopulateExtendedData();
+                var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
+                if (link != null)
+                {
+                    string statusText = link.ToString() == link.Title ? 
+                        link.Title.Substring(0, 116) + " " + link.Uri.ToString()
+                        :
+                        link.Uri.ToString();
+                    TwitterModel.Instance.UpdateStatus(statusText, processStatus: false);
+                    return true;
+                }
+            }
+            else
+            {
+                TwitterModel.Instance.Retweet(tweet.StatusID.ToString());
+                return true;
+            }
+
+            return false;
+        }
+
+        private void EstablishTargets()
         {
             if (RuntimeSettings.TweetsSentSinceLastFriendRequest >= 20)
             {
@@ -378,43 +417,47 @@ namespace Postworthy.Models.Streaming
 
         private IEnumerable<Tweet> RespondToTweets(IEnumerable<Tweet> tweets)
         {
+
             var repliedTo = new List<Tweet>();
-            foreach (var t in tweets)
+            if (Messages != null)
             {
-                string tweetedBy = t.User.Identifier.ScreenName.ToLower();
-                if (!NoTweetList.Any(x => x == tweetedBy) && //Don't bug people with constant retweets
-                    !t.TweetText.ToLower().Contains(NoTweetList[0]) && //Don't bug them even if they are mentioned in the tweet
-                    (!OnlyWithMentions || t.Status.Entities.UserMentions.Count > 0) //OPTIONAL: Only respond to tweets that mention someone
-                    )
+                foreach (var t in tweets)
                 {
-                    //Dont want to keep hitting the same person over and over so add them to the ignore list
-                    NoTweetList.Add(tweetedBy);
-                    //If they were mentioned in a tweet they get ignored in the future just in case they reply
-                    NoTweetList.AddRange(t.Status.Entities.UserMentions.Where(um => !string.IsNullOrEmpty(um.ScreenName)).Select(um => um.ScreenName));
-
-                    string message = "";
-                    if (t.User.FollowersCount > 9999)
-                        //TODO: It would be very cool to have the code branch here for custom tweets to popular twitter accounts
-                        //IDEA: Maybe have it text you for a response
-                        message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
-                    else
-                        //Randomly select response from list of possible responses
-                        message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
-
-                    //Tweet it
-                    try
+                    string tweetedBy = t.User.Identifier.ScreenName.ToLower();
+                    if (!NoTweetList.Any(x => x == tweetedBy) && //Don't bug people with constant retweets
+                        !t.TweetText.ToLower().Contains(NoTweetList[0]) && //Don't bug them even if they are mentioned in the tweet
+                        (!OnlyWithMentions || t.Status.Entities.UserMentions.Count > 0) //OPTIONAL: Only respond to tweets that mention someone
+                        )
                     {
-                        TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+                        //Dont want to keep hitting the same person over and over so add them to the ignore list
+                        NoTweetList.Add(tweetedBy);
+                        //If they were mentioned in a tweet they get ignored in the future just in case they reply
+                        NoTweetList.AddRange(t.Status.Entities.UserMentions.Where(um => !string.IsNullOrEmpty(um.ScreenName)).Select(um => um.ScreenName));
+
+                        string message = "";
+                        if (t.User.FollowersCount > 9999)
+                            //TODO: It would be very cool to have the code branch here for custom tweets to popular twitter accounts
+                            //IDEA: Maybe have it text you for a response
+                            message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+                        else
+                            //Randomly select response from list of possible responses
+                            message = Messages.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+
+                        //Tweet it
+                        try
+                        {
+                            TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+                        }
+                        catch (Exception ex) { log.WriteLine("{0}: TweetBot Error: {1}", DateTime.Now, ex.ToString()); }
+
+                        repliedTo.Add(t);
+
+                        //Wait at least 1 minute between tweets so it doesnt look bot-ish with fast retweets
+                        //Add some extra random timing somewhere between 0-2 minutes
+                        //The shortest wait will be 1 minute the longest will be 3
+                        int randomTime = 60000 + (1000 * Enumerable.Range(0, 120).OrderBy(x => Guid.NewGuid()).FirstOrDefault());
+                        System.Threading.Thread.Sleep(randomTime);
                     }
-                    catch (Exception ex) { log.WriteLine("{0}: TweetBot Error: {1}", DateTime.Now, ex.ToString()); }
-
-                    repliedTo.Add(t);
-
-                    //Wait at least 1 minute between tweets so it doesnt look bot-ish with fast retweets
-                    //Add some extra random timing somewhere between 0-2 minutes
-                    //The shortest wait will be 1 minute the longest will be 3
-                    int randomTime = 60000 + (1000 * Enumerable.Range(0, 120).OrderBy(x => Guid.NewGuid()).FirstOrDefault());
-                    System.Threading.Thread.Sleep(randomTime);
                 }
             }
             return repliedTo;
