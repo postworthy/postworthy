@@ -218,8 +218,7 @@ namespace Postworthy.Models.Twitter
                 if (status != null)
                 {
                     var tweet = new Tweet(status);
-                    var tp = new TweetProcessor(new List<Tweet> { tweet }, true);
-                    tp.Start();
+                    tweet.PopulateExtendedData();
                     Repository<Tweet>.Instance.Save(screenname + TWEETS, tweet);
                 }
             }

@@ -323,6 +323,12 @@ namespace Postworthy.Models.Twitter
 
         #endregion
 
+        public void PopulateExtendedData()
+        {
+            var tp = new TweetProcessor(new List<Tweet> { this }, true);
+            tp.Start();
+        }
+
         public static IEqualityComparer<ITweet> GetITweetTextComparer()
         {
             return GenericEqualityComparerFactory<ITweet>.Build(
