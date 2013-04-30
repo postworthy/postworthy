@@ -58,7 +58,7 @@
       <HintPath>..\packages\HtmlAgilityPack.1.4.6\lib\Net40\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="LinqToTwitter">
-      <HintPath>..\packages\linqtotwitter.2.1.03\lib\net40\LinqToTwitter.dll</HintPath>
+      <HintPath>..\packages\linqtotwitter.2.1.05\lib\net40\LinqToTwitter.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\net40\Newtonsoft.Json.dll</HintPath>

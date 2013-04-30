@@ -226,9 +226,6 @@ namespace Postworthy.Tasks.StreamMonitor
 
                     trackList = track.ToLower().Split(',').ToList();
 
-                    context.StreamingUserName = ConfigurationManager.AppSettings["UserName"];
-                    context.StreamingPassword = ConfigurationManager.AppSettings["Password"];
-
                     context.Streaming
                         .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == track)
                         .Select(strm => strm)

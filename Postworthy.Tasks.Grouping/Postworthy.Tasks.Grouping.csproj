@@ -35,8 +35,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LinqToTwitter">
-      <HintPath>..\packages\linqtotwitter.2.1.03\lib\net40\LinqToTwitter.dll</HintPath>
+    <Reference Include="LinqToTwitter, Version=2.1.5.0, Culture=neutral, PublicKeyToken=957107be965c25d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\linqtotwitter.2.1.05\lib\net40\LinqToTwitter.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
