@@ -12,14 +12,14 @@ using System.IO;
 
 namespace Postworthy.Models.Repository.Providers
 {
-    public class AzureTableStorageCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
+    public class AzureBlobStorageCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
 
         private CloudStorageAccount storageAccount = null;
         private CloudBlobClient blobClient = null;
         private CloudBlobContainer container = null;
 
-        public AzureTableStorageCache()
+        public AzureBlobStorageCache()
             : base()
         {
             var connectionString = ConfigurationManager.AppSettings["AzureStorageConnectionString"];
