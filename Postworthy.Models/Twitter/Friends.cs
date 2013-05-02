@@ -1,5 +1,6 @@
 ﻿using LinqToTwitter;
 using Postworthy.Models.Account;
+using Postworthy.Models.Core;
 using Postworthy.Models.Repository;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,12 @@ namespace Postworthy.Models.Twitter
 
         public static List<Tweep> GetFollowers(string screenname)
         {
+            var llf = GetFollowersWithLazyLoading(screenname);
+            return llf.Select(x => x.Value).ToList();
+        }
+
+        public static List<LazyLoader<Tweep>> GetFollowersWithLazyLoading(string screenname)
+        {
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
 
             try
@@ -49,15 +56,17 @@ namespace Postworthy.Models.Twitter
                     .SocialGraph
                     .Where(g => g.ScreenName == screenname && g.Type == SocialGraphType.Followers && g.Cursor == "-1")
                     .SelectMany(g => g.IDs)
-                    .Select(s => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == s).First(), Tweep.TweepType.Follower))
+                    .Select(s => new LazyLoader<Tweep>(s,
+                        (() => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == s).First(), Tweep.TweepType.Follower))))
                     .ToList();
 
                 friends.AddRange(context
                     .SocialGraph
                     .Where(g => g.ScreenName == screenname && g.Type == SocialGraphType.Friends && g.Cursor == "-1")
                     .SelectMany(g => g.IDs)
-                    .Except(friends.Select(u => u.User.Identifier.UserID))
-                    .Select(s => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == s).First(), Tweep.TweepType.Following)));
+                    .Except(friends.Select(x => x.ID))
+                    .Select(s => new LazyLoader<Tweep>(s,
+                        (() => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == s).First(), Tweep.TweepType.Following)))));
 
                 return friends;
             }

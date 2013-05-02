@@ -5,6 +5,7 @@ using System.Text;
 using Postworthy.Models.Repository;
 using LinqToTwitter;
 using Postworthy.Models.Account;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Models.Twitter
 {
@@ -69,20 +70,20 @@ namespace Postworthy.Models.Twitter
         }
         #endregion
 
-        private List<Tweep> _Followers = null;
-        public List<Tweep> Followers(bool forceRefresh = false)
+        private List<LazyLoader<Tweep>> _Followers = null;
+        public List<LazyLoader<Tweep>> Followers(bool forceRefresh = false)
         {
             if (_Followers == null || forceRefresh)
-                _Followers = Friends.GetFollowers(User.Identifier.ScreenName) ?? new List<Tweep>();
+                _Followers = Friends.GetFollowersWithLazyLoading(User.Identifier.ScreenName) ?? new List<LazyLoader<Tweep>>();
 
             return _Followers;
         }
 
-        public int Clout(bool includeFollowers = false)
+        public int Clout()
         {
-            var clout = this.User.FollowersCount + ((includeFollowers) ? Followers().Sum(x => 0.1 * x.User.FollowersCount) : 0.0);
+            var clout = this.User.FollowersCount;
 
-            return (int)Math.Floor(clout);
+            return clout;
         }
 
         #region IEquatable<Tweep> Members
