@@ -21,5 +21,10 @@ namespace Postworthy.Models.Streaming
                     return tweets;
                 }));
         }
+
+        public void Shutdown()
+        { 
+
+        }
     }
 }

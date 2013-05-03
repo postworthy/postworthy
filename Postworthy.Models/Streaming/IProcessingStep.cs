@@ -12,5 +12,6 @@ namespace Postworthy.Models.Streaming
     {
         void Init(TextWriter LogStream);
         Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets);
+        void Shutdown();
     }
 }

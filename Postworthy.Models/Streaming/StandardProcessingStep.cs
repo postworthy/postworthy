@@ -123,5 +123,10 @@ namespace Postworthy.Models.Streaming
 
             Repository<Tweet>.Instance.FlushChanges();
         }
+
+        public void Shutdown()
+        {
+
+        }
     }
 }

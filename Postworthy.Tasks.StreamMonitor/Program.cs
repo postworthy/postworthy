@@ -12,6 +12,7 @@ using Postworthy.Models.Streaming;
 using SignalR.Client.Hubs;
 using System.Net;
 using System.Threading.Tasks;
+using System.Runtime.ConstrainedExecution;
 
 namespace Postworthy.Tasks.StreamMonitor
 {
@@ -67,6 +68,8 @@ namespace Postworthy.Tasks.StreamMonitor
             {
                 if (s != null) s.CloseStream();
             });
+            if (processingStep != null) 
+                processingStep.Shutdown();
         }
 
         private static void StartProcessingQueue(TwitterContext userStreamContext, TwitterContext trackerStreamContext)
