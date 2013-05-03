@@ -139,8 +139,19 @@ namespace Postworthy.Models.Repository.Providers
             else
                 objects = new List<string> { obj.UniqueKey };
 
-            SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj));
-            SharedCache.Store(StoreMode.Set, key, Serialize(objects));
+            try
+            {
+                SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj));
+            }
+            catch (MemcachedException ex)
+            {
+                if (ex.Message != "object too large for cache") throw;
+
+                objects.Remove(obj.UniqueKey);
+            }
+
+            if(objects.Count > 0) 
+                SharedCache.Store(StoreMode.Set, key, Serialize(objects));
         }
 
         public override void Store(string key, List<TYPE> obj)
@@ -155,9 +166,19 @@ namespace Postworthy.Models.Repository.Providers
 
             obj.ForEach(o =>
             {
-                SharedCache.Store(StoreMode.Set, o.UniqueKey.ToString(), Serialize(o));
+                try
+                {
+                    SharedCache.Store(StoreMode.Set, o.UniqueKey.ToString(), Serialize(o));
+                }
+                catch (MemcachedException ex)
+                {
+                    if (ex.Message != "object too large for cache") throw;
+
+                    objects.Remove(o.UniqueKey);
+                }
             });
-            SharedCache.Store(StoreMode.Set, key, Serialize(objects));
+            if (objects.Count > 0) 
+                SharedCache.Store(StoreMode.Set, key, Serialize(objects));
         }
 
         public override void Remove(string key, TYPE obj)
