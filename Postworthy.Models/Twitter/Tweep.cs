@@ -27,6 +27,8 @@ namespace Postworthy.Models.Twitter
         public User User { get { return _User; } set { SetNotifyingProperty("User", ref _User, value); } }
         public TweepType Type { get { return _Type; } set { SetNotifyingProperty("Type", ref _Type, value); } }
 
+        public string ScreenName { get { return User.Identifier.ScreenName; } }
+
         public Tweep() { }
 
         public Tweep(User user, TweepType type)
@@ -97,7 +99,7 @@ namespace Postworthy.Models.Twitter
 
         public override string ToString()
         {
-            return this.User.Identifier.ScreenName + " (" + Enum.GetName(typeof(TweepType), this.Type) + ") (" + this.User.FollowersCount + ")";
+            return this.User.Identifier.ScreenName.PadRight(15) +  "\t" + Enum.GetName(typeof(TweepType), this.Type).PadRight(10) + "\t" + this.User.FollowersCount.ToString().PadLeft(10,'0');
         }
     }
 }
