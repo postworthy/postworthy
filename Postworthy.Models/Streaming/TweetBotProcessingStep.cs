@@ -25,6 +25,7 @@ namespace Postworthy.Models.Streaming
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
         private bool OnlyWithMentions = false;
+        private bool SimulationMode = false;
         private TextWriter log = null;
         private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
         private TweetBotRuntimeSettings RuntimeSettings = null;
@@ -44,13 +45,22 @@ namespace Postworthy.Models.Streaming
                 ?? new TweetBotRuntimeSettings();
 
             NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
-            Messages = TweetBotSettings.Settings.Messages.Count == 0 ?
+            Messages = TweetBotSettings.Get.Messages.Count == 0 ?
                 null :
-                Enumerable.Range(0, TweetBotSettings.Settings.Messages.Count - 1)
-                    .Select(i => TweetBotSettings.Settings.Messages[i].Value).ToArray();
-            OnlyWithMentions = TweetBotSettings.Settings.Filters["OnlyWithMentions"] != null ?
-                TweetBotSettings.Settings.Filters["OnlyWithMentions"].Value :
+                Enumerable.Range(0, TweetBotSettings.Get.Messages.Count - 1)
+                    .Select(i => TweetBotSettings.Get.Messages[i].Value).ToArray();
+            OnlyWithMentions = TweetBotSettings.Get.Filters["OnlyWithMentions"] != null ?
+                TweetBotSettings.Get.Filters["OnlyWithMentions"].Value :
                 false;
+
+            SimulationMode = TweetBotSettings.Get.Settings["IsSimulationMode"] != null ?
+                TweetBotSettings.Get.Settings["IsSimulationMode"].Value :
+                false;
+
+            if(SimulationMode)
+                log.WriteLine("{0}: Running in Simulation Mode, no real world actions will be taken.",
+                    DateTime.Now);
+
             if (Messages == null)
                 log.WriteLine("{0}: 'TweetBotSettings' configuration section is missing Messages. No responses will be sent.",
                     DateTime.Now);
@@ -180,29 +190,33 @@ namespace Postworthy.Models.Streaming
 
         private bool SendTweet(Tweet tweet, bool isRetweet)
         {
-            return true; //Short this call out until ready to release into the wild...
-
-            if (!isRetweet)
+            if (!SimulationMode)
             {
-                tweet.PopulateExtendedData();
-                var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
-                if (link != null)
+
+                if (!isRetweet)
                 {
-                    string statusText = link.ToString() == link.Title ? 
-                        link.Title.Substring(0, 116) + " " + link.Uri.ToString()
-                        :
-                        link.Uri.ToString();
-                    TwitterModel.Instance.UpdateStatus(statusText, processStatus: false);
+                    tweet.PopulateExtendedData();
+                    var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
+                    if (link != null)
+                    {
+                        string statusText = link.ToString() == link.Title ?
+                            link.Title.Substring(0, 116) + " " + link.Uri.ToString()
+                            :
+                            link.Uri.ToString();
+                        TwitterModel.Instance.UpdateStatus(statusText, processStatus: false);
+                        return true;
+                    }
+                }
+                else
+                {
+                    TwitterModel.Instance.Retweet(tweet.StatusID.ToString());
                     return true;
                 }
-            }
-            else
-            {
-                TwitterModel.Instance.Retweet(tweet.StatusID.ToString());
-                return true;
-            }
 
-            return false;
+                return false;
+            }
+            else 
+                return true;
         }
 
         private void EstablishTargets()
@@ -224,14 +238,13 @@ namespace Postworthy.Models.Streaming
                     {
                         x.Item2.Type = Tweep.TweepType.Target;
 
-                        /*
-                         * Uncomment if you want the bot to make friendships...
-                         * 
-                        var follow = TwitterModel.Instance.CreateFriendship(x.Item2);
+                        if (!SimulationMode)
+                        {
+                            var follow = TwitterModel.Instance.CreateFriendship(x.Item2);
 
-                        if (follow.Type == Tweep.TweepType.Following)
-                            PrimaryTweep.Followers(true);
-                         */
+                            if (follow.Type == Tweep.TweepType.Following)
+                                PrimaryTweep.Followers(true);
+                        }
                     }
                     else
                         x.Item2.Type = Tweep.TweepType.Ignore;
@@ -288,6 +301,10 @@ namespace Postworthy.Models.Streaming
             log.WriteLine("{0}: Minimum Retweets: {1:F2}",
                 DateTime.Now,
                 GetMinRetweets());
+
+            log.WriteLine("{0}: Running {1}",
+                DateTime.Now,
+                SimulationMode ? "**In Simulation Mode**" : "**In the Wild**");
             log.WriteLine("####################");
 
             log.WriteLine("****************************");
@@ -523,13 +540,45 @@ namespace Postworthy.Models.Streaming
     {
         private static TweetBotSettings settings = ConfigurationManager.GetSection("TweetBotSettings") as TweetBotSettings;
 
-        public static TweetBotSettings Settings { get { return settings; } }
+        public static TweetBotSettings Get { get { return settings; } }
 
         [ConfigurationProperty("Messages", IsKey = false, IsRequired = true)]
         public MessageCollection Messages { get { return (MessageCollection)base["Messages"]; } }
 
         [ConfigurationProperty("Filters", IsKey = false, IsRequired = false)]
         public FilterCollection Filters { get { return (FilterCollection)base["Filters"]; } }
+
+        [ConfigurationProperty("Settings", IsKey = false, IsRequired = false)]
+        public SettingCollection Settings { get { return (SettingCollection)base["Settings"]; } }
+    }
+
+    public class SettingCollection : ConfigurationElementCollection
+    {
+        protected override ConfigurationElement CreateNewElement()
+        {
+            return new Setting();
+        }
+
+        protected override object GetElementKey(ConfigurationElement element)
+        {
+            return ((Setting)element).Key;
+        }
+
+        public Setting this[int idx]
+        {
+            get
+            {
+                return (Setting)BaseGet(idx);
+            }
+        }
+
+        public Setting this[string key]
+        {
+            get
+            {
+                return (Setting)BaseGet(key);
+            }
+        }
     }
 
     public class FilterCollection : ConfigurationElementCollection
@@ -580,6 +629,14 @@ namespace Postworthy.Models.Streaming
                 return (Message)BaseGet(idx);
             }
         }
+    }
+
+    public class Setting : ConfigurationElement
+    {
+        [ConfigurationProperty("key", IsKey = false, IsRequired = true)]
+        public string Key { get { return (string)base["key"]; } set { base["key"] = value; } }
+        [ConfigurationProperty("value", IsKey = false, IsRequired = true)]
+        public bool Value { get { return (bool)base["value"]; } set { base["value"] = value; } }
     }
 
     public class Filter : ConfigurationElement
