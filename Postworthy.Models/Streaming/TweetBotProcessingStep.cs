@@ -21,6 +21,7 @@ namespace Postworthy.Models.Streaming
         private const int POTENTIAL_TWEEP_BUFFER_MAX = 50;
         private const int MIN_TWEEP_NOTICED = 5;
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
+        private const int MAX_TIME_BETWEEN_TWEETS = 3;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
@@ -131,7 +132,9 @@ namespace Postworthy.Models.Streaming
             if (RuntimeSettings.TweetOrRetweet)
             {
                 RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX)
+                if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
+                    //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
+                    DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS))
                 {
                     var tweet = RuntimeSettings.PotentialTweets.First();
                     var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
@@ -149,8 +152,9 @@ namespace Postworthy.Models.Streaming
                         {
                             RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
                             RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                            RuntimeSettings.LastTweetTime = DateTime.Now;
                             RuntimeSettings.PotentialTweets.Remove(tweet);
-                            RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.8));
+                            RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                         }
                         else
                             RuntimeSettings.PotentialReTweets.Remove(tweet);
@@ -160,7 +164,9 @@ namespace Postworthy.Models.Streaming
             else
             {
                 RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX)
+                if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX || 
+                    //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
+                    DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS))
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
                      var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
@@ -178,8 +184,9 @@ namespace Postworthy.Models.Streaming
                          {
                              RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
                              RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                             RuntimeSettings.LastTweetTime = DateTime.Now;
                              RuntimeSettings.PotentialReTweets.Remove(tweet);
-                             RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < (tweet.RetweetCount * 0.3));
+                             RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                          }
                          else
                              RuntimeSettings.PotentialReTweets.Remove(tweet);
@@ -221,7 +228,7 @@ namespace Postworthy.Models.Streaming
 
         private void EstablishTargets()
         {
-            if (RuntimeSettings.TweetsSentSinceLastFriendRequest >= 5)
+            if (RuntimeSettings.TweetsSentSinceLastFriendRequest >= 2)
             {
                 RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
 
@@ -243,7 +250,10 @@ namespace Postworthy.Models.Streaming
                             var follow = TwitterModel.Instance.CreateFriendship(x.Item2);
 
                             if (follow.Type == Tweep.TweepType.Following)
+                            {
                                 PrimaryTweep.Followers(true);
+                                RuntimeSettings.PotentialTweeps.Remove(x);
+                            }
                         }
                     }
                     else
@@ -675,6 +685,7 @@ namespace Postworthy.Models.Streaming
             PotentialReTweets = new List<Tweet>();
             Tweeted = new List<Tweet>();
             PotentialTweeps = new List<Tuple<int, Tweep>>();
+            LastTweetTime = DateTime.MaxValue;
         }
 
         public override string UniqueKey
