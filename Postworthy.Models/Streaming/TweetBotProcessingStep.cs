@@ -137,11 +137,13 @@ namespace Postworthy.Models.Streaming
                     DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS))
                 {
                     var tweet = RuntimeSettings.PotentialTweets.First();
-                    var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                        .GroupSimilar(log: log)
+                    var groups = RuntimeSettings.Tweeted
+                        .Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                        .GroupSimilar(0.75m, log)
                         .Select(g => new TweetGroup(g))
                         .Where(g=>g.GroupStatusIDs.Count() > 1);
-                    if (groups.Any(x => x.GroupStatusIDs.Contains(tweet.StatusID)))
+                    var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
+                    if (matches.Count() > 0)
                     {
                         //Ignore Tweets that are very similar
                         RuntimeSettings.PotentialTweets.Remove(tweet);
@@ -170,10 +172,11 @@ namespace Postworthy.Models.Streaming
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
                      var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                        .GroupSimilar(log: log)
+                        .GroupSimilar(0.75m, log)
                         .Select(g => new TweetGroup(g))
                         .Where(g=>g.GroupStatusIDs.Count() > 1);
-                     if (groups.Any(x => x.GroupStatusIDs.Contains(tweet.StatusID)))
+                     var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
+                     if (matches.Count() > 0)
                      {
                          //Ignore Tweets that are very similar
                          RuntimeSettings.PotentialReTweets.Remove(tweet);
