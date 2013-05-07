@@ -36,11 +36,6 @@ namespace Postworthy.Models.Streaming
         {
             this.log = log;
 
-            /*
-            repo.Save(RUNTIME_REPO_KEY,
-                Newtonsoft.Json.JsonConvert.DeserializeObject<TweetBotRuntimeSettings>(File.ReadAllText(@"C:\Users\jolkey\AppData\Local\Temp\longtermstorage\b8bca097-f014-4c9e-8f7b-bcc9a7a6c64c.json")));
-            */
-
             RuntimeSettings = (repo.Query(RUNTIME_REPO_KEY)
                 ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault() 
                 ?? new TweetBotRuntimeSettings();
@@ -139,7 +134,7 @@ namespace Postworthy.Models.Streaming
                     var tweet = RuntimeSettings.PotentialTweets.First();
                     var groups = RuntimeSettings.Tweeted
                         .Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                        .GroupSimilar(0.75m, log)
+                        .GroupSimilar(0.45m, log)
                         .Select(g => new TweetGroup(g))
                         .Where(g=>g.GroupStatusIDs.Count() > 1);
                     var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
@@ -172,7 +167,7 @@ namespace Postworthy.Models.Streaming
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
                      var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                        .GroupSimilar(0.75m, log)
+                        .GroupSimilar(0.45m, log)
                         .Select(g => new TweetGroup(g))
                         .Where(g=>g.GroupStatusIDs.Count() > 1);
                      var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
