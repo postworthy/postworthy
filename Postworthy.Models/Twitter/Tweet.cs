@@ -21,6 +21,7 @@ namespace Postworthy.Models.Twitter
         public Tweet()
         {
             Links = new List<UriEx>();
+            //WordLetterPairHash = Enumerable.Range(0, 9).Select(x => Guid.NewGuid().ToString().GetHashCode()).ToArray();
             /*
             Links.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((x, y) =>
                 {
@@ -124,7 +125,7 @@ namespace Postworthy.Models.Twitter
 
                 return _WordLetterPairHash;
             }
-            protected set { SetNotifyingProperty("WordLetterPairHash", ref _WordLetterPairHash, value); }
+            set { SetNotifyingProperty("WordLetterPairHash", ref _WordLetterPairHash, value); }
         }
 
         #endregion
