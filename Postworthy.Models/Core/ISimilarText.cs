@@ -7,6 +7,6 @@ namespace Postworthy.Models.Core
 {
     public interface ISimilarText
     {
-        List<int> WordLetterPairHash { get; }
+        int[] WordLetterPairHash { get; }
     }
 }

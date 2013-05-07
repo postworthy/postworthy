@@ -80,8 +80,8 @@ namespace Postworthy.Models.Core
                             {
                                 #region Compare All Pairs and Assign Similarity (Pass 1)
                                 intersection = 0;
-                                p1c = so[i].Object.WordLetterPairHash.Count;
-                                p2c = so[j].Object.WordLetterPairHash.Count;
+                                p1c = so[i].Object.WordLetterPairHash.Length;
+                                p2c = so[j].Object.WordLetterPairHash.Length;
                                 union = p1c + p2c;
 
                                 if (union != 0)

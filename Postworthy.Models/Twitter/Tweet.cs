@@ -72,9 +72,9 @@ namespace Postworthy.Models.Twitter
                  * to do this we compare the precomputed letter hashes
                  * if we mis we return as soon as possible.
                  */
-                else if (this.WordLetterPairHash.Count == otherTweet.WordLetterPairHash.Count)
+                else if (this.WordLetterPairHash.Length == otherTweet.WordLetterPairHash.Length)
                 {
-                    for (int i = 0; i < this.WordLetterPairHash.Count; i++)
+                    for (int i = 0; i < this.WordLetterPairHash.Length; i++)
                     {
                         if (this.WordLetterPairHash[i] != otherTweet.WordLetterPairHash[i])
                             return false;
@@ -101,23 +101,21 @@ namespace Postworthy.Models.Twitter
             text = Regex.Replace(text, @"(http|ftp|https)://([\w+?\.\w+])+([a-zA-Z0-9\~\!\@\#\$\%\^\&\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?", "");
             text = text.Trim();
             int MIN_LENGTH = 3;
-            WordLetterPairHash = new List<int>(text.Length);
-            string[] words = text.ToLower().Split(' ');
+            int index = 0;
+            string[] words = text.ToLower().Split(' ').Where(x=>x.Length >= MIN_LENGTH).ToArray();
+            WordLetterPairHash = new int[words.Sum(x => x.Length - (MIN_LENGTH - 1))];
             for (int w = 0; w < words.Length; w++)
             {
-                if (words[w].Length >= MIN_LENGTH)
+                int numPairs = words[w].Length - (MIN_LENGTH - 1);
+                for (int j = 0; j < numPairs; j++)
                 {
-                    int numPairs = words[w].Length - (MIN_LENGTH - 1);
-                    for (int j = 0; j < numPairs; j++)
-                    {
-                        WordLetterPairHash.Add(words[w].Substring(j, MIN_LENGTH).GetHashCode());
-                    }
+                    WordLetterPairHash[index++] = words[w].Substring(j, MIN_LENGTH).GetHashCode();
                 }
             }
         }
 
-        private List<int> _WordLetterPairHash;
-        public List<int> WordLetterPairHash
+        private int[] _WordLetterPairHash;
+        public int[] WordLetterPairHash
         {
             get
             {
