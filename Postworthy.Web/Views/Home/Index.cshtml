@@ -261,14 +261,15 @@
         $(function () {
             stream = $.connection.streamingHub;
 
-            stream.update = function (data) {
-                $(data).each(function (i, o) {
-                    availableUpdates.unshift(o);
-                });
-                updateNotification();
-            };
-
-            $.connection.hub.start();
+            if (stream) {
+                stream.update = function (data) {
+                    $(data).each(function (i, o) {
+                        availableUpdates.unshift(o);
+                    });
+                    updateNotification();
+                };
+                $.connection.hub.start();
+            }
         });
 
         function loadUpdates() {
