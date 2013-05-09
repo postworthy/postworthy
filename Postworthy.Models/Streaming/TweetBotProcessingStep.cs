@@ -37,7 +37,7 @@ namespace Postworthy.Models.Streaming
             this.log = log;
 
             RuntimeSettings = (repo.Query(RUNTIME_REPO_KEY)
-                ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault() 
+                ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault()
                 ?? new TweetBotRuntimeSettings();
 
             NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
@@ -53,7 +53,7 @@ namespace Postworthy.Models.Streaming
                 TweetBotSettings.Get.Settings["IsSimulationMode"].Value :
                 false;
 
-            if(SimulationMode)
+            if (SimulationMode)
                 log.WriteLine("{0}: Running in Simulation Mode, no real world actions will be taken.",
                     DateTime.Now);
 
@@ -114,7 +114,7 @@ namespace Postworthy.Models.Streaming
                 catch (Enyim.Caching.Memcached.MemcachedException mcex)
                 {
                     RuntimeSettings.Tweeted = RuntimeSettings.Tweeted
-                        .OrderByDescending(x=>x.TweetRank)
+                        .OrderByDescending(x => x.TweetRank)
                         .Take(RuntimeSettings.Tweeted.Count() / 2)
                         .ToList();
                     saved = false;
@@ -129,14 +129,14 @@ namespace Postworthy.Models.Streaming
                 RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
                 if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
                     //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                    DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS))
+                    (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialTweets.Count > 0))
                 {
                     var tweet = RuntimeSettings.PotentialTweets.First();
                     var groups = RuntimeSettings.Tweeted
                         .Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
                         .GroupSimilar(0.45m, log)
                         .Select(g => new TweetGroup(g))
-                        .Where(g=>g.GroupStatusIDs.Count() > 1);
+                        .Where(g => g.GroupStatusIDs.Count() > 1);
                     var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
                     if (matches.Count() > 0)
                     {
@@ -161,34 +161,34 @@ namespace Postworthy.Models.Streaming
             else
             {
                 RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX || 
+                if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
                     //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                    DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS))
+                    (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialReTweets.Count > 0))
                 {
                     var tweet = RuntimeSettings.PotentialReTweets.First();
-                     var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                        .GroupSimilar(0.45m, log)
-                        .Select(g => new TweetGroup(g))
-                        .Where(g=>g.GroupStatusIDs.Count() > 1);
-                     var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
-                     if (matches.Count() > 0)
-                     {
-                         //Ignore Tweets that are very similar
-                         RuntimeSettings.PotentialReTweets.Remove(tweet);
-                     }
-                     else
-                     {
-                         if (SendTweet(tweet, true))
-                         {
-                             RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                             RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                             RuntimeSettings.LastTweetTime = DateTime.Now;
-                             RuntimeSettings.PotentialReTweets.Remove(tweet);
-                             RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
-                         }
-                         else
-                             RuntimeSettings.PotentialReTweets.Remove(tweet);
-                     }
+                    var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                       .GroupSimilar(0.45m, log)
+                       .Select(g => new TweetGroup(g))
+                       .Where(g => g.GroupStatusIDs.Count() > 1);
+                    var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
+                    if (matches.Count() > 0)
+                    {
+                        //Ignore Tweets that are very similar
+                        RuntimeSettings.PotentialReTweets.Remove(tweet);
+                    }
+                    else
+                    {
+                        if (SendTweet(tweet, true))
+                        {
+                            RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                            RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                            RuntimeSettings.LastTweetTime = DateTime.Now;
+                            RuntimeSettings.PotentialReTweets.Remove(tweet);
+                            RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
+                        }
+                        else
+                            RuntimeSettings.PotentialReTweets.Remove(tweet);
+                    }
                 }
             }
         }
@@ -220,7 +220,7 @@ namespace Postworthy.Models.Streaming
 
                 return false;
             }
-            else 
+            else
                 return true;
         }
 
@@ -234,11 +234,12 @@ namespace Postworthy.Models.Streaming
                     .Where(x => x.Item1 > MIN_TWEEP_NOTICED)
                     .Where(x => x.Item2.Type == Tweep.TweepType.None);
 
-                tweeps.ToList().ForEach(x=>{
-                    var followers = x.Item2.Followers().Select(y=>y.ID);
+                tweeps.ToList().ForEach(x =>
+                {
+                    var followers = x.Item2.Followers().Select(y => y.ID);
                     var primaryFollowers = PrimaryTweep.Followers().Select(y => y.ID);
 
-                    if (x.Item1 > TWEEP_NOTICED_AUTOMATIC || 
+                    if (x.Item1 > TWEEP_NOTICED_AUTOMATIC ||
                         followers.Union(primaryFollowers).Count() != (followers.Count() + primaryFollowers.Count()))
                     {
                         x.Item2.Type = Tweep.TweepType.Target;
@@ -294,10 +295,10 @@ namespace Postworthy.Models.Streaming
                 log.WriteLine("{0}: Potential Tweeps: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweeps
-                        .OrderByDescending(x=>x.Item2.User.FollowersCount.ToString().Length)
-                        .ThenByDescending(x=>x.Item1)
-                        .ThenBy(x=>x.Item2.ScreenName)
-                        .Select(x => x.Item1.ToString().PadLeft(3,'0') + "\t" + x.Item2)));
+                        .OrderByDescending(x => x.Item2.User.FollowersCount.ToString().Length)
+                        .ThenByDescending(x => x.Item1)
+                        .ThenBy(x => x.Item2.ScreenName)
+                        .Select(x => x.Item1.ToString().PadLeft(3, '0') + "\t" + x.Item2)));
                 log.WriteLine("####################");
             }
 
@@ -380,7 +381,7 @@ namespace Postworthy.Models.Streaming
                     })
                     .Where(x => Encoding.UTF8.GetByteCount(x.tweet.TweetText) == x.tweet.TweetText.Length) //Only ASCII for me...
                     .Where(x => x.weight >= minWeight)
-                    .Where(x=>x.tweet.RetweetCount >= minRetweets);
+                    .Where(x => x.tweet.RetweetCount >= minRetweets);
 
             if (tweet_tweep_pairs.Count() > 0)
             {
@@ -408,7 +409,7 @@ namespace Postworthy.Models.Streaming
         {
             var minClout = GetMinClout();
             var minWeight = GetMinWeight();
-            var friendsAndFollows = PrimaryTweep.Followers().Select(x=>x.ID);
+            var friendsAndFollows = PrimaryTweep.Followers().Select(x => x.ID);
             var tweet_tweep_pairs = tweets
                 .Select(x =>
                     x.Status.Retweeted ?
@@ -441,8 +442,8 @@ namespace Postworthy.Models.Streaming
                             if (RuntimeSettings.PotentialTweeps[i].Item2.Equals(x))
                             {
                                 var tweep = RuntimeSettings.PotentialTweeps[i].Item2;
-                                
-                                if(tweep.Type != Tweep.TweepType.Target)
+
+                                if (tweep.Type != Tweep.TweepType.Target)
                                     tweep.Type = Tweep.TweepType.None;
 
                                 RuntimeSettings.PotentialTweeps[i] = new Tuple<int, Tweep>(
@@ -488,10 +489,19 @@ namespace Postworthy.Models.Streaming
 
         private double GetMinRetweets()
         {
-            if (RuntimeSettings.Tweeted != null && RuntimeSettings.Tweeted.Count > 0)
-                return RuntimeSettings.Tweeted.Average(x => x.RetweetCount) * 0.65;
-            else
-                return 1.0;
+            if (RuntimeSettings.Tweeted != null && RuntimeSettings.Tweeted.Count > 5)
+            {
+                double stdev = 0;
+                var values = RuntimeSettings.Tweeted.Select(x => x.RetweetCount);
+                double avg = values.Average();
+                //Get Standard Deviation
+                stdev = Math.Sqrt(values.Sum(d => (d - avg) * (d - avg)) / values.Count());
+
+                return values.Where(x => x <= (avg + stdev*2) && x >= (avg - stdev*2)).Average() * 0.65;
+            }
+            
+                return 2.0;
+
         }
 
         private IEnumerable<Tweet> RespondToTweets(IEnumerable<Tweet> tweets)
