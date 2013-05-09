@@ -22,15 +22,24 @@ namespace Postworthy.Models.Streaming
         private const int MIN_TWEEP_NOTICED = 5;
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
+        private const int SIMULATION_MODE_HOURS = 48;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
         private bool OnlyWithMentions = false;
-        private bool SimulationMode = false;
         private TextWriter log = null;
         private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
         private TweetBotRuntimeSettings RuntimeSettings = null;
         private Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
+        private bool ForceSimulationMode = false;
+
+        public bool SimulationMode
+        {
+            get
+            {
+                return ForceSimulationMode || (RuntimeSettings != null && RuntimeSettings.BotFirstStart.AddHours(SIMULATION_MODE_HOURS) > DateTime.Now);
+            }
+        }
 
         public void Init(TextWriter log)
         {
@@ -49,13 +58,17 @@ namespace Postworthy.Models.Streaming
                 TweetBotSettings.Get.Filters["OnlyWithMentions"].Value :
                 false;
 
-            SimulationMode = TweetBotSettings.Get.Settings["IsSimulationMode"] != null ?
+            ForceSimulationMode = TweetBotSettings.Get.Settings["IsSimulationMode"] != null ?
                 TweetBotSettings.Get.Settings["IsSimulationMode"].Value :
                 false;
 
-            if (SimulationMode)
-                log.WriteLine("{0}: Running in Simulation Mode, no real world actions will be taken.",
+            if (ForceSimulationMode)
+                log.WriteLine("{0}: Running in forced simulation mode. No actions will be taken.",
                     DateTime.Now);
+            else if (SimulationMode)
+                log.WriteLine("{0}: Running in automatic simulation mode to aquire a baseline. No actions will be taken for {1}hrs.",
+                    DateTime.Now,
+                    SIMULATION_MODE_HOURS);
 
             if (Messages == null)
                 log.WriteLine("{0}: 'TweetBotSettings' configuration section is missing Messages. No responses will be sent.",
@@ -197,7 +210,6 @@ namespace Postworthy.Models.Streaming
         {
             if (!SimulationMode)
             {
-
                 if (!isRetweet)
                 {
                     tweet.PopulateExtendedData();
@@ -677,6 +689,7 @@ namespace Postworthy.Models.Streaming
     {
         public Guid SettingsGuid { get; set; }
 
+        public DateTime BotFirstStart { get; set; }
         public double AverageWeight { get; set; }
         public DateTime LastTweetTime { get; set; }
         public bool TweetOrRetweet { get; set; }
@@ -688,6 +701,7 @@ namespace Postworthy.Models.Streaming
 
         public TweetBotRuntimeSettings()
         {
+            BotFirstStart = DateTime.Now;
             SettingsGuid = Guid.NewGuid();
             PotentialTweets = new List<Tweet>();
             PotentialReTweets = new List<Tweet>();
