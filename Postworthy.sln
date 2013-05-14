@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.Streaming"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.StreamMonitor", "Postworthy.Tasks.StreamMonitor\Postworthy.Tasks.StreamMonitor.csproj", "{8230CB3C-BC4A-46D5-9074-3020F9E47E19}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Web.Bot", "Postworthy.Web.Bot\Postworthy.Web.Bot.csproj", "{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,16 @@ Global
 		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|Mixed Platforms.Build.0 = Release|x86
 		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|x86.ActiveCfg = Release|x86
 		{8230CB3C-BC4A-46D5-9074-3020F9E47E19}.Release|x86.Build.0 = Release|x86
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FEAF78B2-70EA-428E-B7B2-B78BBD1AEB6D}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

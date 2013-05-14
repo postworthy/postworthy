@@ -28,12 +28,12 @@ obj/
 _ReSharper*/
 [Tt]est[Rr]esult*
 app.config
-Postworthy.Web/Web.config
-Postworthy.Web/Web.Debug.config
-Postworthy.Web/Web.Release.config
+Web.config
+Web.Debug.config
+Web.Release.config
 UsersCollection.config
 Postworthy.Web.Publish.xml
-Postworthy.Web/Postworthy.Publish.xml
+Postworthy.Publish.xml
 *.pubxml
 *.pubxml.user
 PublishProfiles
