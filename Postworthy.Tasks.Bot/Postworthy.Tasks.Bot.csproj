@@ -50,6 +50,14 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\Filter.cs" />
+    <Compile Include="Settings\FilterCollection.cs" />
+    <Compile Include="Settings\Message.cs" />
+    <Compile Include="Settings\MessageCollection.cs" />
+    <Compile Include="Settings\Setting.cs" />
+    <Compile Include="Settings\SettingCollection.cs" />
+    <Compile Include="Settings\TweetBotRuntimeSettings.cs" />
+    <Compile Include="Settings\TweetBotSettings.cs" />
     <Compile Include="Streaming\TweetBotProcessingStep.cs" />
   </ItemGroup>
   <ItemGroup>
