@@ -90,6 +90,7 @@ namespace Postworthy.Tasks.StreamMonitor
             queueTimer.Elapsed += new ElapsedEventHandler((x, y) =>
             {
                 queueTimer.Enabled = false;
+                bool restartTracker = false;
                 try
                 {
                     log.WriteLine("{0}: Processing Queue", DateTime.Now);
@@ -112,6 +113,11 @@ namespace Postworthy.Tasks.StreamMonitor
 
                     //Currently there is only one step but there could potentially be multiple user defined steps
                     GetIProcessingStep().ProcessItems(tweets).Wait();
+
+                    if (processingStep is IKeywordSuggestionStep)
+                    {
+                        restartTracker = (processingStep as IKeywordSuggestionStep).HasNewKeywordSuggestions();
+                    }
 
                     tweets = null;
                 }
@@ -142,12 +148,17 @@ namespace Postworthy.Tasks.StreamMonitor
                     }
                     try
                     {
-                        if (trackerStream != null && Math.Abs((lastCallBackTimeTrackerStream - DateTime.Now).TotalSeconds) > 90) //The Tracker Stream Stalled or was Closed
+                        if (restartTracker ||  //The tracker should be restarted because we have new potential keywords to track
+                            (trackerStream != null && Math.Abs((lastCallBackTimeTrackerStream - DateTime.Now).TotalSeconds) > 90)) //The Tracker Stream Stalled or was Closed
                         {
                             if (hadTrackerStreamFailure)
-                                log.WriteLine("{0}: LinqToTwitter Tracker Stream Was Closed Attempting to Reconnect", DateTime.Now);
+                                log.WriteLine("{0}: LinqToTwitter Tracker Stream was Closed Attempting to Reconnect", DateTime.Now);
+                            else if (restartTracker)
+                                log.WriteLine("{0}: LinqToTwitter Tracker Stream will be Restarted to Track more Keywords", DateTime.Now);
                             else
                                 log.WriteLine("{0}: LinqToTwitter Tracker Stream Stalled Attempting to Restart It", DateTime.Now);
+
+                            trackerStream.CloseStream();
 
                             trackerStreamContext = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
                             var task = StartTwitterTrackerStream(trackerStreamContext);
@@ -236,6 +247,19 @@ namespace Postworthy.Tasks.StreamMonitor
                         log.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, track);
 
                     trackList = track.ToLower().Split(',').ToList();
+
+                    if (processingStep is IKeywordSuggestionStep)
+                    {
+                        var keywordSuggestionStep = processingStep as IKeywordSuggestionStep;
+                        if (keywordSuggestionStep != null)
+                        {
+                            /* I have chosen to wrap these calls in seperate try catch statements incase one fails
+                             * the other can still run. This way if the get fails we may still have hope of a reset.
+                             */
+                            try { trackList.AddRange(keywordSuggestionStep.GetKeywordSuggestions()); } catch { }
+                            try { keywordSuggestionStep.ResetHasNewKeywordSuggestions(); } catch { }
+                        }
+                    }
 
                     context.Streaming
                         .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == track)

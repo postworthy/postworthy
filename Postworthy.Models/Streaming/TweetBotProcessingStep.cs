@@ -14,7 +14,7 @@ using System.Runtime.ConstrainedExecution;
 
 namespace Postworthy.Models.Streaming
 {
-    public class TweetBotProcessingStep : IProcessingStep
+    public class TweetBotProcessingStep : IProcessingStep, IKeywordSuggestionStep
     {
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
         private const int POTENTIAL_TWEET_BUFFER_MAX = 10;
@@ -23,6 +23,7 @@ namespace Postworthy.Models.Streaming
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
         private const int SIMULATION_MODE_HOURS = 48;
+        private const int MINIMUM_KEYWORD_COUNT = 30;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
@@ -32,6 +33,7 @@ namespace Postworthy.Models.Streaming
         private TweetBotRuntimeSettings RuntimeSettings = null;
         private Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
         private bool ForceSimulationMode = false;
+        private bool hasNewKeywordSuggestions = false;
 
         public bool SimulationMode
         {
@@ -563,6 +565,24 @@ namespace Postworthy.Models.Streaming
             }
             return repliedTo;
         }
+
+        public List<string> GetKeywordSuggestions()
+        {
+            return RuntimeSettings.KeywordSuggestions
+                .Where(x=>x.Item1 >= MINIMUM_KEYWORD_COUNT)
+                .Select(x=>x.Item2)
+                .ToList();
+        }
+
+        public void ResetHasNewKeywordSuggestions()
+        {
+            hasNewKeywordSuggestions = false;
+        }
+
+        public bool HasNewKeywordSuggestions()
+        {
+            return hasNewKeywordSuggestions;
+        }
     }
 
     #region TweetBotSettings
@@ -697,6 +717,7 @@ namespace Postworthy.Models.Streaming
         public List<Tweet> PotentialTweets { get; set; }
         public List<Tweet> PotentialReTweets { get; set; }
         public List<Tweet> Tweeted { get; set; }
+        public List<Tuple<int, string>> KeywordSuggestions { get; set; }
         public List<Tuple<int, Tweep>> PotentialTweeps { get; set; }
 
         public TweetBotRuntimeSettings()
@@ -708,6 +729,7 @@ namespace Postworthy.Models.Streaming
             Tweeted = new List<Tweet>();
             PotentialTweeps = new List<Tuple<int, Tweep>>();
             LastTweetTime = DateTime.MaxValue;
+            KeywordSuggestions = new List<Tuple<int, string>>();
         }
 
         public override string UniqueKey
