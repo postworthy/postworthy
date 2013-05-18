@@ -13,6 +13,8 @@ using Postworthy.Models.Core;
 using System.Runtime.ConstrainedExecution;
 using Postworthy.Models.Streaming;
 using Postworthy.Tasks.Bot.Settings;
+using System.Text.RegularExpressions;
+using Postworthy.Tasks.Bot.Models;
 
 namespace Postworthy.Tasks.Bot.Streaming
 {
@@ -26,6 +28,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
         private const int SIMULATION_MODE_HOURS = 48;
         private const int MINIMUM_KEYWORD_COUNT = 30;
+        private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
@@ -36,6 +39,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
         private bool ForceSimulationMode = false;
         private bool hasNewKeywordSuggestions = false;
+        private List<string> StopWords = new List<string>();
 
         public bool SimulationMode
         {
@@ -83,6 +87,18 @@ namespace Postworthy.Tasks.Bot.Streaming
                     DateTime.Now,
                     Environment.NewLine + string.Join(Environment.NewLine, Messages));
             }
+
+            try
+            {
+                StopWords = File.OpenText("Resources/stopwords.txt")
+                    .ReadToEnd()
+                    .Split('\n').Select(x=>x.Replace("\r","").ToLower())
+                    .ToList();
+                log.WriteLine("{0}: Stop Words: {1}",
+                    DateTime.Now,
+                    string.Join(",", StopWords));
+            }
+            catch { }
         }
 
         public Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets)
@@ -94,6 +110,8 @@ namespace Postworthy.Tasks.Bot.Streaming
                     FindPotentialTweets(tweets);
 
                     FindTweepsToFollow(tweets);
+
+                    FindKeywords(tweets);
 
                     UpdateAverageWeight(tweets);
 
@@ -315,6 +333,17 @@ namespace Postworthy.Tasks.Bot.Streaming
                         .ThenByDescending(x => x.Item1)
                         .ThenBy(x => x.Item2.ScreenName)
                         .Select(x => x.Item1.ToString().PadLeft(3, '0') + "\t" + x.Item2)));
+                log.WriteLine("####################");
+            }
+            if (RuntimeSettings.KeywordSuggestions.Count() > 0)
+            {
+                log.WriteLine("####################");
+                log.WriteLine("{0}: Keyword Suggestions: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.KeywordSuggestions
+                        .OrderByDescending(x => x.Count)
+                        .ThenByDescending(x => x.Key)
+                        .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
                 log.WriteLine("####################");
             }
 
@@ -568,11 +597,50 @@ namespace Postworthy.Tasks.Bot.Streaming
             return repliedTo;
         }
 
+        private void FindKeywords(IEnumerable<Tweet> tweets)
+        {
+            //For Later
+            var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
+
+            var keywords = tweets
+                .SelectMany(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower().Split(' ')) //Strip Punctuation, Force Lowercase, Split Words, Make List
+                .Except(StopWords) //Exclude Stop Words
+                .Except(RuntimeSettings.KeywordsToIgnore) //Exclude Ignore Words
+                .Where(x => !x.StartsWith("http")) //No URLs
+                .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
+                .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
+                .GroupBy(w => w) //Group Similar Words
+                .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
+                .ToList();
+
+            //Update Master Keyword List
+            keywords.ForEach(w=>{
+                var item = RuntimeSettings.KeywordSuggestions.Where(x=>x.Key == w.Word).FirstOrDefault();
+                if(item != null)
+                    item.Count += w.Count;
+                else
+                    RuntimeSettings.KeywordSuggestions.Add(new CountableItem(w.Word, w.Count));
+            });
+
+            RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
+                .OrderByDescending(x => x.Count)
+                .ThenByDescending(x => x.Key.Length)
+                .Take(50)
+                .ToList();
+
+            //For Comparison
+            var newSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
+
+            //If we have more then set the flag
+            if (newSuggestionCount > oldSuggestionCount)
+                hasNewKeywordSuggestions = true;
+        }
+
         public List<string> GetKeywordSuggestions()
         {
             return RuntimeSettings.KeywordSuggestions
-                .Where(x=>x.Item1 >= MINIMUM_KEYWORD_COUNT)
-                .Select(x=>x.Item2)
+                .Where(x=>x.Count >= MINIMUM_KEYWORD_COUNT)
+                .Select(x=>x.Key)
                 .ToList();
         }
 
@@ -584,6 +652,11 @@ namespace Postworthy.Tasks.Bot.Streaming
         public bool HasNewKeywordSuggestions()
         {
             return hasNewKeywordSuggestions;
+        }
+
+        public void SetIgnoreKeywords(List<string> keywords)
+        {
+            RuntimeSettings.KeywordsToIgnore = keywords;
         }
     }
 }

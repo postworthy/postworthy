@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Twitter;
+using Postworthy.Tasks.Bot.Models;
 
 namespace Postworthy.Tasks.Bot.Settings
 {
@@ -20,8 +21,9 @@ namespace Postworthy.Tasks.Bot.Settings
         public List<Tweet> PotentialTweets { get; set; }
         public List<Tweet> PotentialReTweets { get; set; }
         public List<Tweet> Tweeted { get; set; }
-        public List<Tuple<int, string>> KeywordSuggestions { get; set; }
-        public List<Tuple<int, Tweep>> PotentialTweeps { get; set; }
+        public List<CountableItem> KeywordSuggestions { get; set; }
+        public List<string> KeywordsToIgnore { get; set; }
+        public List<Tuple<int, Tweep>> PotentialTweeps { get; set; } ///TODO: Replace Tuple with CountableItem
 
         public TweetBotRuntimeSettings()
         {
@@ -32,7 +34,8 @@ namespace Postworthy.Tasks.Bot.Settings
             Tweeted = new List<Tweet>();
             PotentialTweeps = new List<Tuple<int, Tweep>>();
             LastTweetTime = DateTime.MaxValue;
-            KeywordSuggestions = new List<Tuple<int, string>>();
+            KeywordSuggestions = new List<CountableItem>();
+            KeywordsToIgnore = new List<string>();
         }
 
         public override string UniqueKey

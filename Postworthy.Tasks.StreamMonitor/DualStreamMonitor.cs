@@ -116,7 +116,7 @@ namespace Postworthy.Tasks.StreamMonitor
 
                     if (processingStep is IKeywordSuggestionStep)
                     {
-                        restartTracker = (processingStep as IKeywordSuggestionStep).HasNewKeywordSuggestions();
+                        try { restartTracker = (processingStep as IKeywordSuggestionStep).HasNewKeywordSuggestions(); } catch { }
                     }
 
                     tweets = null;
@@ -158,7 +158,8 @@ namespace Postworthy.Tasks.StreamMonitor
                             else
                                 log.WriteLine("{0}: LinqToTwitter Tracker Stream Stalled Attempting to Restart It", DateTime.Now);
 
-                            trackerStream.CloseStream();
+                            if (trackerStream != null) 
+                                trackerStream.CloseStream();
 
                             trackerStreamContext = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname);
                             var task = StartTwitterTrackerStream(trackerStreamContext);
@@ -238,84 +239,94 @@ namespace Postworthy.Tasks.StreamMonitor
 
                 try
                 {
-                    if (string.IsNullOrEmpty(track))
+                    if (string.IsNullOrEmpty(track) && !(processingStep is IKeywordSuggestionStep))
                     {
-                        log.WriteLine("{0}: AppSetting or UserCollection Property 'Track' Cannot be Null or Empty if you want to Track Key Words!", DateTime.Now, track);
+                        log.WriteLine("{0}: To track keywords one of the following must be true: \n\t1) AppSetting Property 'Track' Cannot be Null or Empty.\n\t2) UserCollection Property 'Track' Cannot be Null or Empty.\n\t3) ProcessingStep must Implement IKeywordSuggestionStep.", DateTime.Now);
                         return null;
                     }
                     else
-                        log.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, track);
-
-                    trackList = track.ToLower().Split(',').ToList();
-
-                    if (processingStep is IKeywordSuggestionStep)
                     {
-                        var keywordSuggestionStep = processingStep as IKeywordSuggestionStep;
-                        if (keywordSuggestionStep != null)
-                        {
-                            /* I have chosen to wrap these calls in seperate try catch statements incase one fails
-                             * the other can still run. This way if the get fails we may still have hope of a reset.
-                             */
-                            try { trackList.AddRange(keywordSuggestionStep.GetKeywordSuggestions()); } catch { }
-                            try { keywordSuggestionStep.ResetHasNewKeywordSuggestions(); } catch { }
-                        }
-                    }
+                        trackList = !string.IsNullOrEmpty(track) ? track.ToLower().Split(',').ToList() : new List<string>();
 
-                    context.Streaming
-                        .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == track)
-                        .Select(strm => strm)
-                        .StreamingCallback(strm =>
+                        if (processingStep is IKeywordSuggestionStep)
                         {
-                            try
+                            var keywordSuggestionStep = processingStep as IKeywordSuggestionStep;
+                            if (keywordSuggestionStep != null)
                             {
-                                lastCallBackTimeTrackerStream = DateTime.Now;
-                                sc = strm;
-                                if (strm != null)
+                                /* I have chosen to wrap these calls in seperate try catch statements incase one fails
+                                 * the other can still run. This way if the get fails we may still have hope of a reset.
+                                 */
+                                try { keywordSuggestionStep.SetIgnoreKeywords(trackList); } catch { }
+                                try { trackList.AddRange(keywordSuggestionStep.GetKeywordSuggestions().Select(x=>x.ToLower()).ToList()); } catch { }
+                                try { keywordSuggestionStep.ResetHasNewKeywordSuggestions(); } catch { }
+                            }
+                        }
+
+                        if (trackList.Count == 0)
+                        {
+                            log.WriteLine("{0}: No Keywords to Track at this time.", DateTime.Now);
+                            return null;
+                        }
+                        else
+                            log.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, string.Join(",", trackList));
+
+
+                        context.Streaming
+                            .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == track)
+                            .Select(strm => strm)
+                            .StreamingCallback(strm =>
+                            {
+                                try
                                 {
-                                    if (strm.Status == TwitterErrorStatus.RequestProcessingException)
+                                    lastCallBackTimeTrackerStream = DateTime.Now;
+                                    sc = strm;
+                                    if (strm != null)
                                     {
-                                        var wex = strm.Error as WebException;
-                                        if (wex != null && wex.Status == WebExceptionStatus.ConnectFailure)
+                                        if (strm.Status == TwitterErrorStatus.RequestProcessingException)
                                         {
-                                            log.WriteLine("{0}: LinqToTwitter Stream Connection Failure (TrackerStream)", DateTime.Now);
-                                            hadTrackerStreamFailure = true;
-                                            //Will Be Restarted By Processing Queue
-                                        }
-                                    }
-                                    else if (!string.IsNullOrEmpty(strm.Content))
-                                    {
-                                        var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
-                                        if (status != null && !string.IsNullOrEmpty(status.StatusID))
-                                        {
-                                            string statusText = status.Text.ToLower();
-                                            if (
-                                                trackList.Any(x => statusText.Contains(x)) && //Looking for exact matches
-                                                status.User.FollowersCount >= minFollowers && //Meets the follower cutoff
-                                                !ignore.Any(x => x != "" && statusText.Contains(x)) //Ignore these
-                                                )
+                                            var wex = strm.Error as WebException;
+                                            if (wex != null && wex.Status == WebExceptionStatus.ConnectFailure)
                                             {
-                                                var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
-                                                lock (queue_lock)
-                                                {
-                                                    queue.Add(tweet);
-                                                }
-                                                log.WriteLine("{0}: Added Item to Queue (TrackerStream): @{1} said [{2}]", DateTime.Now, tweet.User.Identifier.ScreenName, tweet.TweetText);
+                                                log.WriteLine("{0}: LinqToTwitter Stream Connection Failure (TrackerStream)", DateTime.Now);
+                                                hadTrackerStreamFailure = true;
+                                                //Will Be Restarted By Processing Queue
                                             }
                                         }
+                                        else if (!string.IsNullOrEmpty(strm.Content))
+                                        {
+                                            var status = new Status(LitJson.JsonMapper.ToObject(strm.Content));
+                                            if (status != null && !string.IsNullOrEmpty(status.StatusID))
+                                            {
+                                                string statusText = status.Text.ToLower();
+                                                if (
+                                                    trackList.Any(x => statusText.Contains(x)) && //Looking for exact matches
+                                                    status.User.FollowersCount >= minFollowers && //Meets the follower cutoff
+                                                    !ignore.Any(x => x != "" && statusText.Contains(x)) //Ignore these
+                                                    )
+                                                {
+                                                    var tweet = new Tweet(string.IsNullOrEmpty(status.RetweetedStatus.StatusID) ? status : status.RetweetedStatus);
+                                                    lock (queue_lock)
+                                                    {
+                                                        queue.Add(tweet);
+                                                    }
+                                                    log.WriteLine("{0}: Added Item to Queue (TrackerStream): @{1} said [{2}]", DateTime.Now, tweet.User.Identifier.ScreenName, tweet.TweetText);
+                                                }
+                                            }
+                                            else
+                                                log.WriteLine("{0}: Unhandled Item in Stream (TrackerStream): {1}", DateTime.Now, strm.Content);
+                                        }
                                         else
-                                            log.WriteLine("{0}: Unhandled Item in Stream (TrackerStream): {1}", DateTime.Now, strm.Content);
+                                            log.WriteLine("{0}: Twitter Keep Alive (TrackerStream)", DateTime.Now);
                                     }
                                     else
-                                        log.WriteLine("{0}: Twitter Keep Alive (TrackerStream)", DateTime.Now);
+                                        throw new ArgumentNullException("strm", "This value should never be null!");
                                 }
-                                else
-                                    throw new ArgumentNullException("strm", "This value should never be null!");
-                            }
-                            catch (Exception ex)
-                            {
-                                log.WriteLine("{0}: Error (TrackerStream): {1}", DateTime.Now, ex.ToString());
-                            }
-                        }).SingleOrDefault();
+                                catch (Exception ex)
+                                {
+                                    log.WriteLine("{0}: Error (TrackerStream): {1}", DateTime.Now, ex.ToString());
+                                }
+                            }).SingleOrDefault();
+                    }
                 }
                 catch (Exception ex)
                 {

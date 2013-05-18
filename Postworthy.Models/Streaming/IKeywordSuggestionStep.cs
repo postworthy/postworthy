@@ -7,6 +7,7 @@ namespace Postworthy.Models.Streaming
 {
     public interface IKeywordSuggestionStep
     {
+        void SetIgnoreKeywords(List<string> keywords);
         void ResetHasNewKeywordSuggestions();
         bool HasNewKeywordSuggestions();
         List<string> GetKeywordSuggestions();
