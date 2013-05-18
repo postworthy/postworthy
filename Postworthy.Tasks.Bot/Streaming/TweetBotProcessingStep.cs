@@ -11,8 +11,9 @@ using System.Collections;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Core;
 using System.Runtime.ConstrainedExecution;
+using Postworthy.Models.Streaming;
 
-namespace Postworthy.Models.Streaming
+namespace Postworthy.Tasks.Bot.Streaming
 {
     public class TweetBotProcessingStep : IProcessingStep, IKeywordSuggestionStep
     {

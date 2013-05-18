@@ -17,7 +17,7 @@ using System.IO;
 
 namespace Postworthy.Tasks.StreamMonitor
 {
-    public class StreamMonitor
+    public class DualStreamMonitor
     {
         private TextWriter log;
 
@@ -35,7 +35,7 @@ namespace Postworthy.Tasks.StreamMonitor
 
         private static Timer queueTimer = null;
 
-        public StreamMonitor(TextWriter log)
+        public DualStreamMonitor(TextWriter log)
         {
             this.log = log;
         }

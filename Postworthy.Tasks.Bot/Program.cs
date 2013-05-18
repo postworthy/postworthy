@@ -2,19 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Postworthy.Models.Account;
-using Postworthy.Models.Twitter;
-using LinqToTwitter;
-using System.Configuration;
-using System.Timers;
-using Postworthy.Models.Repository;
-using Postworthy.Models.Streaming;
-using SignalR.Client.Hubs;
-using System.Net;
 using System.Threading.Tasks;
-using System.Runtime.ConstrainedExecution;
+using Postworthy.Models.Account;
+using Postworthy.Tasks.StreamMonitor;
 
-namespace Postworthy.Tasks.StreamMonitor
+namespace Postworthy.Tasks.Bot
 {
     class Program
     {
@@ -33,12 +25,12 @@ namespace Postworthy.Tasks.StreamMonitor
             streamMonitor.Stop();
         }
 
-        
-        
+
+
         private static bool EnsureSingleLoad()
         {
             bool result;
-            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.StreamMonitor." + UsersCollection.PrimaryUser().TwitterScreenName, out result);
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Bot." + UsersCollection.PrimaryUser().TwitterScreenName, out result);
 
             return result;
         }
