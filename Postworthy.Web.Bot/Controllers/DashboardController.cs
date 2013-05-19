@@ -15,7 +15,8 @@ namespace Postworthy.Web.Bot.Controllers
         [AuthorizePrimaryUser]
         public ActionResult Index()
         {
-            return View();
+            var model = new DashboardModel();
+            return View(model);
         }
 
     }
