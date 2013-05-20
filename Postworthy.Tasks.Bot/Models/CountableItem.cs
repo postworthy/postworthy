@@ -6,12 +6,17 @@ using System.Threading.Tasks;
 
 namespace Postworthy.Tasks.Bot.Models
 {
-    public class CountableItem
+    public class CountableItem : CountableItem<string>
     {
-        public string Key { get; set; }
+        public CountableItem(string key, int count) : base(key, count) { }
+    }
+
+    public class CountableItem<T>
+    {
+        public T Key { get; set; }
         public int Count { get; set; }
 
-        public CountableItem(string key, int count)
+        public CountableItem(T key, int count)
         {
             Key = key;
             Count = count;

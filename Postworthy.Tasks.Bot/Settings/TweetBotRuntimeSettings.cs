@@ -23,7 +23,7 @@ namespace Postworthy.Tasks.Bot.Settings
         public List<Tweet> Tweeted { get; set; }
         public List<CountableItem> KeywordSuggestions { get; set; }
         public List<string> KeywordsToIgnore { get; set; }
-        public List<Tuple<int, Tweep>> PotentialTweeps { get; set; } ///TODO: Replace Tuple with CountableItem
+        public List<CountableItem<Tweep>> PotentialFriendRequests { get; set; }
 
         public TweetBotRuntimeSettings()
         {
@@ -32,7 +32,7 @@ namespace Postworthy.Tasks.Bot.Settings
             PotentialTweets = new List<Tweet>();
             PotentialReTweets = new List<Tweet>();
             Tweeted = new List<Tweet>();
-            PotentialTweeps = new List<Tuple<int, Tweep>>();
+            PotentialFriendRequests = new List<CountableItem<Tweep>>();
             LastTweetTime = DateTime.MaxValue;
             KeywordSuggestions = new List<CountableItem>();
             KeywordsToIgnore = new List<string>();
