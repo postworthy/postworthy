@@ -113,6 +113,8 @@ namespace Postworthy.Tasks.Bot.Streaming
         {
             return Task<IEnumerable<Tweet>>.Factory.StartNew(new Func<IEnumerable<Tweet>>(() =>
                 {
+                    RuntimeSettings.TotalTweetsProcessed += tweets.Count();
+
                     RespondToTweets(tweets);
 
                     FindPotentialTweets(tweets);
@@ -538,19 +540,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private double GetMinRetweets()
         {
-            if (RuntimeSettings.Tweeted != null && RuntimeSettings.Tweeted.Count > 5)
-            {
-                double stdev = 0;
-                var values = RuntimeSettings.Tweeted.Select(x => x.RetweetCount);
-                double avg = values.Average();
-                //Get Standard Deviation
-                stdev = Math.Sqrt(values.Sum(d => (d - avg) * (d - avg)) / values.Count());
-
-                return values.Where(x => x <= (avg + stdev*2) && x >= (avg - stdev*2)).Average() * 0.65;
-            }
-            
-                return 2.0;
-
+            return RuntimeSettings.MinimumRetweetLevel;
         }
 
         private IEnumerable<Tweet> RespondToTweets(IEnumerable<Tweet> tweets)
@@ -603,6 +593,26 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void FindKeywords(IEnumerable<Tweet> tweets)
         {
+            
+            //Get Current Keyword Counts
+            var currentKeywords = tweets
+                .SelectMany(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower().Split(' ')) //Strip Punctuation, Force Lowercase, Split Words, Make List
+                .Intersect(RuntimeSettings.KeywordsToIgnore) //Find Words we are currently tracking
+                .GroupBy(w => w) //Group Similar Words
+                .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
+                .ToList();
+
+            //Update Master Keyword List
+            currentKeywords.ForEach(w =>
+            {
+                var item = RuntimeSettings.Keywords.Where(x => x.Key == w.Word).FirstOrDefault();
+                if (item != null)
+                    item.Count += w.Count;
+                else
+                    RuntimeSettings.Keywords.Add(new CountableItem(w.Word, w.Count));
+            });
+
+
             //For Later
             var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
 

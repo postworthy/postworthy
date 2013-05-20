@@ -6,6 +6,7 @@ using Postworthy.Models.Account;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Twitter;
 using Postworthy.Tasks.Bot.Settings;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Web.Bot.Models
 {
@@ -24,7 +25,7 @@ namespace Postworthy.Web.Bot.Models
         public List<KeyValuePair<string, int>> KeywordSuggestions { get; set; }
         public List<KeyValuePair<Tweep, int>> PotentialFriendRequests { get; set; }
         public double TweetsPerHour { get; set; }
-        public double[] TweetsPerHourLast24 { get; set; }
+        public int[] TweetsPerHourLast24 { get; set; }
         public List<KeyValuePair<Tweep, int>> TopFriendTweetCounts { get; set; }
         public int MinimumRetweetLevel { get; set; }
         public int CurrentClout { get; set; }
@@ -44,7 +45,7 @@ namespace Postworthy.Web.Bot.Models
             PotentialFriendRequests = new List<KeyValuePair<Tweep, int>>();
             LastTweetTime = DateTime.MaxValue;
             KeywordSuggestions = new List<KeyValuePair<string, int>>();
-            TweetsPerHourLast24 = new double[24];
+            TweetsPerHourLast24 = new int[24];
             TopFriendTweetCounts = new List<KeyValuePair<Tweep, int>>();
             KeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
             PotentialKeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
@@ -62,20 +63,48 @@ namespace Postworthy.Web.Bot.Models
 
         private void LoadFromRepository()
         {
+            var me = new Tweep(User, Tweep.TweepType.None);
             Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
 
             var runtimeSettings = (repo.Query(RepoKey) ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
 
             if (runtimeSettings != null)
             {
+                BotStartupTime = runtimeSettings.BotFirstStart;
+                LastTweetTime = runtimeSettings.LastTweetTime;
+                TweetsSentSinceLastFriendRequest = runtimeSettings.TweetsSentSinceLastFriendRequest;
+                TweetsPerHour = runtimeSettings.Tweeted.Count() / (1.0 * (runtimeSettings.Tweeted.Max(x => x.CreatedAt) - runtimeSettings.Tweeted.Min(x => x.CreatedAt)).TotalHours);
+                MinimumRetweetLevel = (int)Math.Ceiling(runtimeSettings.MinimumRetweetLevel);
+                CurrentClout = me.Followers().Count();
+                FollowerCount = me.User.FollowersCount;
+                FollowingCount = me.User.FriendsCount;
+                TwitterStreamVolume = runtimeSettings.TotalTweetsProcessed / (1.0 * Runtime.TotalMinutes);
+                    
+
                 PotentialTweets = runtimeSettings.PotentialTweets;
                 PotentialReTweets = runtimeSettings.PotentialReTweets;
                 Tweeted = runtimeSettings.Tweeted;
-                PotentialFriendRequests = runtimeSettings.PotentialFriendRequests.Select(x => new KeyValuePair<Tweep, int>(x.Key, x.Count)).ToList();
-                LastTweetTime = runtimeSettings.LastTweetTime;
-                ///TODO: Add the rest...
+                PotentialFriendRequests = runtimeSettings.PotentialFriendRequests
+                    .Select(x => new KeyValuePair<Tweep, int>(x.Key, x.Count)).ToList();
+                KeywordSuggestions = runtimeSettings.KeywordSuggestions
+                    .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
+                TweetsPerHourLast24 = runtimeSettings.Tweeted
+                    .Where(t => t.CreatedAt.AddHours(24) >= DateTime.Now)
+                    .GroupBy(t => t.CreatedAt.Hour)
+                    .Select(g => new { date = g.FirstOrDefault().CreatedAt, count = g.Count() })
+                    .OrderBy(x => x.date)
+                    .Select(x => x.count)
+                    .ToArray();
+                TopFriendTweetCounts = runtimeSettings.Tweeted
+                    .Where(t => me.Followers().Select(f => f.ID).Contains(t.User.UserID))
+                    .GroupBy(t => t.User.UserID)
+                    .Select(g => new KeyValuePair<Tweep, int>(new Tweep(g.FirstOrDefault().User, Tweep.TweepType.None), g.Count()))
+                    .ToList();
+                KeywordsWithOccurrenceCount = runtimeSettings.Keywords
+                    .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
+                PotentialKeywordsWithOccurrenceCount = runtimeSettings.KeywordSuggestions
+                    .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
 
-                //Load data from repository (i.e. TweetBotRuntimeSettings)
             }
         }
     }
