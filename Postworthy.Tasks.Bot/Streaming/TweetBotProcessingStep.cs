@@ -49,11 +49,19 @@ namespace Postworthy.Tasks.Bot.Streaming
             }
         }
 
+        private string RepoKey
+        {
+            get
+            {
+                return PrimaryTweep.ScreenName + "_" + RUNTIME_REPO_KEY;
+            }
+        }
+
         public void Init(TextWriter log)
         {
             this.log = log;
 
-            RuntimeSettings = (repo.Query(RUNTIME_REPO_KEY)
+            RuntimeSettings = (repo.Query(RepoKey)
                 ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault()
                 ?? new TweetBotRuntimeSettings();
 
@@ -143,7 +151,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 try
                 {
-                    repo.Save(RUNTIME_REPO_KEY, RuntimeSettings);
+                    repo.Save(RepoKey, RuntimeSettings);
                     saved = true;
                 }
                 catch (Enyim.Caching.Memcached.MemcachedException mcex)
@@ -264,33 +272,33 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
 
-                var tweeps = RuntimeSettings.PotentialTweeps
-                    .Where(x => x.Item1 > MIN_TWEEP_NOTICED)
-                    .Where(x => x.Item2.Type == Tweep.TweepType.None);
+                var tweeps = RuntimeSettings.PotentialFriendRequests
+                    .Where(x => x.Count > MIN_TWEEP_NOTICED)
+                    .Where(x => x.Key.Type == Tweep.TweepType.None);
 
                 tweeps.ToList().ForEach(x =>
                 {
-                    var followers = x.Item2.Followers().Select(y => y.ID);
+                    var followers = x.Key.Followers().Select(y => y.ID);
                     var primaryFollowers = PrimaryTweep.Followers().Select(y => y.ID);
 
-                    if (x.Item1 > TWEEP_NOTICED_AUTOMATIC ||
+                    if (x.Count > TWEEP_NOTICED_AUTOMATIC ||
                         followers.Union(primaryFollowers).Count() != (followers.Count() + primaryFollowers.Count()))
                     {
-                        x.Item2.Type = Tweep.TweepType.Target;
+                        x.Key.Type = Tweep.TweepType.Target;
 
                         if (!SimulationMode)
                         {
-                            var follow = TwitterModel.Instance.CreateFriendship(x.Item2);
+                            var follow = TwitterModel.Instance.CreateFriendship(x.Key);
 
                             if (follow.Type == Tweep.TweepType.Following)
                             {
                                 PrimaryTweep.Followers(true);
-                                RuntimeSettings.PotentialTweeps.Remove(x);
+                                RuntimeSettings.PotentialFriendRequests.Remove(x);
                             }
                         }
                     }
                     else
-                        x.Item2.Type = Tweep.TweepType.Ignore;
+                        x.Key.Type = Tweep.TweepType.Ignore;
                 });
             }
         }
@@ -323,16 +331,16 @@ namespace Postworthy.Tasks.Bot.Streaming
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialReTweets.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
                 log.WriteLine("####################");
             }
-            if (RuntimeSettings.PotentialTweeps.Count() > 0)
+            if (RuntimeSettings.PotentialFriendRequests.Count() > 0)
             {
                 log.WriteLine("####################");
-                log.WriteLine("{0}: Potential Tweeps: {1}",
+                log.WriteLine("{0}: Potential Friend Requests: {1}",
                     DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweeps
-                        .OrderByDescending(x => x.Item2.User.FollowersCount.ToString().Length)
-                        .ThenByDescending(x => x.Item1)
-                        .ThenBy(x => x.Item2.ScreenName)
-                        .Select(x => x.Item1.ToString().PadLeft(3, '0') + "\t" + x.Item2)));
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialFriendRequests
+                        .OrderByDescending(x => x.Key.User.FollowersCount.ToString().Length)
+                        .ThenByDescending(x => x.Count)
+                        .ThenBy(x => x.Key.ScreenName)
+                        .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
                 log.WriteLine("####################");
             }
             if (RuntimeSettings.KeywordSuggestions.Count() > 0)
@@ -482,35 +490,31 @@ namespace Postworthy.Tasks.Bot.Streaming
                     .ToList()
                     .ForEach(x =>
                     {
-                        for (int i = 0; i < RuntimeSettings.PotentialTweeps.Count(); i++)
+                        RuntimeSettings.PotentialFriendRequests
+                            .Where(t => t.Key.Equals(x))
+                            .ToList()
+                            .ForEach(t =>
                         {
-                            if (RuntimeSettings.PotentialTweeps[i].Item2.Equals(x))
-                            {
-                                var tweep = RuntimeSettings.PotentialTweeps[i].Item2;
+                            if (t.Key.Type != Tweep.TweepType.Target)
+                                t.Key.Type = Tweep.TweepType.None;
 
-                                if (tweep.Type != Tweep.TweepType.Target)
-                                    tweep.Type = Tweep.TweepType.None;
-
-                                RuntimeSettings.PotentialTweeps[i] = new Tuple<int, Tweep>(
-                                    RuntimeSettings.PotentialTweeps[i].Item1 + 1,
-                                    tweep);
-                            }
-                        }
+                            t.Count++;
+                        });
                     });
 
             //Add New
             tweet_tweep_pairs
                     .Select(x => x.tweep)
-                    .Except(RuntimeSettings.PotentialTweeps.Select(x => x.Item2))
+                    .Except(RuntimeSettings.PotentialFriendRequests.Select(x => x.Key))
                     .ToList()
                     .ForEach(x =>
                     {
-                        RuntimeSettings.PotentialTweeps.Add(new Tuple<int, Tweep>(1, x));
+                        RuntimeSettings.PotentialFriendRequests.Add(new CountableItem<Tweep>(x, 1));
                     });
 
             //Limit
-            RuntimeSettings.PotentialTweeps = RuntimeSettings.PotentialTweeps
-                .OrderByDescending(x => x.Item2.Clout())
+            RuntimeSettings.PotentialFriendRequests = RuntimeSettings.PotentialFriendRequests
+                .OrderByDescending(x => x.Key.Clout())
                 .Take(POTENTIAL_TWEEP_BUFFER_MAX)
                 .ToList();
         }
