@@ -246,6 +246,10 @@
       <Project>{1628e67a-0233-4f42-a3f7-3ff4a121f9a8}</Project>
       <Name>Postworthy.Models</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Postworthy.Tasks.Bot\Postworthy.Tasks.Bot.csproj">
+      <Project>{46f305c4-923c-4b16-8958-bc207715c0b3}</Project>
+      <Name>Postworthy.Tasks.Bot</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
