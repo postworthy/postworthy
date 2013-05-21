@@ -169,70 +169,75 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void SendTweets()
         {
-            if (RuntimeSettings.TweetOrRetweet)
+            var hourOfDay = DateTime.Now.Hour + DateTime.Now.Minute/100.0;
+            
+            if (hourOfDay > 6.29 && hourOfDay < 21.29) //Only Tweet during particular times of the day
             {
-                RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
-                    //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                    (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialTweets.Count > 0))
+                if (RuntimeSettings.TweetOrRetweet)
                 {
-                    var tweet = RuntimeSettings.PotentialTweets.First();
-                    var groups = RuntimeSettings.Tweeted
-                        .Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                        .GroupSimilar(0.45m, log)
-                        .Select(g => new TweetGroup(g))
-                        .Where(g => g.GroupStatusIDs.Count() > 1);
-                    var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
-                    if (matches.Count() > 0)
+                    RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
+                    if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
+                        //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
+                        (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialTweets.Count > 0))
                     {
-                        //Ignore Tweets that are very similar
-                        RuntimeSettings.PotentialTweets.Remove(tweet);
-                    }
-                    else
-                    {
-                        if (SendTweet(tweet, false))
+                        var tweet = RuntimeSettings.PotentialTweets.First();
+                        var groups = RuntimeSettings.Tweeted
+                            .Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                            .GroupSimilar(0.45m, log)
+                            .Select(g => new TweetGroup(g))
+                            .Where(g => g.GroupStatusIDs.Count() > 1);
+                        var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
+                        if (matches.Count() > 0)
                         {
-                            RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                            RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                            RuntimeSettings.LastTweetTime = DateTime.Now;
+                            //Ignore Tweets that are very similar
                             RuntimeSettings.PotentialTweets.Remove(tweet);
-                            RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                         }
                         else
-                            RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        {
+                            if (SendTweet(tweet, false))
+                            {
+                                RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                                RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                                RuntimeSettings.LastTweetTime = DateTime.Now;
+                                RuntimeSettings.PotentialTweets.Remove(tweet);
+                                RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
+                            }
+                            else
+                                RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        }
                     }
                 }
-            }
-            else
-            {
-                RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
-                    //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                    (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialReTweets.Count > 0))
+                else
                 {
-                    var tweet = RuntimeSettings.PotentialReTweets.First();
-                    var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                       .GroupSimilar(0.45m, log)
-                       .Select(g => new TweetGroup(g))
-                       .Where(g => g.GroupStatusIDs.Count() > 1);
-                    var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
-                    if (matches.Count() > 0)
+                    RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
+                    if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
+                        //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
+                        (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialReTweets.Count > 0))
                     {
-                        //Ignore Tweets that are very similar
-                        RuntimeSettings.PotentialReTweets.Remove(tweet);
-                    }
-                    else
-                    {
-                        if (SendTweet(tweet, true))
+                        var tweet = RuntimeSettings.PotentialReTweets.First();
+                        var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                           .GroupSimilar(0.45m, log)
+                           .Select(g => new TweetGroup(g))
+                           .Where(g => g.GroupStatusIDs.Count() > 1);
+                        var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
+                        if (matches.Count() > 0)
                         {
-                            RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                            RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                            RuntimeSettings.LastTweetTime = DateTime.Now;
+                            //Ignore Tweets that are very similar
                             RuntimeSettings.PotentialReTweets.Remove(tweet);
-                            RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                         }
                         else
-                            RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        {
+                            if (SendTweet(tweet, true))
+                            {
+                                RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                                RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                                RuntimeSettings.LastTweetTime = DateTime.Now;
+                                RuntimeSettings.PotentialReTweets.Remove(tweet);
+                                RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
+                            }
+                            else
+                                RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        }
                     }
                 }
             }
