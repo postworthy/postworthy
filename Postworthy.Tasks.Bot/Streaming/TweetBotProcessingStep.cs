@@ -648,7 +648,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
                 .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Where(x => Encoding.UTF8.GetByteCount(x.Key) == x.Key.Length) //Only ASCII for me...
-                .Where(x=>x.LastModifiedTime.AddMinutes(10) >= DateTime.Now) //Limit by time
+                .Where(x=>x.LastModifiedTime.AddMinutes(10) >= DateTime.Now || x.Count >= MINIMUM_KEYWORD_COUNT) //Limit by time
                 .OrderByDescending(x => x.Count)
                 .ThenByDescending(x =>x.LastModifiedTime)
                 .ThenByDescending(x => x.Key.Length)
