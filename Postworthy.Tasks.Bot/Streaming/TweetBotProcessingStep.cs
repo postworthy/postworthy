@@ -599,10 +599,17 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void FindKeywords(IEnumerable<Tweet> tweets)
         {
-            
+            var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower());
+
+            //Strip Punctuation, Force Lowercase, Split Words
+            var words = cleanedTweets
+                .SelectMany(t => t.Split(' '))
+                .Except(StopWords) //Exclude Stop Words
+                .Where(x => !x.StartsWith("http")) //No URLs
+                .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length); //Only ASCII for me...
+
             //Get Current Keyword Counts
-            var currentKeywords = tweets
-                .SelectMany(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower().Split(' ')) //Strip Punctuation, Force Lowercase, Split Words, Make List
+            var currentKeywords = words
                 .Intersect(RuntimeSettings.KeywordsToIgnore) //Find Words we are currently tracking
                 .GroupBy(w => w) //Group Similar Words
                 .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
@@ -618,17 +625,23 @@ namespace Postworthy.Tasks.Bot.Streaming
                     RuntimeSettings.Keywords.Add(new CountableItem(w.Word, w.Count));
             });
 
+            //Exclude Ignore Words, which are current keywords
+            words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y })));
+
+            //Create pairs of words for phrase searching
+            var wordPairs = words.SelectMany(w => words.Where(x => x != w).Select(w2 => w + " " + w2));
+
+            //Match phrases in tweet text
+            var validPairs = wordPairs.Where(wp => cleanedTweets.Any(t => t.IndexOf(wp) > -1));
+
+            //Remove words that are found in a phrase and then include the phrases
+            words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Union(validPairs);
 
             //For Later
             var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
 
-            var keywords = tweets
-                .SelectMany(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower().Split(' ')) //Strip Punctuation, Force Lowercase, Split Words, Make List
-                .Except(StopWords) //Exclude Stop Words
-                .Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y }))) //Exclude Ignore Words
-                .Where(x => !x.StartsWith("http")) //No URLs
+            var keywords = words
                 .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
-                .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
                 .GroupBy(w => w) //Group Similar Words
                 .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
                 .ToList();
