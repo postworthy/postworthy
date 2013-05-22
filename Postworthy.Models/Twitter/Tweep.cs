@@ -80,6 +80,10 @@ namespace Postworthy.Models.Twitter
 
             return _Followers;
         }
+        public void OverrideFollowers(List<LazyLoader<Tweep>> tweeps)
+        {
+            _Followers = tweeps;
+        }
 
         public int Clout()
         {

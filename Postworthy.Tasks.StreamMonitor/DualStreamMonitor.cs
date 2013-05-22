@@ -14,6 +14,7 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Runtime.ConstrainedExecution;
 using System.IO;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Tasks.StreamMonitor
 {
@@ -395,7 +396,30 @@ namespace Postworthy.Tasks.StreamMonitor
                                             log.WriteLine("{0}: Added Item to Queue (UserStream): {1}", DateTime.Now, tweet.TweetText);
                                         }
                                         else
-                                            log.WriteLine("{0}: Unhandled Item in Stream (UserStream): {1}", DateTime.Now, strm.Content);
+                                        {
+                                            //If you can handle friends we will look for them
+                                            if (processingStep is ITweepProcessingStep)
+                                            {
+                                                var jsonDataFriends = LitJson.JsonMapper.ToObject(strm.Content)
+                                                    .FirstOrDefault(x => x.Key == "friends");
+
+                                                //If this is a friends collection update we will notify you
+                                                if (jsonDataFriends.Value.IsArray)
+                                                {
+                                                    var friends = new List<LazyLoader<Tweep>>();
+                                                    for (int i = 0; i < jsonDataFriends.Value.Count; i++)
+                                                    {
+                                                        friends.Add(Friends.GetLazyLoadedTweep(jsonDataFriends.Value[i].ToString()));
+                                                    }
+
+                                                    (processingStep as ITweepProcessingStep).ProcessTweeps(friends);
+                                                }
+                                                else
+                                                    log.WriteLine("{0}: Unhandled Item in Stream (UserStream): {1}", DateTime.Now, strm.Content);
+                                            }
+                                            else
+                                                log.WriteLine("{0}: Unhandled Item in Stream (UserStream): {1}", DateTime.Now, strm.Content);
+                                        }
                                     }
                                     else
                                         log.WriteLine("{0}: Twitter Keep Alive (UserStream)", DateTime.Now);

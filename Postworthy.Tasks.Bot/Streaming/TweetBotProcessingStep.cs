@@ -18,7 +18,7 @@ using Postworthy.Tasks.Bot.Models;
 
 namespace Postworthy.Tasks.Bot.Streaming
 {
-    public class TweetBotProcessingStep : IProcessingStep, IKeywordSuggestionStep
+    public class TweetBotProcessingStep : IProcessingStep, ITweepProcessingStep, IKeywordSuggestionStep
     {
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
         private const int POTENTIAL_TWEET_BUFFER_MAX = 10;
@@ -697,6 +697,15 @@ namespace Postworthy.Tasks.Bot.Streaming
         public void SetIgnoreKeywords(List<string> keywords)
         {
             RuntimeSettings.KeywordsToIgnore = keywords;
+        }
+
+        public Task<IEnumerable<LazyLoader<Tweep>>> ProcessTweeps(IEnumerable<LazyLoader<Tweep>> tweeps)
+        {
+            return Task<IEnumerable<LazyLoader<Tweep>>>.Factory.StartNew(new Func<IEnumerable<LazyLoader<Tweep>>>(() =>
+                {
+                    PrimaryTweep.OverrideFollowers(tweeps.ToList());
+                    return tweeps;
+                }));
         }
     }
 }
