@@ -28,7 +28,8 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
         private const int SIMULATION_MODE_HOURS = 48;
         private const int MINIMUM_KEYWORD_COUNT = 30;
-        private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
+        private const int MINIMUM_NEW_KEYWORD_LENGTH = 5;
+        private const int MAX_KEYWORD_SUGGESTIONS = 50;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
@@ -642,9 +643,16 @@ namespace Postworthy.Tasks.Bot.Streaming
             });
 
             RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
+                .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
+                .Where(x => !RuntimeSettings.KeywordsToIgnore.Contains(x.Key)) //Exclude Ignore Words
+                .Where(x => !x.Key.StartsWith("http")) //No URLs
+                .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
+                .Where(x => Encoding.UTF8.GetByteCount(x.Key) == x.Key.Length) //Only ASCII for me...
+                .Where(x=>x.LastModifiedTime.AddMinutes(10) >= DateTime.Now) //Limit by time
                 .OrderByDescending(x => x.Count)
+                .ThenByDescending(x =>x.LastModifiedTime)
                 .ThenByDescending(x => x.Key.Length)
-                .Take(50)
+                .Take(MAX_KEYWORD_SUGGESTIONS)
                 .ToList();
 
             //For Comparison

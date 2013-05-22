@@ -13,13 +13,25 @@ namespace Postworthy.Tasks.Bot.Models
 
     public class CountableItem<T>
     {
-        public T Key { get; set; }
-        public int Count { get; set; }
+        private T key = default(T);
+        public T Key
+        {
+            get { return key; }
+            set { key = value; LastModifiedTime = DateTime.Now; }
+        }
+        private int count;
+        public int Count
+        {
+            get { return count; }
+            set { count = value; LastModifiedTime = DateTime.Now; }
+        }
+        public DateTime LastModifiedTime { get; set; }
 
         public CountableItem(T key, int count)
         {
             Key = key;
             Count = count;
+            LastModifiedTime = DateTime.Now;
         }
     }
 }
