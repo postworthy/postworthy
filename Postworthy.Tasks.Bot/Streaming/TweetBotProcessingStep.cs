@@ -625,7 +625,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             var keywords = tweets
                 .SelectMany(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower().Split(' ')) //Strip Punctuation, Force Lowercase, Split Words, Make List
                 .Except(StopWords) //Exclude Stop Words
-                .Except(RuntimeSettings.KeywordsToIgnore) //Exclude Ignore Words
+                .Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y }))) //Exclude Ignore Words
                 .Where(x => !x.StartsWith("http")) //No URLs
                 .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
@@ -644,13 +644,13 @@ namespace Postworthy.Tasks.Bot.Streaming
 
             RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
                 .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
-                .Where(x => !RuntimeSettings.KeywordsToIgnore.Contains(x.Key)) //Exclude Ignore Words
+                .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
                 .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Where(x => Encoding.UTF8.GetByteCount(x.Key) == x.Key.Length) //Only ASCII for me...
-                .Where(x=>x.LastModifiedTime.AddMinutes(10) >= DateTime.Now || x.Count >= MINIMUM_KEYWORD_COUNT) //Limit by time
+                .Where(x => x.LastModifiedTime.AddMinutes(10) >= DateTime.Now || x.Count >= MINIMUM_KEYWORD_COUNT) //Limit by time
                 .OrderByDescending(x => x.Count)
-                .ThenByDescending(x =>x.LastModifiedTime)
+                .ThenByDescending(x => x.LastModifiedTime)
                 .ThenByDescending(x => x.Key.Length)
                 .Take(MAX_KEYWORD_SUGGESTIONS)
                 .ToList();
