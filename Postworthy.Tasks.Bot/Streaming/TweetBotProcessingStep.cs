@@ -30,6 +30,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int MINIMUM_KEYWORD_COUNT = 30;
         private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
         private const int MAX_KEYWORD_SUGGESTIONS = 50;
+        private const int KEYWORD_FALLOUT_MINUTES = 15;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
@@ -632,12 +633,12 @@ namespace Postworthy.Tasks.Bot.Streaming
             words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y }))).ToList();
 
             //Create pairs of words for phrase searching
-            var wordPairs = words.SelectMany(w => words.Where(x => x != w).Select(w2 =>  (w + " " + w2).Trim()));
+            var wordPairs = words.SelectMany(w => words.Distinct().Where(x => x != w).Select(w2 =>  (w + " " + w2).Trim())).ToList();
 
-            //Match phrases in tweet text
-            var validPairs = wordPairs.Where(wp => cleanedTweets.Any(t => t.IndexOf(wp) > -1));
+            //Match phrases in tweet text (must match in more than 1 tweet to be valid)
+            var validPairs = wordPairs.Where(wp => cleanedTweets.Count(t => t.IndexOf(wp) > -1) > 1).ToList();
 
-            //Remove words that are found in a phrase and then include the phrases
+            //Remove words that are found in a phrase and union with phrases
             words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Union(validPairs).ToList();
 
             //For Later
@@ -663,7 +664,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
                 .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Where(x => Encoding.UTF8.GetByteCount(x.Key) == x.Key.Length) //Only ASCII for me...
-                .Where(x => x.LastModifiedTime.AddMinutes(10) >= DateTime.Now || x.Count >= MINIMUM_KEYWORD_COUNT) //Limit by time
+                .Where(x => x.LastModifiedTime.AddMinutes(KEYWORD_FALLOUT_MINUTES) >= DateTime.Now || x.Count >= MINIMUM_KEYWORD_COUNT) //Limit by time
                 .OrderByDescending(x => x.Count)
                 .ThenByDescending(x => x.LastModifiedTime)
                 .ThenByDescending(x => x.Key.Length)
