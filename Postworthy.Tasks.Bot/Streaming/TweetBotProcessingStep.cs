@@ -28,7 +28,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
         private const int SIMULATION_MODE_HOURS = 48;
         private const int MINIMUM_KEYWORD_COUNT = 30;
-        private const int MINIMUM_NEW_KEYWORD_LENGTH = 5;
+        private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
         private const int MAX_KEYWORD_SUGGESTIONS = 50;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
@@ -599,14 +599,17 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void FindKeywords(IEnumerable<Tweet> tweets)
         {
-            var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower());
+            var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
 
             //Strip Punctuation, Force Lowercase, Split Words
             var words = cleanedTweets
                 .SelectMany(t => t.Split(' '))
+                .Select(w=>w.Trim())
+                .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Except(StopWords) //Exclude Stop Words
                 .Where(x => !x.StartsWith("http")) //No URLs
-                .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length); //Only ASCII for me...
+                .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
+                .ToList();
 
             //Get Current Keyword Counts
             var currentKeywords = words
@@ -626,22 +629,21 @@ namespace Postworthy.Tasks.Bot.Streaming
             });
 
             //Exclude Ignore Words, which are current keywords
-            words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y })));
+            words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y }))).ToList();
 
             //Create pairs of words for phrase searching
-            var wordPairs = words.SelectMany(w => words.Where(x => x != w).Select(w2 => w + " " + w2));
+            var wordPairs = words.SelectMany(w => words.Where(x => x != w).Select(w2 =>  (w + " " + w2).Trim()));
 
             //Match phrases in tweet text
             var validPairs = wordPairs.Where(wp => cleanedTweets.Any(t => t.IndexOf(wp) > -1));
 
             //Remove words that are found in a phrase and then include the phrases
-            words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Union(validPairs);
+            words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Union(validPairs).ToList();
 
             //For Later
             var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
 
             var keywords = words
-                .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .GroupBy(w => w) //Group Similar Words
                 .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
                 .ToList();
