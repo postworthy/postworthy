@@ -33,7 +33,7 @@ namespace Postworthy.Tasks.Bot.Settings
             {
                 if (this.Tweeted != null && this.Tweeted.Count > 5)
                 {
-                    double less = 0.2 + Math.Max(60.0 - ((DateTime.Now - LastTweetTime).TotalMinutes / 2), 0); //Allows us to progressivly lower the bar of what we accept over time
+                    double less = Math.Max(60.0 - ((DateTime.Now - LastTweetTime).TotalMinutes / 2), 0.2)/100.0; //Allows us to progressivly lower the bar of what we accept over time
                     double stdev = 0;
                     var values = this.Tweeted.Select(x => x.RetweetCount);
                     double avg = values.Average();
