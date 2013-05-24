@@ -602,12 +602,14 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void FindKeywords(IEnumerable<Tweet> tweets)
         {
+            long nothing;
+            //Strip Punctuation, Force Lowercase
             var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
 
-            //Strip Punctuation, Force Lowercase, Split Words
             var words = cleanedTweets
                 .SelectMany(t => t.Split(' '))
-                .Select(w=>w.Trim())
+                .Select(w => w.Trim())
+                .Where(w => !long.TryParse(w, out nothing)) //Ignore Numbers
                 .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Except(StopWords) //Exclude Stop Words
                 .Where(x => !x.StartsWith("http")) //No URLs
@@ -661,6 +663,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             });
 
             RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
+                .Where(x => !long.TryParse(x.Key, out nothing)) //Ignore Numbers
                 .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
                 .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
