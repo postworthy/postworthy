@@ -31,6 +31,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
         private const int MAX_KEYWORD_SUGGESTIONS = 50;
         private const int KEYWORD_FALLOUT_MINUTES = 15;
+        private const int FRIEND_FALLOUT_MINUTES = 60 * 24 * 2;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
@@ -523,6 +524,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
             //Limit
             RuntimeSettings.PotentialFriendRequests = RuntimeSettings.PotentialFriendRequests
+                .Where(x => x.Key.Type == Tweep.TweepType.Target || x.LastModifiedTime.AddHours(FRIEND_FALLOUT_MINUTES) > DateTime.Now) //Only watch them for a limited time
                 .OrderByDescending(x => x.Key.Clout())
                 .Take(POTENTIAL_TWEEP_BUFFER_MAX)
                 .ToList();
