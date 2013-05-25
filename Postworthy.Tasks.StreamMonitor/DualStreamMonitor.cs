@@ -247,7 +247,7 @@ namespace Postworthy.Tasks.StreamMonitor
                     }
                     else
                     {
-                        var ignoreList = !string.IsNullOrEmpty(track) ? track.ToLower().Split(',').ToList() : new List<string>();
+                        var processIgnoreWords = !string.IsNullOrEmpty(track) ? track.ToLower().Split(',').ToList() : new List<string>();
                         trackList = !string.IsNullOrEmpty(track) ? track.ToLower().Split(',').ToList() : new List<string>();
 
                         if (processingStep is IKeywordSuggestionStep)
@@ -258,7 +258,7 @@ namespace Postworthy.Tasks.StreamMonitor
                                 /* I have chosen to wrap these calls in seperate try catch statements incase one fails
                                  * the other can still run. This way if the get fails we may still have hope of a reset.
                                  */
-                                try { keywordSuggestionStep.SetIgnoreKeywords(ignoreList); } catch { }
+                                try { keywordSuggestionStep.SetIgnoreKeywords(processIgnoreWords); } catch { }
                                 try { trackList.AddRange(keywordSuggestionStep.GetKeywordSuggestions().Select(x=>x.ToLower()).ToList()); } catch { }
                                 try { keywordSuggestionStep.ResetHasNewKeywordSuggestions(); } catch { }
                             }
@@ -270,7 +270,10 @@ namespace Postworthy.Tasks.StreamMonitor
                             return null;
                         }
                         else
+                        {
                             log.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, string.Join(",", trackList));
+                            log.WriteLine("{0}: Ignoring : {1}", DateTime.Now, string.Join(",", ignore));
+                        }
 
 
                         context.Streaming
