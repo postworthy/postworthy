@@ -124,7 +124,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
                     FindTweepsToFollow(tweets);
 
-                    FindKeywords(tweets);
+                    FindKeywordsFromCurrentTweets(tweets);
 
                     UpdateAverageWeight(tweets);
 
@@ -600,11 +600,14 @@ namespace Postworthy.Tasks.Bot.Streaming
             return repliedTo;
         }
 
-        private void FindKeywords(IEnumerable<Tweet> tweets)
+        private void FindKeywordsFromCurrentTweets(IEnumerable<Tweet> tweets)
         {
             long nothing;
             //Strip Punctuation, Force Lowercase
             var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
+            var cleanedPastTweets = RuntimeSettings.Tweeted.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
+
+            var cleanedAll = cleanedTweets.Concat(cleanedTweets);
 
             var words = cleanedTweets
                 .SelectMany(t => t.Split(' '))
@@ -634,16 +637,16 @@ namespace Postworthy.Tasks.Bot.Streaming
             });
 
             //Exclude Ignore Words, which are current keywords
-            words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y }))).ToList();
+            words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y }))).ToList();
 
             //Create pairs of words for phrase searching
             var wordPairs = words.SelectMany(w => words.Distinct().Where(x => x != w).Select(w2 =>  (w + " " + w2).Trim())).ToList();
 
             //Match phrases in tweet text (must match in more than 1 tweet to be valid)
-            var validPairs = wordPairs.Where(wp => cleanedTweets.Count(t => t.IndexOf(wp) > -1) > 1).ToList();
+            var validPairs = wordPairs.Where(wp => cleanedAll.Count(t => t.IndexOf(wp) > -1) > 1).ToList();
 
             //Remove words that are found in a phrase and union with phrases
-            words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Union(validPairs).ToList();
+            words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Concat(validPairs).ToList();
 
             //For Later
             var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
@@ -665,7 +668,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
                 .Where(x => !long.TryParse(x.Key, out nothing)) //Ignore Numbers
                 .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
-                .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Union(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
+                .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
                 .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Where(x => Encoding.UTF8.GetByteCount(x.Key) == x.Key.Length) //Only ASCII for me...
