@@ -17,6 +17,7 @@ namespace Postworthy.Web.Bot.Models
         public PostworthyUser User { get; set; }
         public DateTime BotStartupTime { get; set; }
         public TimeSpan Runtime { get { return DateTime.Now - BotStartupTime; } }
+        public Int32 UpTime { get { return Runtime.Days; } }
         public DateTime LastTweetTime { get; set; }
         public int TweetsSentSinceLastFriendRequest { get; set; }
         public List<Tweet> PotentialTweets { get; set; }
@@ -73,7 +74,7 @@ namespace Postworthy.Web.Bot.Models
                 BotStartupTime = runtimeSettings.BotFirstStart;
                 LastTweetTime = runtimeSettings.LastTweetTime;
                 TweetsSentSinceLastFriendRequest = runtimeSettings.TweetsSentSinceLastFriendRequest;
-                TweetsPerHour = runtimeSettings.Tweeted.Count() / (1.0 * (runtimeSettings.Tweeted.Max(x => x.CreatedAt) - runtimeSettings.Tweeted.Min(x => x.CreatedAt)).TotalHours);
+                TweetsPerHour = runtimeSettings.Tweeted.Count() > 2 ? runtimeSettings.Tweeted.Count() / (1.0 * (runtimeSettings.Tweeted.Max(x => x.CreatedAt) - runtimeSettings.Tweeted.Min(x => x.CreatedAt)).TotalHours) : 0;
                 MinimumRetweetLevel = (int)Math.Ceiling(runtimeSettings.MinimumRetweetLevel);
                 CurrentClout = me.Followers().Count();
                 FollowerCount = me.User.FollowersCount;

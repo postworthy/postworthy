@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Postworthy.Models.Account;
 
 namespace Postworthy.Web.Bot.Controllers
 {
@@ -15,7 +16,8 @@ namespace Postworthy.Web.Bot.Controllers
         [AuthorizePrimaryUser]
         public ActionResult Index()
         {
-            var model = new DashboardModel();
+            var user = UsersCollection.Single(User.Identity.Name);
+            var model = new DashboardModel(user);
             return View(model);
         }
 

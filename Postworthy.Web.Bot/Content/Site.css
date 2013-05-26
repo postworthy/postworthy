@@ -59,3 +59,9 @@ textarea {
 .validation-summary-valid {
     display: none;
 }
+
+/* Custom for Postworthy Bot Dashboard */
+.xx
+{
+	font-size:xx-large;
+}

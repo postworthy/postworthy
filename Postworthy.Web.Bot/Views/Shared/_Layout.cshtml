@@ -1,16 +1,46 @@
 ﻿<!DOCTYPE html>
-<html>
+<html class="no-js">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
+    @*<title>@ViewBag.Title</title>*@
+
+    <title>Postworthy.Bot Page</title>
+    <!-- Bootstrap -->
+    <link href="Content/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="Content/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet" media="screen">
+    <link href="Content/vendors/easypiechart/jquery.easy-pie-chart.css" rel="stylesheet" media="screen">
+    <link href="Content/assets/styles.css" rel="stylesheet" media="screen">
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script src="Content/vendors/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 </head>
 <body>
     @RenderBody()
+     <hr>
+        <footer>
+            <p>
+                &copy; @(ViewBag.Brand ?? "Postworthy") @DateTime.Now.Year powered by <a target="_blank" href="http://postworthy.org" title="Postworthy - The Open Source Content Curation Tool">Postworthy</a>
+            </p>
+        </footer>
 
     @Scripts.Render("~/bundles/jquery")
     @RenderSection("scripts", required: false)
+   
 </body>
+@*<script src="Content/vendors/jquery-1.9.1.min.js"></script>*@
+<script src="Content/bootstrap/js/bootstrap.min.js"></script>
+<script src="Content/vendors/easypiechart/jquery.easy-pie-chart.js"></script>
+<script src="Content/assets/scripts.js"></script>
+<script>
+$(function () {
+    // Easy pie charts
+    $('.chart').easyPieChart({ animate: 1000 });
+});
+</script>
 </html>
