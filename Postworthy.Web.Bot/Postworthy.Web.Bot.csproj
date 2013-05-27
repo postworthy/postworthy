@@ -360,6 +360,7 @@
     <Content Include="Views\Dashboard\Index.cshtml" />
     <Content Include="Web.config" />
     <Content Include="Views\Shared\_LogOnPartial.cshtml" />
+    <Content Include="Views\Dashboard\Tweets.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

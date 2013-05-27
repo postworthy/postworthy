@@ -65,3 +65,16 @@ textarea {
 {
 	font-size:xx-large;
 }
+
+.tweets { width: 55%; border: 2px solid gray; height: 40em; overflow: scroll; overflow-x: hidden; background-color: Black; color: White; padding: 0.5em; position: relative; }
+.tweets table { border-width: 0;}
+.tweets tr { vertical-align: top; }
+.tweets td { padding: 0.4em 0.3em 1em 0.4em; border-width: 0; }
+.tweets img { width: 4em; }
+.tweetInfo { color: Gray; font-size: 0.9em; }
+.twitterUser { color: #77AAFF; text-decoration: none; font-size: 1.1em; font-weight: bold; }
+
+.wid
+{
+	width: 150px;
+}

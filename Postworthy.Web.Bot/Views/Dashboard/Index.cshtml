@@ -105,7 +105,7 @@
                     <a href="index.html"><i class="icon-chevron-right"></i>Dashboard</a>
                 </li>
                 <li>
-                    <a href="calendar.html"><i class="icon-chevron-right"></i>Calendar</a>
+                    @Html.ActionLink("Tweets", "Tweets")
                 </li>
                 <li>
                     <a href="stats.html"><i class="icon-chevron-right"></i>Statistics</a>
@@ -198,53 +198,83 @@
             </div>
 
             <div class="row-fluid">
-                <!-- block -->
-                <div class="block">
-                    <div class="navbar navbar-inner block-header">
-                        <div class="muted pull-left">Keywords</div>
-                    </div>
-                    <div class="block-content collapse in">
-                        <div>
-                            @foreach (var items in Model.KeywordsWithOccurrenceCount)
-                            {
-                                <div>@items.Key</div>
-                                <div>@items.Value</div>
-                            }
+                <div class="span6">
+                    <!-- block -->
+                    <div class="block">
+                        <div class="navbar navbar-inner block-header">
+                            <div class="muted pull-left">Keywords</div>
+                            <div class="pull-right">
+                                <span class="badge badge-info">@Model.KeywordOccurenceTotal</span>
+                            </div>
+                        </div>
+                        <div class="block-content collapse in">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Word</th>
+                                        <th>Occurrence Count</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                    int idx = 0;
+                                    foreach (var items in Model.KeywordsWithOccurrenceCount)
+                                    {
+                                        idx++;
+                                        <tr>
+                                            <td>@idx</td>
+                                            <td>@items.Key</td>
+                                            <td>@items.Value</td>
+                                            <td><div class="btn btn-warning btn-mini">Remove</div></td>
+                                        </tr>
+                                    }
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="block">
-
-                    <div class="navbar navbar-inner block-header">
-                        <div class="muted pull-left">Keyword Suggestions</div>
-                    </div>
-                    <div class="block-content collapse in">
-                        <div>
-                            @foreach (var items in Model.KeywordSuggestions)
-                            {
-                                <div>@items.Key</div>
-                                <div>@items.Value</div>
-                            }
+                <div class="span6">
+                    <div class="block">
+                        <div class="navbar navbar-inner block-header">
+                            <div class="muted pull-left">Keyword Suggestions</div>
+                            <div class="pull-right">
+                                <span class="badge badge-info">@Model.PotentialKeywordOccurenceTotal</span>
+                            </div>
                         </div>
-                    </div>
-
-                </div>
-                <div class="block">
-
-                    <div class="navbar navbar-inner block-header">
-                        <div class="muted pull-left">Keywords Potential</div>
-                    </div>
-                    <div class="block-content collapse in">
-                        <div>
-                            @foreach (var items in Model.PotentialKeywordsWithOccurrenceCount)
-                            {
-                                <div>@items.Key</div>
-                                <div>@items.Value</div>
-                            }
+                        <div class="block-content collapse in">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Word</th>
+                                        <th>Occurrence Count</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                    int idx2 = 0;
+                                    foreach (var items in Model.PotentialKeywordsWithOccurrenceCount)
+                                    {
+                                        idx2++;
+                                        <tr>
+                                            <td>@idx2</td>
+                                            <td>@items.Key</td>
+                                            <td>@items.Value</td>
+                                            <td><div class="btn btn-success btn-mini">Add</div></td>
+                                        </tr>
+                                        if (idx2 > idx - 1) { break; }
+                                    }
+                                    }
+                                </tbody>
+                            </table>
                         </div>
+
                     </div>
                 </div>
-                <!-- /block -->
             </div>
 
             <div class="row-fluid">
@@ -257,41 +287,55 @@
                         </div>
                     </div>
                     <div class="block-content collapse in">
+                        <div>
+                            <table style="width:100%;">
+                                
                         @foreach (var item in Model.PotentialTweets)
                         {
-                            <div>@item.CreatedAt</div>
-                            <div>@item.Image</div>
-                            <div>@item.Links</div>
-                            <div>@item.RetweetCount</div>
-                            <div>@item.Status</div>
-                            <div>@item.TweetRank</div>
-                            <div>@item.TweetText</div>
-                            <div>@item.User</div>
+                                <tr>
+                                    <td><img src="@item.User.ProfileBackgroundImageUrl" height="75" width="75" /></td>
+                                    <td>
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User</a>
+                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                        <span>@item.TweetText</span>
+                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                    </td>
+                                    <td class="pull-right wid">@item.TweetTime</td>
+                                </tr>
                         }
+                            </table>
+                        </div>
                     </div>
                 </div>
+
                 <div class="block">
                     <div class="navbar navbar-inner block-header">
-                        <div class="muted pull-left">Potential ReTweets</div>
+                        <div class="muted pull-left">Potential Retweets</div>
                         <div class="pull-right">
                             <span class="badge badge-warning">View More</span>
                         </div>
                     </div>
                     <div class="block-content collapse in">
+                        <div>
+                            <table style="width:100%;">
+                                
                         @foreach (var item in Model.PotentialReTweets)
                         {
-                            <div>@item.CreatedAt</div>
-                            <div>@item.Image</div>
-                            <div>@item.Links</div>
-                            <div>@item.RetweetCount</div>
-                            <div>@item.Status</div>
-                            <div>@item.TweetRank</div>
-                            <div>@item.TweetText</div>
-                            <div>@item.User</div>
+                                <tr>
+                                    <td><img src="@item.User.ProfileBackgroundImageUrl" height="75" width="75" /></td>
+                                    <td>
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User</a>
+                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                        <span>@item.TweetText</span>
+                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                    </td>
+                                    <td class="pull-right wid">@item.TweetTime</td>
+                                </tr>
                         }
+                            </table>
+                        </div>
                     </div>
                 </div>
-
 
                  <div class="block">
                     <div class="navbar navbar-inner block-header">
@@ -301,19 +345,27 @@
                         </div>
                     </div>
                     <div class="block-content collapse in">
+                        <div>
+                            <table style="width:100%;">
+                                
                         @foreach (var item in Model.Tweeted)
                         {
-                            <div>@item.CreatedAt</div>
-                            <div>@item.Image</div>
-                            <div>@item.Links</div>
-                            <div>@item.RetweetCount</div>
-                            <div>@item.Status</div>
-                            <div>@item.TweetRank</div>
-                            <div>@item.TweetText</div>
-                            <div>@item.User</div>
+                                <tr>
+                                    <td><img src="@item.User.ProfileBackgroundImageUrl" height="75" width="75" /></td>
+                                    <td>
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User</a>
+                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                        <span>@item.TweetText</span>
+                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                    </td>
+                                    <td class="pull-right wid">@item.TweetTime</td>
+                                </tr>
                         }
+                            </table>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
         <!-- /block -->

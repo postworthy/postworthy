@@ -33,7 +33,27 @@ namespace Postworthy.Web.Bot.Models
         public int FollowerCount { get; set; }
         public int FollowingCount { get; set; }
         public List<KeyValuePair<string, int>> KeywordsWithOccurrenceCount { get; set; }
+        public int KeywordOccurenceTotal { 
+            get 
+            {   int total = 0;
+                foreach (var i in KeywordsWithOccurrenceCount) {
+                    total += i.Value;
+                }
+                return total;
+            } 
+        }
         public List<KeyValuePair<string, int>> PotentialKeywordsWithOccurrenceCount { get; set; }
+        public int PotentialKeywordOccurenceTotal {   
+            get
+            {   int total = 0;
+                foreach (var i in PotentialKeywordsWithOccurrenceCount)
+                {
+                    total += i.Value;
+                }
+                return total;
+            }
+        }
+
         public double TwitterStreamVolume { get; set; }
 
 
@@ -67,7 +87,9 @@ namespace Postworthy.Web.Bot.Models
             var me = new Tweep(User, Tweep.TweepType.None);
             Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
 
-            var runtimeSettings = (repo.Query(RepoKey) ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
+            var runtimeSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<TweetBotRuntimeSettings>(System.IO.File.OpenText("c:\\temp\\runtimesettings.demo.json.txt").ReadToEnd());
+
+            //var runtimeSettings = (repo.Query(RepoKey) ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
 
             if (runtimeSettings != null)
             {

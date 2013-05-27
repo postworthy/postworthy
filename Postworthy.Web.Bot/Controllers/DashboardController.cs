@@ -21,5 +21,14 @@ namespace Postworthy.Web.Bot.Controllers
             return View(model);
         }
 
+        public ActionResult Tweets()
+        {
+            var user = UsersCollection.Single(User.Identity.Name);
+            var model = new DashboardModel(user);
+            return View(model);
+        }
+
+
+
     }
 }
