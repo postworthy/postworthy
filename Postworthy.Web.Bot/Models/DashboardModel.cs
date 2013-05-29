@@ -7,6 +7,7 @@ using Postworthy.Models.Repository;
 using Postworthy.Models.Twitter;
 using Postworthy.Tasks.Bot.Settings;
 using Postworthy.Models.Core;
+using Postworthy.Tasks.Bot.Streaming;
 
 namespace Postworthy.Web.Bot.Models
 {
@@ -101,7 +102,11 @@ namespace Postworthy.Web.Bot.Models
                     .Select(g => new KeyValuePair<Tweep, int>(new Tweep(g.FirstOrDefault().User, Tweep.TweepType.None), g.Count()))
                     .ToList();
                 KeywordsWithOccurrenceCount = runtimeSettings.Keywords
-                    .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
+                    .Concat(runtimeSettings.KeywordSuggestions.Where(x => x.Count >= TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT))
+                    .OrderByDescending(x => x.Count)
+                    .ThenByDescending(x => x.Key)
+                    .Select(x => new KeyValuePair<string, int>(x.Key, x.Count))
+                    .ToList();
                 PotentialKeywordsWithOccurrenceCount = runtimeSettings.KeywordSuggestions
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
 

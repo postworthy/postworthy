@@ -27,7 +27,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
         private const int SIMULATION_MODE_HOURS = 48;
-        private const int MINIMUM_KEYWORD_COUNT = 30;
+        public const int MINIMUM_KEYWORD_COUNT = 30;
         private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
         private const int MAX_KEYWORD_SUGGESTIONS = 50;
         private const int KEYWORD_FALLOUT_MINUTES = 15;
@@ -353,12 +353,25 @@ namespace Postworthy.Tasks.Bot.Streaming
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
                 log.WriteLine("####################");
             }
+            if (RuntimeSettings.Keywords.Count() > 0)
+            {
+                log.WriteLine("####################");
+                log.WriteLine("{0}: Keywords: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Keywords
+                        .Concat(RuntimeSettings.KeywordSuggestions.Where(x=>x.Count >= MINIMUM_KEYWORD_COUNT))
+                        .OrderByDescending(x => x.Count)
+                        .ThenByDescending(x => x.Key)
+                        .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
+                log.WriteLine("####################");
+            }
             if (RuntimeSettings.KeywordSuggestions.Count() > 0)
             {
                 log.WriteLine("####################");
                 log.WriteLine("{0}: Keyword Suggestions: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.KeywordSuggestions
+                        .Where(x => x.Count < MINIMUM_KEYWORD_COUNT)
                         .OrderByDescending(x => x.Count)
                         .ThenByDescending(x => x.Key)
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
@@ -635,6 +648,9 @@ namespace Postworthy.Tasks.Bot.Streaming
                 else
                     RuntimeSettings.Keywords.Add(new CountableItem(w.Word, w.Count));
             });
+
+            //Only words we are tracking from config
+            RuntimeSettings.Keywords = RuntimeSettings.Keywords.Where(w => RuntimeSettings.KeywordsToIgnore.Contains(w.Key)).ToList();
 
             //Exclude Ignore Words, which are current keywords
             words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y }))).ToList();
