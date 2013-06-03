@@ -1,17 +1,112 @@
-﻿@{
-    Layout = null;
-}
+﻿@model Postworthy.Web.Bot.Models.DashboardModel
 
-<!DOCTYPE html>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Tweets</title>
-</head>
-<body>
-    <div>
-        
+@Html.Partial("_TopMenu")
+
+<div class="container-fluid">
+    <div class="row-fluid">
+
+       @Html.Partial("_SideMenu")
+
+        <div class="span9" id="content">
+
+            <div class="row-fluid" style="position: relative; top: -14px;">
+                <!-- block -->
+                <div class="block">
+                    <div class="navbar navbar-inner block-header">
+                        <div class="muted pull-left">Potential Tweets</div>
+                        <div class="pull-right">
+                            <span class="badge badge-warning">View More</span>
+                        </div>
+                    </div>
+                    <div class="block-content collapse in">
+                        <div>
+                            <table style="width:100%;">
+                                
+                        @foreach (var item in Model.PotentialTweets)
+                        {
+                                <tr>
+                                    <td><img src="@item.User.ProfileImageUrl" /></td>
+                                    <td>
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User</a>
+                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                        <span>@item.TweetText</span>
+                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                    </td>
+                                    <td class="pull-right wid">@item.TweetTime</td>
+                                    <td><div class="btn btn-info btn-mini">Tweet</div></td>
+                                </tr>
+                        }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="block">
+                    <div class="navbar navbar-inner block-header">
+                        <div class="muted pull-left">Potential Retweets</div>
+                        <div class="pull-right">
+                            <span class="badge badge-warning">View More</span>
+                        </div>
+                    </div>
+                    <div class="block-content collapse in">
+                        <div>
+                            <table style="width:100%;">
+                                
+                        @foreach (var item in Model.PotentialReTweets)
+                        {
+                                <tr>
+                                    <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
+                                    <td>
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User</a>
+                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                        <span>@item.TweetText</span>
+                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                    </td>
+                                    <td class="pull-right wid">@item.TweetTime</td>
+                                    <td><div class="btn btn-info btn-mini">Tweet</div></td>
+                                </tr>
+                        }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="block">
+                    <div class="navbar navbar-inner block-header">
+                        <div class="muted pull-left">Tweeted</div>
+                        <div class="pull-right">
+                            <span class="badge badge-warning">View More</span>
+                        </div>
+                    </div>
+                    <div class="block-content collapse in">
+                        <div>
+                            <table style="width:100%;">
+                                
+                        @foreach (var item in Model.Tweeted)
+                        {
+                                <tr>
+                                    <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
+                                    <td>
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
+                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                        <span>@item.TweetText</span>
+                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                    </td>
+                                    <td class="pull-right wid">@item.TweetTime</td>
+                                    <td><div class="btn btn-info btn-mini">Tweet</div></td>
+                                </tr>
+                        }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- /block -->
     </div>
-</body>
-</html>
+
+</div>
+
+

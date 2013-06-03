@@ -334,7 +334,10 @@
     <Content Include="Content\vendors\jGrowl\jgrowl.jquery.json" />
     <Content Include="Content\vendors\jGrowl\LICENSE" />
     <Content Include="Content\vendors\jGrowl\README.md" />
+    <Content Include="data.tsv" />
     <None Include="Scripts\jquery-2.0.0.intellisense.js" />
+    <Content Include="Scripts\d3.v3.js" />
+    <Content Include="Scripts\d3.v3.min.js" />
     <Content Include="Scripts\jquery-2.0.0.js" />
     <Content Include="Scripts\jquery-2.0.0.min.js" />
     <Content Include="Scripts\jquery-2.0.0.min.map" />
@@ -361,6 +364,11 @@
     <Content Include="Web.config" />
     <Content Include="Views\Shared\_LogOnPartial.cshtml" />
     <Content Include="Views\Dashboard\Tweets.cshtml" />
+    <Content Include="Views\Shared\_TopMenu.cshtml" />
+    <Content Include="Views\Shared\_SideMenu.cshtml" />
+    <Content Include="Views\Dashboard\Charts.cshtml" />
+    <Content Include="Views\data.tsv" />
+    <Content Include="Views\Dashboard\data.tsv" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
