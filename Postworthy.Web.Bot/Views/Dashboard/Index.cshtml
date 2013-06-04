@@ -1,6 +1,5 @@
 ﻿@model Postworthy.Web.Bot.Models.DashboardModel
 
-
 @Html.Partial("_TopMenu")
 
 <div class="container-fluid">
@@ -60,6 +59,39 @@
                     </div>
                 </div>*@
             </div>
+
+         <div class="row-fluid"></div>
+           <div class="block">
+            <div class="navbar navbar-inner block-header">
+                <div class="muted pull-left">Statistics</div>
+                <div class="pull-right">
+                    <span class="badge badge-warning">View More</span>
+                </div>
+            </div>
+            <div class="block-content collapse in">
+                <div class="span3">
+                    <div class="chart" data-percent="@(Model.TweetsPerHour*100)">@((int)(Model.TweetsPerHour*100))</div>
+                    <div class="chart-bottom-heading">
+                        <span class="label label-info">Tweets/Hour</span>
+
+                    </div>
+                </div>
+              @*  <div class="span3">
+                    <div class="chart" data-percent="@(Model.TweetsPerHourLast24/3600*100)">@Model.TweetsPerHourLast24</div>
+                    <div class="chart-bottom-heading">
+                        <span class="label label-info">Tweets/24 Hours</span>
+
+                    </div>
+                </div>*@
+                <div class="span3">
+                    <div class="chart" data-percent="@(Model.TwitterStreamVolume*100)">@((int)(Model.TwitterStreamVolume*100))</div>
+                    <div class="chart-bottom-heading">
+                        <span class="label label-info">Stream Volumne (tweets/min.)</span>
+
+                    </div>
+                </div>
+            </div>
+        </div>
 
             <div class="row-fluid">
                 <div class="span6">

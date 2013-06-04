@@ -16,6 +16,7 @@ namespace Postworthy.Web.Bot.Controllers
         [AuthorizePrimaryUser]
         public ActionResult Index()
         {
+            ViewBag.IsDashboardSection = true;
             var user = UsersCollection.Single(User.Identity.Name);
             var model = new DashboardModel(user);
             return View(model);
@@ -23,6 +24,7 @@ namespace Postworthy.Web.Bot.Controllers
 
         public ActionResult Tweets()
         {
+            ViewBag.IsTweetsSection = true;
             var user = UsersCollection.Single(User.Identity.Name);
             var model = new DashboardModel(user);
             return View(model);
@@ -30,6 +32,7 @@ namespace Postworthy.Web.Bot.Controllers
 
         public ActionResult Charts()
         {
+            ViewBag.IsChartsSection = true;
             var user = UsersCollection.Single(User.Identity.Name);
             var model = new DashboardModel(user);
             return View(model);
