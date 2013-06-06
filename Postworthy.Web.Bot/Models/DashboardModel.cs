@@ -90,9 +90,9 @@ namespace Postworthy.Web.Bot.Models
             var me = new Tweep(User, Tweep.TweepType.None);
             Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
 
-            var runtimeSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<TweetBotRuntimeSettings>(System.IO.File.OpenText("c:\\temp\\runtimesettings.demo.json.txt").ReadToEnd());
+            //var runtimeSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<TweetBotRuntimeSettings>(System.IO.File.OpenText("c:\\temp\\runtimesettings.demo.json.txt").ReadToEnd());
 
-            //var runtimeSettings = (repo.Query(RepoKey) ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
+            var runtimeSettings = (repo.Query(RepoKey) ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
 
             if (runtimeSettings != null)
             {
