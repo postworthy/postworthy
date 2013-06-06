@@ -26,7 +26,6 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int MIN_TWEEP_NOTICED = 5;
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
-        private const int SIMULATION_MODE_HOURS = 48;
         public const int MINIMUM_KEYWORD_COUNT = 30;
         private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
         private const int MAX_KEYWORD_SUGGESTIONS = 50;
@@ -48,7 +47,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         {
             get
             {
-                return ForceSimulationMode || (RuntimeSettings != null && RuntimeSettings.BotFirstStart.AddHours(SIMULATION_MODE_HOURS) > DateTime.Now);
+                return ForceSimulationMode || (RuntimeSettings != null && RuntimeSettings.IsSimulationMode);
             }
         }
 

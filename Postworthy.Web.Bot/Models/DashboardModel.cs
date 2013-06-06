@@ -16,6 +16,7 @@ namespace Postworthy.Web.Bot.Models
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
 
         public PostworthyUser User { get; set; }
+        public bool IsSimulationMode { get; set; }
         public DateTime BotStartupTime { get; set; }
         public TimeSpan Runtime { get { return DateTime.Now - BotStartupTime; } }
         public DateTime LastTweetTime { get; set; }
@@ -72,6 +73,7 @@ namespace Postworthy.Web.Bot.Models
 
             if (runtimeSettings != null)
             {
+                IsSimulationMode = runtimeSettings.IsSimulationMode;
                 BotStartupTime = runtimeSettings.BotFirstStart;
                 LastTweetTime = runtimeSettings.LastTweetTime;
                 TweetsSentSinceLastFriendRequest = runtimeSettings.TweetsSentSinceLastFriendRequest;
