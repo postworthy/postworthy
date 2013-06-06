@@ -11,7 +11,7 @@ namespace Postworthy.Tasks.Bot.Settings
 {
     public class TweetBotRuntimeSettings : RepositoryEntity
     {
-        private const int SIMULATION_MODE_HOURS = 48;
+        public const int SIMULATION_MODE_HOURS = 48;
 
         public Guid SettingsGuid { get; set; }
 

@@ -86,7 +86,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             else if (SimulationMode)
                 log.WriteLine("{0}: Running in automatic simulation mode to aquire a baseline. No actions will be taken for {1}hrs.",
                     DateTime.Now,
-                    SIMULATION_MODE_HOURS);
+                    TweetBotRuntimeSettings.SIMULATION_MODE_HOURS);
 
             if (Messages == null)
                 log.WriteLine("{0}: 'TweetBotSettings' configuration section is missing Messages. No responses will be sent.",
