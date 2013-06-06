@@ -19,16 +19,16 @@
                             <span class="badge badge-warning">View More</span>
                         </div>
                     </div>
-                    <div class="block-content collapse in">
+                    <div class="block-content collapse in" id="">
                         <div>
                             <table style="width:100%;">
                                 
                         @foreach (var item in Model.PotentialTweets)
                         {
                                 <tr>
-                                    <td><img src="@item.User.ProfileImageUrl" /></td>
-                                    <td>
-                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User</a>
+                                    <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
+                                    <td style="padding-left:10px;">
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
                                        @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
                                         <span>@item.TweetText</span>
                                         <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
@@ -42,7 +42,7 @@
                     </div>
                 </div>
 
-                <div class="block">
+                <div class="block" id="retweets">
                     <div class="navbar navbar-inner block-header">
                         <div class="muted pull-left">Potential Retweets</div>
                         <div class="pull-right">
@@ -57,8 +57,8 @@
                         {
                                 <tr>
                                     <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
-                                    <td>
-                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User</a>
+                                    <td style="padding-left:10px;">
+                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
                                        @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
                                         <span>@item.TweetText</span>
                                         <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
@@ -72,7 +72,7 @@
                     </div>
                 </div>
 
-                 <div class="block">
+                 <div class="block" id="tweeted">
                     <div class="navbar navbar-inner block-header">
                         <div class="muted pull-left">Tweeted</div>
                         <div class="pull-right">
@@ -87,14 +87,13 @@
                         {
                                 <tr>
                                     <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
-                                    <td>
+                                    <td style="padding-left:10px;">
                                         <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
                                        @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
                                         <span>@item.TweetText</span>
                                         <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
                                     </td>
                                     <td class="pull-right wid">@item.TweetTime</td>
-                                    <td><div class="btn btn-info btn-mini">Tweet</div></td>
                                 </tr>
                         }
                             </table>
