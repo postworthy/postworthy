@@ -75,7 +75,11 @@ namespace Postworthy.Web.Bot.Models
                 BotStartupTime = runtimeSettings.BotFirstStart;
                 LastTweetTime = runtimeSettings.LastTweetTime;
                 TweetsSentSinceLastFriendRequest = runtimeSettings.TweetsSentSinceLastFriendRequest;
-                TweetsPerHour = runtimeSettings.Tweeted.Count() > 1 ? runtimeSettings.Tweeted.Count() / (1.0 * (runtimeSettings.Tweeted.Max(x => x.CreatedAt) - runtimeSettings.Tweeted.Min(x => x.CreatedAt)).TotalHours) : 0;
+                TweetsPerHour = runtimeSettings.Tweeted.Count() > 1 ? runtimeSettings.Tweeted
+                    .GroupBy(x => x.CreatedAt.ToShortDateString())
+                    .SelectMany(y => y.GroupBy(z => z.CreatedAt.Hour))
+                    .Select(x => x.Count())
+                    .Average() : 0;
                 TweetsPerHourMax = runtimeSettings.Tweeted.Count() > 2 ? runtimeSettings.Tweeted
                     .GroupBy(x => x.CreatedAt.ToShortDateString())
                     .SelectMany(y => y.GroupBy(z => z.CreatedAt.Hour))
