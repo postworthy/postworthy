@@ -202,7 +202,9 @@
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="Example.UsersCollection.config" />
-    <Content Include="Example.Web.config" />
+    <Content Include="Example.Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="Scripts\jquery-2.0.0.intellisense.js" />
     <Content Include="Scripts\jquery-2.0.0.js" />
     <Content Include="Scripts\jquery-2.0.0.min.js" />
