@@ -1,8 +1,199 @@
 ﻿@model Postworthy.Web.Bot.Models.DashboardModel
 
-<div>
-Bot Start Time: @Model.BotStartupTime
+@Html.Partial("_TopMenu")
+
+<div class="container-fluid">
+    <div class="row-fluid">
+
+        @Html.Partial("_SideMenu")
+
+        <div class="span9" id="content">
+            <div class="row-fluid">
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <h4>Up Time (Days)</h4>
+                    <div class="xx">
+                        <b>@Model.UpTime</b>
+                    </div>
+                </div>
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <h4>Follower Count</h4>
+                    <div class="xx">
+                        <b>@Model.FollowerCount</b>
+                    </div>
+                    <div></div>
+                </div>
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <h4>Following Count</h4>
+                    <div class="xx">
+                        <b>@Model.FollowingCount</b>
+                    </div>
+                    <div></div>
+                </div>
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <h4>Current Clout</h4>
+                    <div class="xx">
+                        <b>@Model.CurrentClout</b>
+                    </div>
+                    <div></div>
+                </div>
+            </div>
+            <div class="row-fluid">
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <h4>Tweets/Hour</h4>
+                    <div class="xx">
+                        <b>@Model.TweetsPerHour.ToString("0.00")</b>
+                    </div>
+                    <div></div>
+                </div>
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <a href='@(Url.Action("Tweets", "Dashboard") + "#tweets")'>
+                        <h4>Potential Tweets</h4>
+                        <div class="xx">
+                            <b>@Model.PotentialTweets.Count</b>
+                        </div>
+                        <div></div>
+                    </a>
+                </div>
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <a href='@(Url.Action("Tweets", "Dashboard") + "#retweets")'>
+                        <h4>Potential Retweets</h4>
+                        <div class="xx">
+                            <b>@Model.PotentialReTweets.Count</b>
+                        </div>
+                        <div></div>
+                    </a>
+                </div>
+                <div class="thumbnail span3 centered lightblue dashboardWidget" data-squared="height" data-squared-max="200">
+                    <a href='@(Url.Action("Tweets", "Dashboard") + "#tweeted")'>
+                        <h4>Tweets</h4>
+                        <div class="xx">
+                            <b>@Model.Tweeted.Count</b>
+                        </div>
+                        <div></div>
+                    </a>
+                </div>
+
+                <div class="clearfix">
+                </div>
+
+            </div>
+
+            <div class="row-fluid"></div>
+            <div class="block">
+                <div class="navbar navbar-inner block-header">
+                    <div class="muted pull-left">Statistics</div>
+                    <div class="pull-right">
+                        <span class="badge badge-warning">View More</span>
+                    </div>
+                </div>
+                <div class="block-content collapse in">
+                    <div class="span2">
+                        <div class="chart" data-percent="@(Model.TweetsPerHour * 100)">@((int)(Model.TweetsPerHour * 100))</div>
+                        <div class="chart-bottom-heading">
+                            <span class="label label-info">Tweets/Hour</span>
+                        </div>
+                    </div>
+                    <div class="span2">
+                        <div class="chart" data-percent="@(Model.TwitterStreamVolume * 100)">@((int)(Model.TwitterStreamVolume * 100))</div>
+                        <div class="chart-bottom-heading">
+                            <span class="label label-info">Stream Volume (tweets/min.)</span>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row-fluid">
+                <div class="span6">
+                    <!-- block -->
+                    <div class="block">
+                        <div class="navbar navbar-inner block-header">
+                            <div class="muted pull-left">Keywords</div>
+                            <div class="pull-right">
+                                <span class="badge badge-info">@Model.KeywordOccurenceTotal</span>
+                            </div>
+                        </div>
+                        <div class="block-content collapse in">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Word</th>
+                                        <th>Occurrence Count</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int idx = 0;
+                                        foreach (var items in Model.KeywordsWithOccurrenceCount)
+                                        {
+                                            idx++;
+                                        <tr>
+                                            <td>@idx</td>
+                                            <td>@items.Key</td>
+                                            <td>@items.Value</td>
+                                            <td>
+                                                <div class="btn btn-warning btn-mini">Remove</div>
+                                            </td>
+                                        </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="span6">
+                    <div class="block">
+                        <div class="navbar navbar-inner block-header">
+                            <div class="muted pull-left">Keyword Suggestions</div>
+                            <div class="pull-right">
+                                <span class="badge badge-info">@Model.PotentialKeywordOccurenceTotal</span>
+                            </div>
+                        </div>
+                        <div class="block-content collapse in">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Word</th>
+                                        <th>Occurrence Count</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int idx2 = 0;
+                                        foreach (var items in Model.PotentialKeywordsWithOccurrenceCount)
+                                        {
+                                            idx2++;
+                                        <tr>
+                                            <td>@idx2</td>
+                                            <td>@items.Key</td>
+                                            <td>@items.Value</td>
+                                            <td>
+                                                <div class="btn btn-success btn-mini">Add</div>
+                                            </td>
+                                        </tr>
+                                            if (idx2 > idx - 1) { break; }
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /block -->
+    </div>
 </div>
-<div>
-Bot Up Time: @Model.Runtime.TotalDays Days
-</div>
+
+@section scripts {
+
+    <script src="@Scripts.Url("~/Scripts/squaredUp.js")"></script>
+
+}
