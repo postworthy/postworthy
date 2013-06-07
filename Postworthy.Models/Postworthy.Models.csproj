@@ -112,6 +112,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repository\Repository.cs" />
     <Compile Include="Repository\RepositoryEntity.cs" />
+    <Compile Include="Streaming\ITweepProcessingStep.cs" />
     <Compile Include="Streaming\IKeywordSuggestionStep.cs" />
     <Compile Include="Streaming\IProcessingStep.cs" />
     <Compile Include="Streaming\PassThroughProcessingStep.cs" />

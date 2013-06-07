@@ -72,5 +72,14 @@ namespace Postworthy.Models.Twitter
             }
             catch { return null; }
         }
+
+        public static LazyLoader<Tweep> GetLazyLoadedTweep(string userID, Tweep.TweepType tweepType = Tweep.TweepType.None)
+        {
+            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
+
+            return new LazyLoader<Tweep>(
+                userID,
+                (() => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == userID).First(), tweepType)));
+        }
     }
 }

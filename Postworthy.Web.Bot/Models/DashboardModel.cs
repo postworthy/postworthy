@@ -7,6 +7,7 @@ using Postworthy.Models.Repository;
 using Postworthy.Models.Twitter;
 using Postworthy.Tasks.Bot.Settings;
 using Postworthy.Models.Core;
+using Postworthy.Tasks.Bot.Streaming;
 
 namespace Postworthy.Web.Bot.Models
 {
@@ -15,6 +16,7 @@ namespace Postworthy.Web.Bot.Models
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
 
         public PostworthyUser User { get; set; }
+        public bool IsSimulationMode { get; set; }
         public DateTime BotStartupTime { get; set; }
         public TimeSpan Runtime { get { return DateTime.Now - BotStartupTime; } }
         public Int32 UpTime { get { return Runtime.Days; } }
@@ -26,6 +28,7 @@ namespace Postworthy.Web.Bot.Models
         public List<KeyValuePair<string, int>> KeywordSuggestions { get; set; }
         public List<KeyValuePair<Tweep, int>> PotentialFriendRequests { get; set; }
         public double TweetsPerHour { get; set; }
+        public double TweetsPerHourMax { get; set; }
         public int[] TweetsPerHourLast24 { get; set; }
         public List<KeyValuePair<Tweep, int>> TopFriendTweetCounts { get; set; }
         public int MinimumRetweetLevel { get; set; }
@@ -93,10 +96,20 @@ namespace Postworthy.Web.Bot.Models
 
             if (runtimeSettings != null)
             {
+                IsSimulationMode = runtimeSettings.IsSimulationMode;
                 BotStartupTime = runtimeSettings.BotFirstStart;
                 LastTweetTime = runtimeSettings.LastTweetTime;
                 TweetsSentSinceLastFriendRequest = runtimeSettings.TweetsSentSinceLastFriendRequest;
-                TweetsPerHour = runtimeSettings.Tweeted.Count() > 2 ? runtimeSettings.Tweeted.Count() / (1.0 * (runtimeSettings.Tweeted.Max(x => x.CreatedAt) - runtimeSettings.Tweeted.Min(x => x.CreatedAt)).TotalHours) : 0;
+                TweetsPerHour = runtimeSettings.Tweeted.Count() > 1 ? runtimeSettings.Tweeted
+                    .GroupBy(x => x.CreatedAt.ToShortDateString())
+                    .SelectMany(y => y.GroupBy(z => z.CreatedAt.Hour))
+                    .Select(x => x.Count())
+                    .Average() : 0;
+                TweetsPerHourMax = runtimeSettings.Tweeted.Count() > 2 ? runtimeSettings.Tweeted
+                    .GroupBy(x => x.CreatedAt.ToShortDateString())
+                    .SelectMany(y => y.GroupBy(z => z.CreatedAt.Hour))
+                    .Select(x => x.Count())
+                    .Max() : 0;
                 MinimumRetweetLevel = (int)Math.Ceiling(runtimeSettings.MinimumRetweetLevel);
                 CurrentClout = me.Followers().Count();
                 FollowerCount = me.User.FollowersCount;
@@ -124,7 +137,11 @@ namespace Postworthy.Web.Bot.Models
                     .Select(g => new KeyValuePair<Tweep, int>(new Tweep(g.FirstOrDefault().User, Tweep.TweepType.None), g.Count()))
                     .ToList();
                 KeywordsWithOccurrenceCount = runtimeSettings.Keywords
-                    .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
+                    .Concat(runtimeSettings.KeywordSuggestions.Where(x => x.Count >= TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT))
+                    .OrderByDescending(x => x.Count)
+                    .ThenByDescending(x => x.Key)
+                    .Select(x => new KeyValuePair<string, int>(x.Key, x.Count))
+                    .ToList();
                 PotentialKeywordsWithOccurrenceCount = runtimeSettings.KeywordSuggestions
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
 

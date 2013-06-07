@@ -18,7 +18,7 @@ using Postworthy.Tasks.Bot.Models;
 
 namespace Postworthy.Tasks.Bot.Streaming
 {
-    public class TweetBotProcessingStep : IProcessingStep, IKeywordSuggestionStep
+    public class TweetBotProcessingStep : IProcessingStep, ITweepProcessingStep, IKeywordSuggestionStep
     {
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
         private const int POTENTIAL_TWEET_BUFFER_MAX = 10;
@@ -26,9 +26,11 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int MIN_TWEEP_NOTICED = 5;
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
-        private const int SIMULATION_MODE_HOURS = 48;
-        private const int MINIMUM_KEYWORD_COUNT = 30;
+        public const int MINIMUM_KEYWORD_COUNT = 30;
         private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
+        private const int MAX_KEYWORD_SUGGESTIONS = 50;
+        private const int KEYWORD_FALLOUT_MINUTES = 15;
+        private const int FRIEND_FALLOUT_MINUTES = 60 * 24 * 2;
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private string[] Messages = null;
@@ -45,7 +47,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         {
             get
             {
-                return ForceSimulationMode || (RuntimeSettings != null && RuntimeSettings.BotFirstStart.AddHours(SIMULATION_MODE_HOURS) > DateTime.Now);
+                return ForceSimulationMode || (RuntimeSettings != null && RuntimeSettings.IsSimulationMode);
             }
         }
 
@@ -84,7 +86,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             else if (SimulationMode)
                 log.WriteLine("{0}: Running in automatic simulation mode to aquire a baseline. No actions will be taken for {1}hrs.",
                     DateTime.Now,
-                    SIMULATION_MODE_HOURS);
+                    TweetBotRuntimeSettings.SIMULATION_MODE_HOURS);
 
             if (Messages == null)
                 log.WriteLine("{0}: 'TweetBotSettings' configuration section is missing Messages. No responses will be sent.",
@@ -121,7 +123,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
                     FindTweepsToFollow(tweets);
 
-                    FindKeywords(tweets);
+                    FindKeywordsFromCurrentTweets(tweets);
 
                     UpdateAverageWeight(tweets);
 
@@ -169,70 +171,75 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void SendTweets()
         {
-            if (RuntimeSettings.TweetOrRetweet)
+            var hourOfDay = DateTime.Now.Hour + DateTime.Now.Minute/100.0;
+            
+            if (hourOfDay > 6.29 && hourOfDay < 21.29) //Only Tweet during particular times of the day
             {
-                RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
-                    //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                    (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialTweets.Count > 0))
+                if (RuntimeSettings.TweetOrRetweet)
                 {
-                    var tweet = RuntimeSettings.PotentialTweets.First();
-                    var groups = RuntimeSettings.Tweeted
-                        .Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                        .GroupSimilar(0.45m, log)
-                        .Select(g => new TweetGroup(g))
-                        .Where(g => g.GroupStatusIDs.Count() > 1);
-                    var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
-                    if (matches.Count() > 0)
+                    RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
+                    if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
+                        //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
+                        (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialTweets.Count > 0))
                     {
-                        //Ignore Tweets that are very similar
-                        RuntimeSettings.PotentialTweets.Remove(tweet);
-                    }
-                    else
-                    {
-                        if (SendTweet(tweet, false))
+                        var tweet = RuntimeSettings.PotentialTweets.First();
+                        var groups = RuntimeSettings.Tweeted
+                            .Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                            .GroupSimilar(0.45m, log)
+                            .Select(g => new TweetGroup(g))
+                            .Where(g => g.GroupStatusIDs.Count() > 1);
+                        var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
+                        if (matches.Count() > 0)
                         {
-                            RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                            RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                            RuntimeSettings.LastTweetTime = DateTime.Now;
+                            //Ignore Tweets that are very similar
                             RuntimeSettings.PotentialTweets.Remove(tweet);
-                            RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                         }
                         else
-                            RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        {
+                            if (SendTweet(tweet, false))
+                            {
+                                RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                                RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                                RuntimeSettings.LastTweetTime = DateTime.Now;
+                                RuntimeSettings.PotentialTweets.Remove(tweet);
+                                RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
+                            }
+                            else
+                                RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        }
                     }
                 }
-            }
-            else
-            {
-                RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
-                    //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                    (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialReTweets.Count > 0))
+                else
                 {
-                    var tweet = RuntimeSettings.PotentialReTweets.First();
-                    var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
-                       .GroupSimilar(0.45m, log)
-                       .Select(g => new TweetGroup(g))
-                       .Where(g => g.GroupStatusIDs.Count() > 1);
-                    var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
-                    if (matches.Count() > 0)
+                    RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
+                    if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
+                        //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
+                        (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialReTweets.Count > 0))
                     {
-                        //Ignore Tweets that are very similar
-                        RuntimeSettings.PotentialReTweets.Remove(tweet);
-                    }
-                    else
-                    {
-                        if (SendTweet(tweet, true))
+                        var tweet = RuntimeSettings.PotentialReTweets.First();
+                        var groups = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer())
+                           .GroupSimilar(0.45m, log)
+                           .Select(g => new TweetGroup(g))
+                           .Where(g => g.GroupStatusIDs.Count() > 1);
+                        var matches = groups.Where(x => x.GroupStatusIDs.Contains(tweet.StatusID));
+                        if (matches.Count() > 0)
                         {
-                            RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
-                            RuntimeSettings.TweetsSentSinceLastFriendRequest++;
-                            RuntimeSettings.LastTweetTime = DateTime.Now;
+                            //Ignore Tweets that are very similar
                             RuntimeSettings.PotentialReTweets.Remove(tweet);
-                            RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                         }
                         else
-                            RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        {
+                            if (SendTweet(tweet, true))
+                            {
+                                RuntimeSettings.Tweeted = RuntimeSettings.Tweeted.Union(new List<Tweet> { tweet }, Tweet.GetTweetTextComparer()).ToList();
+                                RuntimeSettings.TweetsSentSinceLastFriendRequest++;
+                                RuntimeSettings.LastTweetTime = DateTime.Now;
+                                RuntimeSettings.PotentialReTweets.Remove(tweet);
+                                RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
+                            }
+                            else
+                                RuntimeSettings.PotentialReTweets.Remove(tweet);
+                        }
                     }
                 }
             }
@@ -345,12 +352,25 @@ namespace Postworthy.Tasks.Bot.Streaming
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
                 log.WriteLine("####################");
             }
+            if (RuntimeSettings.Keywords.Count() > 0)
+            {
+                log.WriteLine("####################");
+                log.WriteLine("{0}: Keywords: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Keywords
+                        .Concat(RuntimeSettings.KeywordSuggestions.Where(x=>x.Count >= MINIMUM_KEYWORD_COUNT))
+                        .OrderByDescending(x => x.Count)
+                        .ThenByDescending(x => x.Key)
+                        .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
+                log.WriteLine("####################");
+            }
             if (RuntimeSettings.KeywordSuggestions.Count() > 0)
             {
                 log.WriteLine("####################");
                 log.WriteLine("{0}: Keyword Suggestions: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.KeywordSuggestions
+                        .Where(x => x.Count < MINIMUM_KEYWORD_COUNT)
                         .OrderByDescending(x => x.Count)
                         .ThenByDescending(x => x.Key)
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
@@ -516,6 +536,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
             //Limit
             RuntimeSettings.PotentialFriendRequests = RuntimeSettings.PotentialFriendRequests
+                .Where(x => x.Key.Type == Tweep.TweepType.Target || x.LastModifiedTime.AddHours(FRIEND_FALLOUT_MINUTES) > DateTime.Now) //Only watch them for a limited time
                 .OrderByDescending(x => x.Key.Clout())
                 .Take(POTENTIAL_TWEEP_BUFFER_MAX)
                 .ToList();
@@ -591,12 +612,27 @@ namespace Postworthy.Tasks.Bot.Streaming
             return repliedTo;
         }
 
-        private void FindKeywords(IEnumerable<Tweet> tweets)
+        private void FindKeywordsFromCurrentTweets(IEnumerable<Tweet> tweets)
         {
-            
+            long nothing;
+            //Strip Punctuation, Force Lowercase
+            var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
+            var cleanedPastTweets = RuntimeSettings.Tweeted.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
+
+            var cleanedAll = cleanedTweets.Concat(cleanedTweets);
+
+            var words = cleanedTweets
+                .SelectMany(t => t.Split(' '))
+                .Select(w => w.Trim())
+                .Where(w => !long.TryParse(w, out nothing)) //Ignore Numbers
+                .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
+                .Except(StopWords) //Exclude Stop Words
+                .Where(x => !x.StartsWith("http")) //No URLs
+                .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
+                .ToList();
+
             //Get Current Keyword Counts
-            var currentKeywords = tweets
-                .SelectMany(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower().Split(' ')) //Strip Punctuation, Force Lowercase, Split Words, Make List
+            var currentKeywords = words
                 .Intersect(RuntimeSettings.KeywordsToIgnore) //Find Words we are currently tracking
                 .GroupBy(w => w) //Group Similar Words
                 .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
@@ -612,17 +648,25 @@ namespace Postworthy.Tasks.Bot.Streaming
                     RuntimeSettings.Keywords.Add(new CountableItem(w.Word, w.Count));
             });
 
+            //Only words we are tracking from config
+            RuntimeSettings.Keywords = RuntimeSettings.Keywords.Where(w => RuntimeSettings.KeywordsToIgnore.Contains(w.Key)).ToList();
+
+            //Exclude Ignore Words, which are current keywords
+            words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y }))).ToList();
+
+            //Create pairs of words for phrase searching
+            var wordPairs = words.SelectMany(w => words.Distinct().Where(x => x != w).Select(w2 =>  (w + " " + w2).Trim())).ToList();
+
+            //Match phrases in tweet text (must match in more than 1 tweet to be valid)
+            var validPairs = wordPairs.Where(wp => cleanedAll.Count(t => t.IndexOf(wp) > -1) > 1).ToList();
+
+            //Remove words that are found in a phrase and union with phrases
+            words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Concat(validPairs).ToList();
 
             //For Later
             var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
 
-            var keywords = tweets
-                .SelectMany(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower().Split(' ')) //Strip Punctuation, Force Lowercase, Split Words, Make List
-                .Except(StopWords) //Exclude Stop Words
-                .Except(RuntimeSettings.KeywordsToIgnore) //Exclude Ignore Words
-                .Where(x => !x.StartsWith("http")) //No URLs
-                .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
-                .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
+            var keywords = words
                 .GroupBy(w => w) //Group Similar Words
                 .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
                 .ToList();
@@ -637,16 +681,26 @@ namespace Postworthy.Tasks.Bot.Streaming
             });
 
             RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
+                .Where(x => !long.TryParse(x.Key, out nothing)) //Ignore Numbers
+                .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
+                .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
+                .Where(x => !x.Key.StartsWith("http")) //No URLs
+                .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
+                .Where(x => Encoding.UTF8.GetByteCount(x.Key) == x.Key.Length) //Only ASCII for me...
+                .Where(x =>
+                    (x.Count >= MINIMUM_KEYWORD_COUNT || x.LastModifiedTime.AddMinutes(KEYWORD_FALLOUT_MINUTES) >= DateTime.Now)  //Fallout if not seen frequently unless beyond threshold
+                    && (x.LastModifiedTime.AddHours(24) > DateTime.Now)) //No matter what it must be seen within the last 24hrs
                 .OrderByDescending(x => x.Count)
+                .ThenByDescending(x => x.LastModifiedTime)
                 .ThenByDescending(x => x.Key.Length)
-                .Take(50)
+                .Take(MAX_KEYWORD_SUGGESTIONS)
                 .ToList();
 
             //For Comparison
             var newSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
 
-            //If we have more then set the flag
-            if (newSuggestionCount > oldSuggestionCount)
+            //If we have difference then set the flag
+            if (newSuggestionCount != oldSuggestionCount)
                 hasNewKeywordSuggestions = true;
         }
 
@@ -671,6 +725,15 @@ namespace Postworthy.Tasks.Bot.Streaming
         public void SetIgnoreKeywords(List<string> keywords)
         {
             RuntimeSettings.KeywordsToIgnore = keywords;
+        }
+
+        public Task<IEnumerable<LazyLoader<Tweep>>> ProcessTweeps(IEnumerable<LazyLoader<Tweep>> tweeps)
+        {
+            return Task<IEnumerable<LazyLoader<Tweep>>>.Factory.StartNew(new Func<IEnumerable<LazyLoader<Tweep>>>(() =>
+                {
+                    PrimaryTweep.OverrideFollowers(tweeps.ToList());
+                    return tweeps;
+                }));
         }
     }
 }

@@ -30,6 +30,7 @@ always
 am
 among
 amongst
+amp
 an
 and
 announce
