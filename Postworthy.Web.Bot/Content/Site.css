@@ -94,3 +94,15 @@ color: rgba(255, 255, 255, 0.7);
 .dashboardWidget.lightblue {
     background-color: #12b0c5;
 }
+.dashboardWidget.darkblue {
+    background-color: #254fce;
+}
+.dashboardWidget.brightgreen {
+    background-color: #10dc34;
+}
+.dashboardWidget.brightorange {
+    background-color: #ff8413;
+}
+.dashboardWidget.brightred {
+    background-color: #ff2413;
+}
