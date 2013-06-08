@@ -61,6 +61,11 @@ textarea {
 }
 
 /* Custom for Postworthy Bot Dashboard */
+@media (max-width: 979px) {
+    body {
+    padding-top: 0;
+    }
+}
 .xx
 {
 	font-size:xx-large;
