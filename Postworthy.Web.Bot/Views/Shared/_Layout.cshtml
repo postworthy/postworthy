@@ -30,17 +30,8 @@
         </footer>
 
     @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
    
 </body>
-@*<script src="Content/vendors/jquery-1.9.1.min.js"></script>*@
-<script src="/Content/bootstrap/js/bootstrap.min.js"></script>
-<script src="/Content/vendors/easypiechart/jquery.easy-pie-chart.js"></script>
-<script src="/Content/assets/scripts.js"></script>
-<script>
-$(function () {
-    // Easy pie charts
-    $('.chart').easyPieChart({ animate: 1000, size: 200 });
-});
-</script>
 </html>

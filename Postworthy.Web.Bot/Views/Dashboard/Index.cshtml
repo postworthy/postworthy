@@ -15,71 +15,67 @@
                 <div class="block-content collapse in">
                     <div class="row-fluid row1">
                         <div class="thumbnail span3 centered brightorange dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/power.jpg")')"></div>
+                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/power.png")')"></div>
                             <h4>Up Time (Days)</h4>
                             <div class="xx">
                                 <b>@Model.UpTime</b>
                             </div>
                         </div>
                         <div class="thumbnail span3 centered darkblue dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/meninblack.jpg")')"></div>
+                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/meninblack.png")')"></div>
                             <h4>Following Count</h4>
                             <div class="xx">
                                 <b>@Model.FollowingCount</b>
                             </div>
-                            <div></div>
                         </div>
                         <div class="thumbnail span3 centered brightgreen dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/meninblack.jpg")')"></div>
+                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/meninblack.png")')"></div>
                             <h4>Follower Count</h4>
                             <div class="xx">
                                 <b>@Model.FollowerCount</b>
                             </div>
-                            <div></div>
                         </div>
                         <div class="thumbnail span3 centered brightred dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/megaphone.jpg")')"></div>
+                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/megaphone.png")')"></div>
                             <h4>Current Clout</h4>
                             <div class="xx">
                                 <b>@Model.CurrentClout</b>
                             </div>
-                            <div></div>
                         </div>
                     </div>
                     <div class="row-fluid row2">
                         <div class="thumbnail span3 centered brightorange dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/twitterbird.jpg")')"></div>
-                            <div style="width:210px;height:210px;left:50%;margin-left:-105px" class="chart" data-squared="centered" data-percent="@(100 * (Model.TweetsPerHour / Model.TweetsPerHourMax))"><strong>@(Model.TweetsPerHour.ToString("0.00"))</strong> twt/hr</div>
-                            <div></div>
-                        </div>
-                        <div class="thumbnail span3 centered darkblue dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/twitterbird.jpg")')"></div>
-                            <a href='@(Url.Action("Tweets", "Dashboard") + "#tweets")'>
-                                <h4>Potential Tweets</h4>
-                                <div class="xx">
-                                    <b>@Model.PotentialTweets.Count</b>
-                                </div>
-                                <div></div>
-                            </a>
-                        </div>
-                        <div class="thumbnail span3 centered brightgreen dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/twitterbird.jpg")')"></div>
-                            <a href='@(Url.Action("Tweets", "Dashboard") + "#retweets")'>
-                                <h4>Potential Retweets</h4>
-                                <div class="xx">
-                                    <b>@Model.PotentialReTweets.Count</b>
-                                </div>
-                                <div></div>
-                            </a>
+                            <div class="thumbnail-bg chart" data-squared="centered" data-percent="@(100 * (Model.TweetsPerHour / Model.TweetsPerHourMax))"></div>
+                            <h4>Tweets / Hour</h4>
+                            <div class="xx">
+                                <b>@(Model.TweetsPerHour.ToString("0.00"))</b>
+                            </div>
                         </div>
                         <div class="thumbnail span3 centered brightred dashboardWidget" data-squared="height" data-squared-max="200">
-                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/twitterbird.jpg")')"></div>
+                            <div class="thumbnail-bg bars" data-squared="centered"></div>
                             <a href='@(Url.Action("Tweets", "Dashboard") + "#tweeted")'>
                                 <h4>Tweets</h4>
                                 <div class="xx">
                                     <b>@Model.Tweeted.Count</b>
                                 </div>
-                                <div></div>
+                            </a>
+                        </div>
+                        <div class="thumbnail span3 centered darkblue dashboardWidget" data-squared="height" data-squared-max="200">
+                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/twitterbird.png")')"></div>
+                            <a href='@(Url.Action("Tweets", "Dashboard") + "#tweets")'>
+                                <h4>Potential Tweets</h4>
+                                <div class="xx">
+                                    <b>@Model.PotentialTweets.Count</b>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="thumbnail span3 centered brightgreen dashboardWidget" data-squared="height" data-squared-max="200">
+                            <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/twitterbird-rt.png")')"></div>
+                            <a href='@(Url.Action("Tweets", "Dashboard") + "#retweets")'>
+                                <h4>Potential Retweets</h4>
+                                <div class="xx">
+                                    <b>@Model.PotentialReTweets.Count</b>
+                                </div>
                             </a>
                         </div>
 
@@ -98,16 +94,16 @@
                 </div>
                 <div class="block-content collapse in">
                     <div class="row-fluid">
-                        @foreach (var item in Model.Tweeted.Reverse<Postworthy.Models.Twitter.Tweet>().Take(3))
+                        @foreach (var item in Model.Tweeted.Reverse<Postworthy.Models.Twitter.Tweet>().Take(4))
                         {
-                            <style type="text/css">
-                                        .@(item.UniqueKey) {
-                                            background-image: url('@item.User.ProfileImageUrl.Replace("_normal", "_bigger")');
-                                        }
-                                    </style>
                             <div class="thumbnail span3 centered" data-squared="height" data-squared-max="200">
-                                <div class="@(item.UniqueKey) thumbnail-bg"></div>
-                                <div style="float:left;">
+                                <style type="text/css">
+                                    .@(item.UniqueKey) {
+                                        background-image: url('@item.User.ProfileImageUrl.Replace("_normal", "_bigger")');
+                                    }
+                                </style>
+                                <div class="@(item.UniqueKey) thumbnail-bg fill"></div>
+                                <div style="float: left;">
                                     <h4>@item.TweetText</h4>
                                     <div class='xx'>@item.RetweetCount</div>
                                 </div>
@@ -206,12 +202,28 @@
 
 @section scripts {
 
+    @Scripts.Render("~/bundles/charts")
+
     <script src="@Scripts.Url("~/Scripts/squaredUp.js")"></script>
 
     <script type="text/javascript">
-        $(document).ready(function () {
+        $(function () {
             $(".row2").hide();
             setInterval(rotateRows, 30000);
+
+            $('.thumbnail-bg.chart').easyPieChart({ animate: 1000, size: 200 });
+
+            $(".thumbnail-bg.bars").sparkline([@(string.Join(",",Model.TweetsPerHourLast24))], {
+                type: 'bar',
+                chartRangeMin: 0,
+                chartRangeMax: @(Model.TweetsPerHourMax),
+                height: '150',
+                barWidth: 8,
+                barColor: '#a8a6a6',
+                negBarColor: '#a8a6a6',
+                zeroColor: '#a8a6a6',
+                nullColor: '#a8a6a6'
+            });
         });
 
         function rotateRows() {

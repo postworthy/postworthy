@@ -121,10 +121,6 @@ textarea {
 }
 
 .thumbnail-bg {
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-size: cover;
     opacity: 0.2;
     filter: alpha(opacity = 20);
     width: 100%;
@@ -132,7 +128,33 @@ textarea {
     top: 0;
     left: 0;
     position: absolute;
+    background-position: center center;
+    background-repeat: no-repeat;
 }
+
+    .thumbnail-bg.chart {
+        opacity: 0.7;
+        filter: alpha(opacity = 70);
+        width:210px;
+        height:210px;
+        left:50%;
+        margin-left:-105px
+    }
+
+    .thumbnail-bg.bars {
+        opacity: 0.7;
+        filter: alpha(opacity = 70);
+        width:100%;
+        height:210px;
+        overflow: hidden;
+    }
+
+    .thumbnail-bg.fill {
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
 
 .centered {
     text-align: center;
@@ -142,26 +164,28 @@ textarea {
     color: rgba(255, 255, 255, 0.7);
 }
 
-.dashboardWidget a {
-    color: rgba(255, 255, 255, 0.7);
-}
+    .dashboardWidget a {
+        color: rgba(255, 255, 255, 0.7);
+        z-index:100;
+        position:relative;
+    }
 
-.dashboardWidget.lightblue {
-    background-color: #12b0c5;
-}
+    .dashboardWidget.lightblue {
+        background-color: #12b0c5;
+    }
 
-.dashboardWidget.darkblue {
-    background-color: #254fce;
-}
+    .dashboardWidget.darkblue {
+        background-color: #254fce;
+    }
 
-.dashboardWidget.brightgreen {
-    background-color: #10dc34;
-}
+    .dashboardWidget.brightgreen {
+        background-color: #10dc34;
+    }
 
-.dashboardWidget.brightorange {
-    background-color: #ff8413;
-}
+    .dashboardWidget.brightorange {
+        background-color: #ff8413;
+    }
 
-.dashboardWidget.brightred {
-    background-color: #ff2413;
-}
+    .dashboardWidget.brightred {
+        background-color: #ff2413;
+    }

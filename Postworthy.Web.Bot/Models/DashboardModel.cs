@@ -124,13 +124,12 @@ namespace Postworthy.Web.Bot.Models
                     .Select(x => new KeyValuePair<Tweep, int>(x.Key, x.Count)).ToList();
                 KeywordSuggestions = runtimeSettings.KeywordSuggestions
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
-                TweetsPerHourLast24 = runtimeSettings.Tweeted
+                runtimeSettings.Tweeted
                     .Where(t => t.CreatedAt.AddHours(24) >= DateTime.Now)
                     .GroupBy(t => t.CreatedAt.Hour)
-                    .Select(g => new { date = g.FirstOrDefault().CreatedAt, count = g.Count() })
-                    .OrderBy(x => x.date)
-                    .Select(x => x.count)
-                    .ToArray();
+                    .Select(g => new { i = g.FirstOrDefault().CreatedAt.Hour, date = g.FirstOrDefault().CreatedAt, count = g.Count() })
+                    .ToList()
+                    .ForEach(x => TweetsPerHourLast24[x.i] = x.count);
                 TopFriendTweetCounts = runtimeSettings.Tweeted
                     .Where(t => me.Followers().Select(f => f.ID).Contains(t.User.UserID))
                     .GroupBy(t => t.User.UserID)

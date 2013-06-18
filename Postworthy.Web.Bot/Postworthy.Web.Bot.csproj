@@ -138,11 +138,17 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\assets\images\crowd.jpg" />
+    <Content Include="Content\assets\images\crowd.png" />
     <Content Include="Content\assets\images\megaphone.jpg" />
+    <Content Include="Content\assets\images\megaphone.png" />
     <Content Include="Content\assets\images\meninblack.jpg" />
+    <Content Include="Content\assets\images\meninblack.png" />
     <Content Include="Content\assets\images\power.jpg" />
+    <Content Include="Content\assets\images\power.png" />
+    <Content Include="Content\assets\images\retweet.png" />
+    <Content Include="Content\assets\images\twitterbird-rt.png" />
     <Content Include="Content\assets\images\twitterbird.jpg" />
-    <Content Include="Content\assets\scripts.js" />
+    <Content Include="Content\assets\images\twitterbird.png" />
     <Content Include="Content\assets\styles.css" />
     <Content Include="Content\bootstrap\css\bootstrap-responsive.css" />
     <Content Include="Content\bootstrap\css\bootstrap-responsive.min.css" />
@@ -232,6 +238,8 @@
     <Content Include="Content\vendors\jGrowl\jquery.jgrowl.js" />
     <Content Include="Content\vendors\jquery-1.9.1.min.js" />
     <Content Include="Content\vendors\modernizr-2.6.2-respond-1.1.0.min.js" />
+    <Content Include="Content\vendors\sparkline\jquery.sparkline.js" />
+    <Content Include="Content\vendors\sparkline\jquery.sparkline.min.js" />
     <Content Include="Example.Web.config" />
     <Content Include="Content\vendors\flot\.travis.yml" />
     <Content Include="Content\vendors\flot\API.md" />

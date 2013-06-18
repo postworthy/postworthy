@@ -18,6 +18,13 @@ namespace Postworthy.Web.Bot
                         "~/Scripts/jquery.unobtrusive*",
                         "~/Scripts/jquery.validate*"));
 
+            bundles.Add(new ScriptBundle("~/bundles/charts").Include(
+                        "~/Content/bootstrap/js/bootstrap.js"));
+
+            bundles.Add(new ScriptBundle("~/bundles/charts").Include(
+                        "~/Content/vendors/easypiechart/jquery.easy-pie-chart.js",
+                        "~/Content/vendors/sparkline/jquery.sparkline.js"));
+
             // Use the development version of Modernizr to develop with and learn from. Then, when you're
             // ready for production, use the build tool at http://modernizr.com to pick only the tests you need.
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
