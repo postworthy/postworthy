@@ -80,7 +80,7 @@
                         <div>
                             <table style="width:100%;">
                                 
-                        @foreach (var item in Model.Tweeted)
+                        @foreach (var item in Model.Tweeted.Reverse<Postworthy.Models.Twitter.Tweet>())
                         {
                                 <tr>
                                     <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>

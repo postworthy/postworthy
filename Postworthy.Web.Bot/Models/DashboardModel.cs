@@ -29,7 +29,7 @@ namespace Postworthy.Web.Bot.Models
         public List<KeyValuePair<Tweep, int>> PotentialFriendRequests { get; set; }
         public double TweetsPerHour { get; set; }
         public double TweetsPerHourMax { get; set; }
-        public int[] TweetsPerHourLast24 { get; set; }
+        public int[] TweetsLastThirtyDays { get; set; }
         public List<KeyValuePair<Tweep, int>> TopFriendTweetCounts { get; set; }
         public int MinimumRetweetLevel { get; set; }
         public int CurrentClout { get; set; }
@@ -69,7 +69,7 @@ namespace Postworthy.Web.Bot.Models
             PotentialFriendRequests = new List<KeyValuePair<Tweep, int>>();
             LastTweetTime = DateTime.MaxValue;
             KeywordSuggestions = new List<KeyValuePair<string, int>>();
-            TweetsPerHourLast24 = new int[24];
+            TweetsLastThirtyDays = new int[31];
             TopFriendTweetCounts = new List<KeyValuePair<Tweep, int>>();
             KeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
             PotentialKeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
@@ -125,11 +125,11 @@ namespace Postworthy.Web.Bot.Models
                 KeywordSuggestions = runtimeSettings.KeywordSuggestions
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
                 runtimeSettings.Tweeted
-                    .Where(t => t.CreatedAt.AddHours(24) >= DateTime.Now)
-                    .GroupBy(t => t.CreatedAt.Hour)
-                    .Select(g => new { i = g.FirstOrDefault().CreatedAt.Hour, date = g.FirstOrDefault().CreatedAt, count = g.Count() })
+                    .Where(t => t.CreatedAt.AddDays(30) >= DateTime.Now)
+                    .GroupBy(t => t.CreatedAt.Day)
+                    .Select(g => new { i = g.FirstOrDefault().CreatedAt.Day - 1, date = g.FirstOrDefault().CreatedAt, count = g.Count() })
                     .ToList()
-                    .ForEach(x => TweetsPerHourLast24[x.i] = x.count);
+                    .ForEach(x => TweetsLastThirtyDays[x.i] = x.count);
                 TopFriendTweetCounts = runtimeSettings.Tweeted
                     .Where(t => me.Followers().Select(f => f.ID).Contains(t.User.UserID))
                     .GroupBy(t => t.User.UserID)

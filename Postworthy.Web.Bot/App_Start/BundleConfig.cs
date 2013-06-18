@@ -18,7 +18,7 @@ namespace Postworthy.Web.Bot
                         "~/Scripts/jquery.unobtrusive*",
                         "~/Scripts/jquery.validate*"));
 
-            bundles.Add(new ScriptBundle("~/bundles/charts").Include(
+            bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
                         "~/Content/bootstrap/js/bootstrap.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/charts").Include(
