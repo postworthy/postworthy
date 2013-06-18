@@ -49,10 +49,7 @@
                     <div class="row-fluid row2">
                         <div class="thumbnail span3 centered brightorange dashboardWidget" data-squared="height" data-squared-max="200">
                             <div class="thumbnail-bg" style="background-image:url('@Url.Content("~/content/assets/images/twitterbird.jpg")')"></div>
-                            <h4>Tweets/Hour</h4>
-                            <div class="xx">
-                                <b>@Model.TweetsPerHour.ToString("0.00")</b>
-                            </div>
+                            <div style="width:210px;height:210px;left:50%;margin-left:-105px" class="chart" data-squared="centered" data-percent="@(100 * (Model.TweetsPerHour / Model.TweetsPerHourMax))"><strong>@(Model.TweetsPerHour.ToString("0.00"))</strong> twt/hr</div>
                             <div></div>
                         </div>
                         <div class="thumbnail span3 centered darkblue dashboardWidget" data-squared="height" data-squared-max="200">
@@ -101,9 +98,6 @@
                 </div>
                 <div class="block-content collapse in">
                     <div class="row-fluid">
-                        <div class="span3">
-                            <div class="chart" data-percent="@(100 * (Model.TweetsPerHour / Model.TweetsPerHourMax))"><strong>@(Model.TweetsPerHour.ToString("0.00"))</strong> twt/hr</div>
-                        </div>
                         @foreach (var item in Model.Tweeted.Reverse<Postworthy.Models.Twitter.Tweet>().Take(3))
                         {
                             <style type="text/css">

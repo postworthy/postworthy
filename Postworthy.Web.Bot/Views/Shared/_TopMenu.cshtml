@@ -5,7 +5,14 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </a>
-            <a class="brand" href="@Url.Action("Index")">Bot Dashboard</a>
+            <a class="brand" href="@Url.Action("Index")">
+                @{var userName = "";}
+                @if (Request.IsAuthenticated)
+                {
+                    userName = @User.Identity.Name;
+                }
+                @userName Dashboard
+            </a>
             <div class="nav-collapse collapse">
                 <ul class="nav pull-right">
                     @Html.Partial("_LogOnPartial")
