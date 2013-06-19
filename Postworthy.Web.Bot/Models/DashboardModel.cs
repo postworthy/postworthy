@@ -111,7 +111,7 @@ namespace Postworthy.Web.Bot.Models
                     .Select(x => x.Count())
                     .Max() : 0;
                 MinimumRetweetLevel = (int)Math.Ceiling(runtimeSettings.MinimumRetweetLevel);
-                CurrentClout = me.Followers().Count();
+                CurrentClout = me.User.FollowersCount;
                 FollowerCount = me.User.FollowersCount;
                 FollowingCount = me.User.FriendsCount;
                 TwitterStreamVolume = runtimeSettings.TotalTweetsProcessed / (1.0 * Runtime.TotalMinutes);
@@ -142,6 +142,7 @@ namespace Postworthy.Web.Bot.Models
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count))
                     .ToList();
                 PotentialKeywordsWithOccurrenceCount = runtimeSettings.KeywordSuggestions
+                    .Where(x => x.Count < TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT)
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
 
             }

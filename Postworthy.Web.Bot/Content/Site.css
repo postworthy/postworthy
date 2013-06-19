@@ -204,3 +204,10 @@ textarea {
     .dashboardWidget.brightred {
         background-color: #ff2413;
     }
+
+.icon-profile-image {
+background-position: 0 0;
+width: 24px;
+height: 24px;
+margin-top: -5px;
+}
