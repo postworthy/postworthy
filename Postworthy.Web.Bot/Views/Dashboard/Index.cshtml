@@ -134,16 +134,16 @@
                                     var item = groupItem.value;
                             
                                     <div class="thumbnail span2 centered" @Html.Raw(item.Key.Type == Postworthy.Models.Twitter.Tweep.TweepType.Target ? "style=\"font-weight:bold;background-color: #ff2413;\"" : "") data-squared="height" data-squared-max="200">
-                                        <style type="text/css">
-                                    .@(item.Key.UniqueKey) {
-                                        background-image: url('@item.Key.User.ProfileImageUrl.Replace("_normal", "")');
-                                    }
-                                </style>
                                         <div class="@(item.Key.UniqueKey) thumbnail-bg semi-translucent fill"></div>
-                                        <div>
+                                        <a href="http://twitter.com/@(item.Key.ScreenName)" target="_blank" style="color: rgba(0, 0, 0, 0.9);">
                                             <h4>@item.Key.ScreenName</h4>
                                             <div class='xx'>@item.Value</div>
-                                        </div>
+                                        </a>
+                                        <style type="text/css">
+                                            .@(item.Key.UniqueKey) {
+                                                background-image: url('@item.Key.User.ProfileImageUrl.Replace("_normal", "")');
+                                            }
+                                        </style>
                                     </div>
                             
                                 }
