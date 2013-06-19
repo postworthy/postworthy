@@ -256,7 +256,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                     if (link != null)
                     {
                         string statusText = link.ToString() == link.Title ?
-                            link.Title.Substring(0, 116) + " " + link.Uri.ToString()
+                            (link.Title.Length > 116 ? link.Title.Substring(0, 116) : link.Title) + " " + link.Uri.ToString()
                             :
                             link.Uri.ToString();
                         TwitterModel.Instance.UpdateStatus(statusText, processStatus: false);
