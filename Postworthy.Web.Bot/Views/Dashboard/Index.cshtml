@@ -122,6 +122,7 @@
                 <div class="block-content collapse in">
                     <div class="row-fluid">
                         @foreach (var group in Model.PotentialFriendRequests
+                            .Where(x=>x.Key.Type != Postworthy.Models.Twitter.Tweep.TweepType.Ignore)
                             .OrderByDescending(x => x.Value)
                             .Take(12)
                             .Select((x, i) => new { index = i, value = x })
