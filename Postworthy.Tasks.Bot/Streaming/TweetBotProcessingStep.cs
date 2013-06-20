@@ -330,7 +330,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 log.WriteLine("####################");
                 log.WriteLine("{0}: Past Tweets: {1}",
                     DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Tweeted.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Tweeted.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText).Reverse<string>().Take(10)));
                 log.WriteLine("####################");
             }
             if (RuntimeSettings.PotentialTweets.Count() > 0)
