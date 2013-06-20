@@ -119,6 +119,7 @@ textarea {
 .thumbnail {
     position: relative;
     z-index: 1;
+    overflow: hidden;
 }
 
 .thumbnail * {
@@ -130,13 +131,27 @@ textarea {
     z-index:2;
     width: 100%;
     height: 100%;
-    top: 0;
-    left: 0;
+    bottom: 0;
+    right: 0;
     position: absolute;
     background-position: center center;
     background-repeat: no-repeat;
+    background-size: 100% 100%
 }
-    
+    .thumbnail-bg.lower-right {
+        width: 40%;
+        height: 40%;
+    }
+
+    .thumbnail-bg.lower-right.rounded {
+        width: 75px;
+        height: 75px;
+        -moz-border-radius: 50%;
+        border-radius: 50%;
+        margin-right:5px;
+        margin-bottom:5px;
+    }
+
     .thumbnail-bg.translucent {
         opacity: 0.2;
         filter: alpha(opacity = 20);

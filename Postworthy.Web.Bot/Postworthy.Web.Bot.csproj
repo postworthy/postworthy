@@ -285,6 +285,7 @@
     <Content Include="data.tsv" />
     <Content Include="Scripts\d3.v3.js" />
     <Content Include="Scripts\d3.v3.min.js" />
+    <Content Include="Scripts\smartResize.js" />
     <Content Include="Scripts\squaredUp.js" />
     <Content Include="Views\Shared\_LogOnPartial.cshtml" />
     <Content Include="Views\Dashboard\Tweets.cshtml" />
