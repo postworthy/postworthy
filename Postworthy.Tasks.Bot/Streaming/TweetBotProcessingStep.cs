@@ -281,17 +281,26 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
 
+                var primaryFollowers = PrimaryTweep.Followers().Select(y => y.ID);
+
                 var tweeps = RuntimeSettings.PotentialFriendRequests
                     .Where(x => x.Count > MIN_TWEEP_NOTICED)
-                    .Where(x => x.Key.Type == Tweep.TweepType.None);
+                    .Where(x => x.Key.Type == Tweep.TweepType.None || x.Key.Type == Tweep.TweepType.Target);
 
-                tweeps.ToList().ForEach(x =>
+                //Remove Existing Friends
+                tweeps.Where(x => primaryFollowers.Contains(x.Key.User.Identifier.UserID))
+                    .ToList().ForEach(x => {
+                        RuntimeSettings.PotentialFriendRequests.Remove(x);
+                    });
+
+                //Process Potential Friends
+                tweeps.Where(x => !primaryFollowers.Contains(x.Key.User.Identifier.UserID))
+                    .ToList().ForEach(x =>
                 {
                     var followers = x.Key.Followers().Select(y => y.ID);
-                    var primaryFollowers = PrimaryTweep.Followers().Select(y => y.ID);
 
-                    if (x.Count > TWEEP_NOTICED_AUTOMATIC ||
-                        followers.Union(primaryFollowers).Count() != (followers.Count() + primaryFollowers.Count()))
+                    if ((x.Count > TWEEP_NOTICED_AUTOMATIC ||
+                        followers.Union(primaryFollowers).Count() != (followers.Count() + primaryFollowers.Count())))
                     {
                         x.Key.Type = Tweep.TweepType.Target;
 
@@ -501,7 +510,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                         tweep = x.Tweep(),
                         weight = x.RetweetCount / (1.0 + x.Tweep().Clout())
                     })
-                .Where(x => !friendsAndFollows.Contains(x.tweep.UniqueKey))
+                .Where(x => !friendsAndFollows.Contains(x.tweep.User.Identifier.UserID))
                 .Where(x => x.tweep.User.LangResponse == PrimaryTweep.User.LangResponse)
                 .Where(x => x.tweep.Clout() > minClout)
                 .Where(x => x.weight >= minWeight);

@@ -197,7 +197,7 @@ namespace Postworthy.Models.Twitter
         {
             if (string.IsNullOrEmpty(screenname)) screenname = UsersCollection.PrimaryUser().TwitterScreenName;
 
-            var user = GetAuthorizedTwitterContext(screenname).CreateFriendship(follow.User.UserID, null, true);
+            var user = GetAuthorizedTwitterContext(screenname).CreateFriendship(follow.User.Identifier.UserID, null, true);
 
             return new Tweep(user, user.Following ? Tweep.TweepType.Following : Tweep.TweepType.None);
         }
