@@ -42,6 +42,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private bool ForceSimulationMode = false;
         private bool hasNewKeywordSuggestions = false;
         private List<string> StopWords = new List<string>();
+        private DateTime LastUpdatedTwitterSuggestedFollows = DateTime.MinValue;
 
         public bool SimulationMode
         {
@@ -102,7 +103,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 StopWords = File.OpenText("Resources/stopwords.txt")
                     .ReadToEnd()
-                    .Split('\n').Select(x=>x.Replace("\r","").ToLower())
+                    .Split('\n').Select(x => x.Replace("\r", "").ToLower())
                     .ToList();
                 log.WriteLine("{0}: Stop Words: {1}",
                     DateTime.Now,
@@ -122,6 +123,8 @@ namespace Postworthy.Tasks.Bot.Streaming
                     FindPotentialTweets(tweets);
 
                     FindTweepsToFollow(tweets);
+
+                    FindSuggestedTweeps();
 
                     FindKeywordsFromCurrentTweets(tweets);
 
@@ -171,8 +174,8 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void SendTweets()
         {
-            var hourOfDay = DateTime.Now.Hour + DateTime.Now.Minute/100.0;
-            
+            var hourOfDay = DateTime.Now.Hour + DateTime.Now.Minute / 100.0;
+
             if (hourOfDay > 6.29 && hourOfDay < 21.29) //Only Tweet during particular times of the day
             {
                 if (RuntimeSettings.TweetOrRetweet)
@@ -289,7 +292,8 @@ namespace Postworthy.Tasks.Bot.Streaming
 
                 //Remove Existing Friends
                 tweeps.Where(x => primaryFollowers.Contains(x.Key.User.Identifier.UserID))
-                    .ToList().ForEach(x => {
+                    .ToList().ForEach(x =>
+                    {
                         RuntimeSettings.PotentialFriendRequests.Remove(x);
                     });
 
@@ -367,7 +371,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 log.WriteLine("{0}: Keywords: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Keywords
-                        .Concat(RuntimeSettings.KeywordSuggestions.Where(x=>x.Count >= MINIMUM_KEYWORD_COUNT))
+                        .Concat(RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT))
                         .OrderByDescending(x => x.Count)
                         .ThenByDescending(x => x.Key)
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
@@ -553,6 +557,21 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void FindSuggestedTweeps()
         {
+            if (LastUpdatedTwitterSuggestedFollows.AddHours(1) <= DateTime.Now)
+            {
+                try
+                {
+                    var keywords = RuntimeSettings.Keywords.Select(x=>x.Key).Union(GetKeywordSuggestions());
+                    var results =  TwitterModel.Instance.GetSuggestedFollowsForPrimaryUser()
+                        .Where(x => x.User.Description != null && keywords.Any(w => x.User.Description.ToLower().Contains(w)))
+                        .ToList();
+                    RuntimeSettings.TwitterFollowSuggestions = RuntimeSettings.TwitterFollowSuggestions.Union(results).ToList();
+                }
+                finally
+                {
+                    LastUpdatedTwitterSuggestedFollows = DateTime.Now;
+                }
+            }
         }
 
         private int GetMinClout()
@@ -668,7 +687,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             words = words.Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y }))).ToList();
 
             //Create pairs of words for phrase searching
-            var wordPairs = words.SelectMany(w => words.Distinct().Where(x => x != w).Select(w2 =>  (w + " " + w2).Trim())).ToList();
+            var wordPairs = words.SelectMany(w => words.Distinct().Where(x => x != w).Select(w2 => (w + " " + w2).Trim())).ToList();
 
             //Match phrases in tweet text (must match in more than 1 tweet to be valid)
             var validPairs = wordPairs.Where(wp => cleanedAll.Count(t => t.IndexOf(wp) > -1) > 1).ToList();
@@ -685,9 +704,10 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .ToList();
 
             //Update Master Keyword List
-            keywords.ForEach(w=>{
-                var item = RuntimeSettings.KeywordSuggestions.Where(x=>x.Key == w.Word).FirstOrDefault();
-                if(item != null)
+            keywords.ForEach(w =>
+            {
+                var item = RuntimeSettings.KeywordSuggestions.Where(x => x.Key == w.Word).FirstOrDefault();
+                if (item != null)
                     item.Count += w.Count;
                 else
                     RuntimeSettings.KeywordSuggestions.Add(new CountableItem(w.Word, w.Count));
@@ -720,8 +740,8 @@ namespace Postworthy.Tasks.Bot.Streaming
         public List<string> GetKeywordSuggestions()
         {
             return RuntimeSettings.KeywordSuggestions
-                .Where(x=>x.Count >= MINIMUM_KEYWORD_COUNT)
-                .Select(x=>x.Key)
+                .Where(x => x.Count >= MINIMUM_KEYWORD_COUNT)
+                .Select(x => x.Key)
                 .ToList();
         }
 
