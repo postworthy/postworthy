@@ -19,6 +19,7 @@ namespace Postworthy.Models.Twitter
             Target,
             Ignore,
             None,
+            Suggested
         }
 
         private User _User;
@@ -61,6 +62,11 @@ namespace Postworthy.Models.Twitter
             }
             else
                 return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.UniqueKey.GetHashCode();
         }
 
         public override string UniqueKey
