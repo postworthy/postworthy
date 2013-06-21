@@ -365,6 +365,17 @@ namespace Postworthy.Tasks.Bot.Streaming
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
                 log.WriteLine("####################");
             }
+            if (RuntimeSettings.TwitterFollowSuggestions.Count() > 0)
+            {
+                log.WriteLine("####################");
+                log.WriteLine("{0}: Twitter Friend Suggestions: {1}",
+                    DateTime.Now,
+                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.TwitterFollowSuggestions
+                        .OrderByDescending(x => x.User.FollowersCount.ToString().Length)
+                        .ThenBy(x => x.ScreenName)
+                        .Select(x => x)));
+                log.WriteLine("####################");
+            }
             if (RuntimeSettings.Keywords.Count() > 0)
             {
                 log.WriteLine("####################");
