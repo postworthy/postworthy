@@ -91,7 +91,7 @@ namespace Postworthy.Tasks.Streaming
             }
 
             Console.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, screenname);
-            Friends.UpdateForPrimaryUser();
+            TwitterModel.Instance.UpdateFriendsForPrimaryUser();
             Console.WriteLine("{0}: Finished Getting Friends for {1}", DateTime.Now, screenname);
 
             Console.WriteLine("{0}: Listening to Stream", DateTime.Now);

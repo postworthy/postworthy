@@ -76,7 +76,7 @@ namespace Postworthy.Models.Twitter
         public List<LazyLoader<Tweep>> Followers(bool forceRefresh = false)
         {
             if (_Followers == null || forceRefresh)
-                _Followers = Friends.GetFollowersWithLazyLoading(User.Identifier.ScreenName) ?? new List<LazyLoader<Tweep>>();
+                _Followers = TwitterModel.Instance.GetFollowersWithLazyLoading(User.Identifier.ScreenName) ?? new List<LazyLoader<Tweep>>();
 
             return _Followers;
         }
