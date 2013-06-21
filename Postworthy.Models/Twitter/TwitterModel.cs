@@ -264,6 +264,31 @@ namespace Postworthy.Models.Twitter
             return llf.Select(x => x.Value).ToList();
         }
 
+        public List<Tweep> GetSuggestedFollowsForPrimaryUser()
+        {
+            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
+
+            var categories = context.User.Where(u => u.Type == UserType.Categories).FirstOrDefault().Categories;
+            
+            var results = new List<Tweep>();
+
+            //Randomly order the Categories
+            categories = categories.OrderBy(c => Guid.NewGuid()).Take(15).ToList();
+
+            foreach(var category in categories)
+            {
+                try
+                {
+                    results.AddRange(context
+                        .User.Where(u => u.Type == UserType.Category && u.Slug == category.Slug)
+                        .SelectMany(x => x.Categories.Select(c => c.Users).SelectMany(u => u).Select(u => new Tweep(u, Tweep.TweepType.Suggested))));
+                }
+                catch (LinqToTwitter.TwitterQueryException){ }
+            }
+
+            return results;
+        }
+
         public List<LazyLoader<Tweep>> GetFollowersWithLazyLoading(string screenname)
         {
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
