@@ -19,6 +19,7 @@ namespace Postworthy.Models.Twitter
             Target,
             Ignore,
             None,
+            Suggested
         }
 
         private User _User;
@@ -63,6 +64,11 @@ namespace Postworthy.Models.Twitter
                 return false;
         }
 
+        public override int GetHashCode()
+        {
+            return this.UniqueKey.GetHashCode();
+        }
+
         public override string UniqueKey
         {
             get
@@ -76,7 +82,7 @@ namespace Postworthy.Models.Twitter
         public List<LazyLoader<Tweep>> Followers(bool forceRefresh = false)
         {
             if (_Followers == null || forceRefresh)
-                _Followers = Friends.GetFollowersWithLazyLoading(User.Identifier.ScreenName) ?? new List<LazyLoader<Tweep>>();
+                _Followers = TwitterModel.Instance.GetFollowersWithLazyLoading(User.Identifier.ScreenName) ?? new List<LazyLoader<Tweep>>();
 
             return _Followers;
         }

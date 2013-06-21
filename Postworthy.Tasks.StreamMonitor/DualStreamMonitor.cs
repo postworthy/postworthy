@@ -51,7 +51,7 @@ namespace Postworthy.Tasks.StreamMonitor
             var screenname = UsersCollection.PrimaryUser().TwitterScreenName;
 
             log.WriteLine("{0}: Getting Friends for {1}", DateTime.Now, screenname);
-            Friends.UpdateForPrimaryUser();
+            TwitterModel.Instance.UpdateFriendsForPrimaryUser();
             log.WriteLine("{0}: Finished Getting Friends for {1}", DateTime.Now, screenname);
 
             log.WriteLine("{0}: Listening to Stream", DateTime.Now);
@@ -413,7 +413,7 @@ namespace Postworthy.Tasks.StreamMonitor
                                                     var friends = new List<LazyLoader<Tweep>>();
                                                     for (int i = 0; i < jsonDataFriends.Value.Count; i++)
                                                     {
-                                                        friends.Add(Friends.GetLazyLoadedTweep(jsonDataFriends.Value[i].ToString()));
+                                                        friends.Add(TwitterModel.Instance.GetLazyLoadedTweep(jsonDataFriends.Value[i].ToString()));
                                                     }
 
                                                     (processingStep as ITweepProcessingStep).ProcessTweeps(friends);

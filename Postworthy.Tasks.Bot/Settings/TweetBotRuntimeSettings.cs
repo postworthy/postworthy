@@ -28,6 +28,7 @@ namespace Postworthy.Tasks.Bot.Settings
         public List<CountableItem> KeywordSuggestions { get; set; }
         public List<string> KeywordsToIgnore { get; set; }
         public List<CountableItem<Tweep>> PotentialFriendRequests { get; set; }
+        public List<Tweep> TwitterFollowSuggestions { get; set; }
 
         public double MinimumRetweetLevel
         {
@@ -69,6 +70,7 @@ namespace Postworthy.Tasks.Bot.Settings
             Keywords = new List<CountableItem>();
             KeywordSuggestions = new List<CountableItem>();
             KeywordsToIgnore = new List<string>();
+            TwitterFollowSuggestions = new List<Tweep>();
         }
 
         public override string UniqueKey
