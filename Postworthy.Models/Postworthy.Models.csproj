@@ -128,6 +128,7 @@
     <Compile Include="Twitter\TwitterModel.cs" />
     <Compile Include="Core\UriEx.cs" />
     <Compile Include="Core\GroupingUtility.cs" />
+    <Compile Include="Twitter\TwitterScraper.cs" />
     <Compile Include="Twitter\UrlFaceBookShareCount.cs" />
     <Compile Include="Twitter\UrlTweetCount.cs" />
   </ItemGroup>
