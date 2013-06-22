@@ -300,7 +300,7 @@ namespace Postworthy.Models.Twitter
                 .SelectNodes("//div[@data-user-id]")
                 .Select(x=>x.GetAttributeValue("data-user-id",""))
                 .Distinct()
-                .Select(x => GetLazyLoadedTweep(x));
+                .Select(x => GetLazyLoadedTweep(x, Tweep.TweepType.Suggested));
 
             return tweeps.Take(50).Select(x => x.Value).OrderByDescending(x=>x.Clout()).ToList();
         }
