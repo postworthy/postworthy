@@ -572,16 +572,22 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 try
                 {
-                    var keywords = RuntimeSettings.Keywords.Select(x=>x.Key).Union(GetKeywordSuggestions());
+                    var keywords = RuntimeSettings.Keywords.Select(x => x.Key).Union(GetKeywordSuggestions());
                     Func<Tweep, bool> where = (x => x.User.Description != null && keywords.Where(w => x.User.Description.ToLower().Contains(w)).Count() >= 2);
 
-                    var results =  TwitterModel.Instance.GetSuggestedFollowsForPrimaryUser()
+                    var results = TwitterModel.Instance.GetSuggestedFollowsForPrimaryUser()
                         //.Where(where)
                         .ToList();
-                              
+
                     RuntimeSettings.TwitterFollowSuggestions = RuntimeSettings.TwitterFollowSuggestions
                         //.Where(where)
                         .Union(results).ToList();
+                }
+                catch (Exception ex)
+                {
+                    log.WriteLine("{0}: Error from FindSuggestedTweeps: {1}",
+                        DateTime.Now,
+                        ex.ToString());
                 }
                 finally
                 {
