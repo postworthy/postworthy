@@ -12,6 +12,7 @@ namespace Postworthy.Models.Twitter
 {
     public static class TwitterScraper
     {
+        private static string USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1468.0 Safari/537.36";
         public static string GetTwitterUrl(string url)
         {
             if (string.IsNullOrEmpty(ConfigurationManager.AppSettings["PrimaryUser"]) || string.IsNullOrEmpty(ConfigurationManager.AppSettings["Password"]))
@@ -20,6 +21,7 @@ namespace Postworthy.Models.Twitter
             string result = string.Empty;
             CookieContainer cookieContainer = new CookieContainer();
             HttpWebRequest initialFetch = (HttpWebRequest)WebRequest.Create("http://twitter.com");
+            initialFetch.UserAgent = USER_AGENT;
             initialFetch.CookieContainer = cookieContainer;
 
             using (var initialResponse = initialFetch.GetResponse())
@@ -36,6 +38,7 @@ namespace Postworthy.Models.Twitter
                 if (!string.IsNullOrEmpty(authenticityToken))
                 {
                     HttpWebRequest loginRequest = (HttpWebRequest)WebRequest.Create("https://twitter.com/sessions");
+                    loginRequest.UserAgent = USER_AGENT;
                     loginRequest.CookieContainer = cookieContainer;
 
                     loginRequest.Method = "POST";
