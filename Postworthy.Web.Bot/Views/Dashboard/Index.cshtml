@@ -114,7 +114,7 @@
                                 </style>
                                 <div class="@(item.UniqueKey) thumbnail-bg semi-translucent fill lower-right rounded"></div>
                                 <div data-squared="content">
-                                    <h4>@item.TweetText</h4>
+                                    <h4>@Html.Raw(item.TweetText)</h4>
                                     <div class='xx'>@item.RetweetCount</div>
                                 </div>
                             </div>

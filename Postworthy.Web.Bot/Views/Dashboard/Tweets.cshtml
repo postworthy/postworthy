@@ -27,7 +27,7 @@
                                     <td style="padding-left:10px;">
                                         <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
                                        @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
-                                        <span>@item.TweetText</span>
+                                        <span>@Html.Raw(item.TweetText)</span>
                                         <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
                                     </td>
                                     <td class="pull-right wid">@item.TweetTime</td>
@@ -57,7 +57,7 @@
                                     <td style="padding-left:10px;">
                                         <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
                                        @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
-                                        <span>@item.TweetText</span>
+                                        <span>@Html.Raw(item.TweetText)</span>
                                         <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
                                     </td>
                                     <td class="pull-right wid">@item.TweetTime</td>
@@ -87,7 +87,7 @@
                                     <td style="padding-left:10px;">
                                         <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
                                        @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
-                                        <span>@item.TweetText</span>
+                                        <span>@Html.Raw(item.TweetText)</span>
                                         <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
                                     </td>
                                     <td class="pull-right wid">@item.TweetTime</td>
