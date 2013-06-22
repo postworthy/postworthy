@@ -575,9 +575,13 @@ namespace Postworthy.Tasks.Bot.Streaming
                     var keywords = RuntimeSettings.Keywords.Select(x=>x.Key).Union(GetKeywordSuggestions());
                     Func<Tweep, bool> where = (x => x.User.Description != null && keywords.Where(w => x.User.Description.ToLower().Contains(w)).Count() >= 2);
 
-                    var results =  TwitterModel.Instance.GetSuggestedFollowsForPrimaryUser().Where(where).ToList();
+                    var results =  TwitterModel.Instance.GetSuggestedFollowsForPrimaryUser()
+                        //.Where(where)
+                        .ToList();
                               
-                    RuntimeSettings.TwitterFollowSuggestions = RuntimeSettings.TwitterFollowSuggestions.Where(where).Union(results).ToList();
+                    RuntimeSettings.TwitterFollowSuggestions = RuntimeSettings.TwitterFollowSuggestions
+                        //.Where(where)
+                        .Union(results).ToList();
                 }
                 finally
                 {
