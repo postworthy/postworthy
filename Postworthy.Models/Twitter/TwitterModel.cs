@@ -16,6 +16,7 @@ using Postworthy.Models.Repository;
 using Postworthy.Models.Account;
 using Postworthy.Models.Core;
 using Postworthy.Models.Repository.Providers;
+using HtmlAgilityPack;
 
 namespace Postworthy.Models.Twitter
 {
@@ -266,6 +267,7 @@ namespace Postworthy.Models.Twitter
 
         public List<Tweep> GetSuggestedFollowsForPrimaryUser()
         {
+            /*
             var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
 
             var categories = context.User.Where(u => u.Type == UserType.Categories).FirstOrDefault().Categories;
@@ -287,6 +289,20 @@ namespace Postworthy.Models.Twitter
             }
 
             return results;
+             */
+
+            var result = Postworthy.Models.Twitter.TwitterScraper.GetTwitterUrl("https://twitter.com/i/users/recommendations?limit=100");
+            var resultObject = Newtonsoft.Json.JsonConvert.DeserializeAnonymousType(result, new { user_recommendations_html = "" });
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(resultObject.user_recommendations_html);
+            var tweeps = doc.DocumentNode
+                .SelectNodes("//div[@data-user-id]")
+                .Select(x=>x.GetAttributeValue("data-user-id",""))
+                .Distinct()
+                .Select(x => GetLazyLoadedTweep(x, Tweep.TweepType.Suggested));
+
+            return tweeps.Take(50).Select(x => x.Value).OrderByDescending(x=>x.Clout()).ToList();
         }
 
         public List<LazyLoader<Tweep>> GetFollowersWithLazyLoading(string screenname)
