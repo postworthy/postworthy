@@ -26,40 +26,40 @@
                         <div class="thumbnail span3 centered darkblue dashboardWidget" data-squared="height" data-squared-max="200">
                             <div class="thumbnail-bg translucent lower-right" data-squared="width" data-squared-percent="1.375" style="background-image:url('@Url.Content("~/content/assets/images/meninblack.png")')"></div>
                             <div data-squared="content">
-                            <h4>Following Count</h4>
-                            <div class="xx">
-                                <b>@Model.FollowingCount</b>
-                            </div>
+                                <h4>Following Count</h4>
+                                <div class="xx">
+                                    <b>@Model.FollowingCount</b>
                                 </div>
+                            </div>
                         </div>
                         <div class="thumbnail span3 centered brightgreen dashboardWidget" data-squared="height" data-squared-max="200">
                             <div class="thumbnail-bg translucent lower-right" data-squared="width" data-squared-percent="1.375" style="background-image:url('@Url.Content("~/content/assets/images/meninblack.png")')"></div>
                             <div data-squared="content">
-                            <h4>Follower Count</h4>
-                            <div class="xx">
-                                <b>@Model.FollowerCount</b>
-                            </div>
+                                <h4>Follower Count</h4>
+                                <div class="xx">
+                                    <b>@Model.FollowerCount</b>
                                 </div>
+                            </div>
                         </div>
                         <div class="thumbnail span3 centered brightred dashboardWidget" data-squared="height" data-squared-max="200">
                             <div class="thumbnail-bg translucent lower-right" data-squared="width" data-squared-percent="1.375" style="background-image:url('@Url.Content("~/content/assets/images/megaphone.png")')"></div>
                             <div data-squared="content">
-                            <h4>Current Clout</h4>
-                            <div class="xx">
-                                <b>@Model.CurrentClout</b>
-                            </div>
+                                <h4>Current Clout</h4>
+                                <div class="xx">
+                                    <b>@Model.CurrentClout</b>
                                 </div>
+                            </div>
                         </div>
                     </div>
                     <div class="row-fluid row2">
                         <div class="thumbnail span3 centered brightorange dashboardWidget" data-squared="height" data-squared-max="200">
                             <div class="thumbnail-bg translucent chart" data-squared="centered" data-percent="@(100 * (Model.TweetsPerHour / Model.TweetsPerHourMax))"></div>
                             <div data-squared="content">
-                            <h4>Tweets / Hour</h4>
-                            <div class="xx">
-                                <b>@(Model.TweetsPerHour.ToString("0.00"))</b>
-                            </div>
+                                <h4>Tweets / Hour</h4>
+                                <div class="xx">
+                                    <b>@(Model.TweetsPerHour.ToString("0.00"))</b>
                                 </div>
+                            </div>
                         </div>
                         <div class="thumbnail span3 centered brightred dashboardWidget" data-squared="height" data-squared-max="200">
                             <div class="thumbnail-bg translucent bars" data-squared="centered"></div>
@@ -122,47 +122,92 @@
                     </div>
                 </div>
             </div>
-            <div class="block">
-                <div class="navbar navbar-inner block-header">
-                    <div class="muted pull-left">Potentail Friends</div>
-                    <div class="pull-right">
-                        <span class="badge badge-warning">View More</span>
+            @if (Model.PotentialFriendRequests.Count > 0)
+            {
+                <div class="block">
+                    <div class="navbar navbar-inner block-header">
+                        <div class="muted pull-left">Potentail Friends</div>
+                        <div class="pull-right">
+                            <span class="badge badge-warning">View More</span>
+                        </div>
                     </div>
-                </div>
-                <div class="block-content collapse in">
-                    <div class="row-fluid">
-                        @foreach (var group in Model.PotentialFriendRequests
+                    <div class="block-content collapse in">
+                        <div class="row-fluid">
+                            @foreach (var group in Model.PotentialFriendRequests
                             .Where(x => x.Key.Type != Postworthy.Models.Twitter.Tweep.TweepType.Ignore)
                             .OrderByDescending(x => x.Value)
-                            .Take(12)
+                            .Take(Model.TwitterFollowSuggestions.Count == 0 ? 12 : 6)
                             .Select((x, i) => new { index = i, value = x })
                             .GroupBy(x => x.index / 6)
                             )
-                        {
-                            <div class="row-fluid group@(group.Key)" style="margin-bottom:21px;">
-                                @foreach (var groupItem in group)
-                                {
-                                    var item = groupItem.value;
+                            {
+                                <div class="row-fluid group@(group.Key)" style="margin-bottom:21px;">
+                                    @foreach (var groupItem in group)
+                                    {
+                                        var item = groupItem.value;
                             
-                                    <div class="thumbnail span2 centered" @Html.Raw(item.Key.Type == Postworthy.Models.Twitter.Tweep.TweepType.Target ? "style=\"font-weight:bold;background-color: #ff2413;\"" : "") data-squared="height" data-squared-max="200">
-                                        <div class="@(item.Key.UniqueKey) thumbnail-bg semi-translucent fill"></div>
-                                        <a data-squared="content" href="http://twitter.com/@(item.Key.ScreenName)" target="_blank" style="color: rgba(0, 0, 0, 0.9);">
-                                            <h4>@item.Key.ScreenName</h4>
-                                            <div class='xx'>@item.Value</div>
-                                        </a>
-                                        <style type="text/css">
+                                        <div class="thumbnail span2 centered" @Html.Raw(item.Key.Type == Postworthy.Models.Twitter.Tweep.TweepType.Target ? "style=\"font-weight:bold;background-color: #ff2413;\"" : "") data-squared="height" data-squared-max="200">
+                                            <div class="@(item.Key.UniqueKey) thumbnail-bg semi-translucent fill"></div>
+                                            <a data-squared="content" href="http://twitter.com/@(item.Key.ScreenName)" target="_blank" style="color: rgba(0, 0, 0, 0.9);">
+                                                <h4>@item.Key.ScreenName</h4>
+                                                <div class='xx'>@item.Value</div>
+                                            </a>
+                                            <style type="text/css">
                                             .@(item.Key.UniqueKey) {
                                                 background-image: url('@item.Key.User.ProfileImageUrl.Replace("_normal", "")');
                                             }
                                         </style>
-                                    </div>
+                                        </div>
                             
-                                }
-                            </div>
-                        }
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
+            @if (Model.TwitterFollowSuggestions.Count > 0)
+            {
+                <div class="block">
+                    <div class="navbar navbar-inner block-header">
+                        <div class="muted pull-left">Twitter Suggested Friends</div>
+                        <div class="pull-right">
+                            <span class="badge badge-warning">View More</span>
+                        </div>
+                    </div>
+                    <div class="block-content collapse in">
+                        <div class="row-fluid">
+                            @foreach (var group in Model.TwitterFollowSuggestions
+                            .OrderByDescending(x => x.Clout())
+                            .Take(Model.PotentialFriendRequests.Count == 0 ? 12 : 6)
+                            .Select((x, i) => new { index = i, value = x })
+                            .GroupBy(x => x.index / 6)
+                            )
+                            {
+                                <div class="row-fluid group@(group.Key)" style="margin-bottom:21px;">
+                                    @foreach (var groupItem in group)
+                                    {
+                                        var item = groupItem.value;
+                            
+                                        <div class="thumbnail span2 centered" @Html.Raw(item.Type == Postworthy.Models.Twitter.Tweep.TweepType.Target ? "style=\"font-weight:bold;background-color: #ff2413;\"" : "") data-squared="height" data-squared-max="200">
+                                            <div class="@(item.UniqueKey) thumbnail-bg semi-translucent fill"></div>
+                                            <a data-squared="content" href="http://twitter.com/@(item.ScreenName)" target="_blank" style="color: rgba(0, 0, 0, 0.9);">
+                                                <h4>@item.ScreenName</h4>
+                                            </a>
+                                            <style type="text/css">
+                                            .@(item.UniqueKey) {
+                                                background-image: url('@item.User.ProfileImageUrl.Replace("_normal", "")');
+                                            }
+                                        </style>
+                                        </div>
+                            
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
             <div class="block">
                 <div class="span6">
                     <!-- block -->

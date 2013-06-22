@@ -36,6 +36,7 @@ namespace Postworthy.Web.Bot.Models
         public int FollowerCount { get; set; }
         public int FollowingCount { get; set; }
         public List<KeyValuePair<string, int>> KeywordsWithOccurrenceCount { get; set; }
+        public List<Tweep> TwitterFollowSuggestions { get; set; }
         public int KeywordOccurenceTotal { 
             get 
             {   int total = 0;
@@ -73,6 +74,7 @@ namespace Postworthy.Web.Bot.Models
             TopFriendTweetCounts = new List<KeyValuePair<Tweep, int>>();
             KeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
             PotentialKeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
+            TwitterFollowSuggestions = new List<Tweep>();
 
             LoadFromRepository();
         }
@@ -116,7 +118,7 @@ namespace Postworthy.Web.Bot.Models
                 FollowingCount = me.User.FriendsCount;
                 TwitterStreamVolume = runtimeSettings.TotalTweetsProcessed / (1.0 * Runtime.TotalMinutes);
                     
-
+                TwitterFollowSuggestions = runtimeSettings.TwitterFollowSuggestions;
                 PotentialTweets = runtimeSettings.PotentialTweets;
                 PotentialReTweets = runtimeSettings.PotentialReTweets;
                 Tweeted = runtimeSettings.Tweeted;
@@ -144,7 +146,6 @@ namespace Postworthy.Web.Bot.Models
                 PotentialKeywordsWithOccurrenceCount = runtimeSettings.KeywordSuggestions
                     .Where(x => x.Count < TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT)
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
-
             }
         }
     }
