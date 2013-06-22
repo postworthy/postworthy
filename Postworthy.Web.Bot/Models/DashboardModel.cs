@@ -8,12 +8,14 @@ using Postworthy.Models.Twitter;
 using Postworthy.Tasks.Bot.Settings;
 using Postworthy.Models.Core;
 using Postworthy.Tasks.Bot.Streaming;
+using Postworthy.Tasks.Bot.Models;
 
 namespace Postworthy.Web.Bot.Models
 {
     public class DashboardModel
     {
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
+        private const string COMMAND_REPO_KEY = "BotCommands";
 
         public PostworthyUser User { get; set; }
         public bool IsSimulationMode { get; set; }
@@ -37,26 +39,10 @@ namespace Postworthy.Web.Bot.Models
         public int FollowingCount { get; set; }
         public List<KeyValuePair<string, int>> KeywordsWithOccurrenceCount { get; set; }
         public List<Tweep> TwitterFollowSuggestions { get; set; }
-        public int KeywordOccurenceTotal { 
-            get 
-            {   int total = 0;
-                foreach (var i in KeywordsWithOccurrenceCount) {
-                    total += i.Value;
-                }
-                return total;
-            } 
-        }
         public List<KeyValuePair<string, int>> PotentialKeywordsWithOccurrenceCount { get; set; }
-        public int PotentialKeywordOccurenceTotal {   
-            get
-            {   int total = 0;
-                foreach (var i in PotentialKeywordsWithOccurrenceCount)
-                {
-                    total += i.Value;
-                }
-                return total;
-            }
-        }
+        public List<string> SeededKeywords { get; set; }
+        public List<string> PendingKeywordAdd { get; set; }
+        public List<string> PendingKeywordIgnore { get; set; }
 
         public double TwitterStreamVolume { get; set; }
 
@@ -75,11 +61,13 @@ namespace Postworthy.Web.Bot.Models
             KeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
             PotentialKeywordsWithOccurrenceCount = new List<KeyValuePair<string, int>>();
             TwitterFollowSuggestions = new List<Tweep>();
+            PendingKeywordAdd = new List<string>();
+            PendingKeywordIgnore = new List<string>();
 
             LoadFromRepository();
         }
 
-        private string RepoKey
+        private string RuntimeRepoKey
         {
             get
             {
@@ -87,14 +75,23 @@ namespace Postworthy.Web.Bot.Models
             }
         }
 
+        private string CommandRepoKey
+        {
+            get
+            {
+                return User.TwitterScreenName + "_" + COMMAND_REPO_KEY;
+            }
+        }
+
         private void LoadFromRepository()
         {
             var me = new Tweep(User, Tweep.TweepType.None);
-            Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
+            Repository<TweetBotRuntimeSettings> settingsRepo = Repository<TweetBotRuntimeSettings>.Instance;
+            Repository<BotCommand> commandRepo = Repository<BotCommand>.Instance;
 
             //var runtimeSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<TweetBotRuntimeSettings>(System.IO.File.OpenText("c:\\temp\\runtimesettings.demo.json.txt").ReadToEnd());
 
-            var runtimeSettings = (repo.Query(RepoKey) ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
+            var runtimeSettings = (settingsRepo.Query(RuntimeRepoKey) ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault();
 
             if (runtimeSettings != null)
             {
@@ -137,6 +134,7 @@ namespace Postworthy.Web.Bot.Models
                     .GroupBy(t => t.User.UserID)
                     .Select(g => new KeyValuePair<Tweep, int>(new Tweep(g.FirstOrDefault().User, Tweep.TweepType.None), g.Count()))
                     .ToList();
+                SeededKeywords = runtimeSettings.KeywordsToIgnore;
                 KeywordsWithOccurrenceCount = runtimeSettings.Keywords
                     .Concat(runtimeSettings.KeywordSuggestions.Where(x => x.Count >= TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT))
                     .OrderByDescending(x => x.Count)
@@ -146,6 +144,14 @@ namespace Postworthy.Web.Bot.Models
                 PotentialKeywordsWithOccurrenceCount = runtimeSettings.KeywordSuggestions
                     .Where(x => x.Count < TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT)
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
+            }
+
+            var commands = commandRepo.Query(CommandRepoKey);
+
+            if (commands != null)
+            {
+                PendingKeywordAdd = commands.Where(c => c.Command == BotCommand.CommandType.AddKeyword && !c.HasBeenExecuted).Select(c => c.Value).Distinct().ToList();
+                PendingKeywordIgnore = commands.Where(c => c.Command == BotCommand.CommandType.IgnoreKeyword && !c.HasBeenExecuted).Select(c => c.Value).Distinct().ToList();
             }
         }
     }

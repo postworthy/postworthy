@@ -215,7 +215,7 @@
                         <div class="navbar navbar-inner block-header">
                             <div class="muted pull-left">Keywords</div>
                             <div class="pull-right">
-                                <span class="badge badge-info">@Model.KeywordOccurenceTotal</span>
+                                <span class="badge badge-info">@Model.KeywordsWithOccurrenceCount.Sum(x => x.Value)</span>
                             </div>
                         </div>
                         <div class="block-content collapse in">
@@ -231,15 +231,22 @@
                                 <tbody>
                                     @{
                                         int idx = 0;
-                                        foreach (var items in Model.KeywordsWithOccurrenceCount)
+                                        foreach (var item in Model.KeywordsWithOccurrenceCount)
                                         {
                                             idx++;
-                                        <tr>
+                                            var isSeeded = Model.SeededKeywords.Contains(item.Key);
+                                            var isPendingIgnore = Model.PendingKeywordIgnore.Contains(item.Key);
+                                        <tr style="@(isSeeded ? "font-weight:bold; color:#51a351;" : "")">
                                             <td>@idx</td>
-                                            <td>@items.Key</td>
-                                            <td>@items.Value</td>
+                                            <td>@item.Key</td>
+                                            <td>@item.Value</td>
                                             <td>
-                                                <div class="btn btn-warning btn-mini">Remove</div>
+                                                @if (!isSeeded)
+                                                {
+                                                    var dataRemove = isPendingIgnore ? "" : "data-remove-keyword='" + item.Key + "'";
+                                                    var text = isPendingIgnore ? "Pending" : "Remove";
+                                                    <div class="btn btn-warning btn-mini" style="width:50px" @Html.Raw(dataRemove)>@text</div>
+                                                }
                                             </td>
                                         </tr>
                                         }
@@ -254,7 +261,7 @@
                         <div class="navbar navbar-inner block-header">
                             <div class="muted pull-left">Keyword Suggestions</div>
                             <div class="pull-right">
-                                <span class="badge badge-info">@Model.PotentialKeywordOccurenceTotal</span>
+                                <span class="badge badge-info">@Model.PotentialKeywordsWithOccurrenceCount.Sum(x => x.Value)</span>
                             </div>
                         </div>
                         <div class="block-content collapse in">
@@ -270,18 +277,22 @@
                                 <tbody>
                                     @{
                                         int idx2 = 0;
-                                        foreach (var items in Model.PotentialKeywordsWithOccurrenceCount)
+                                        foreach (var item in Model.PotentialKeywordsWithOccurrenceCount)
                                         {
                                             idx2++;
+                                            var isPendingAdd = Model.PendingKeywordAdd.Contains(item.Key);
                                         <tr>
                                             <td>@idx2</td>
-                                            <td>@items.Key</td>
-                                            <td>@items.Value</td>
+                                            <td>@item.Key</td>
+                                            <td>@item.Value</td>
                                             <td>
-                                                <div class="btn btn-success btn-mini">Add</div>
+                                                @{
+                                                    var dataAdd = isPendingAdd ? "" : "data-add-keyword='" + item.Key + "'";
+                                                    var text = isPendingAdd ? "Pending" : "Add";
+                                                    }
+                                                    <div class="btn btn-success btn-mini" style="width:50px" @Html.Raw(dataAdd)>@text</div>
                                             </td>
                                         </tr>
-                                            if (idx2 > idx - 1) { break; }
                                         }
                                     }
                                 </tbody>
@@ -319,6 +330,35 @@
                 negBarColor: '#a8a6a6',
                 zeroColor: '#a8a6a6',
                 nullColor: '#a8a6a6'
+            });
+
+            $("[data-remove-keyword]").on("click",function(evt){ 
+                var target = $(evt.target);
+                var keyword = target.attr("data-remove-keyword");
+                target.removeAttr("data-remove-keyword");
+                target.text("Pending");
+
+                $.ajax({
+                    url: "@Url.Action("IgnoreKeyword", "BotCommand")/" + encodeURI(keyword),
+                }).done(function() {
+                }).fail(function() { 
+                    target.attr("data-remove-keyword",keyword);
+                    target.text("Remove");
+                });
+            });
+            $("[data-add-keyword]").on("click",function(evt){ 
+                var target = $(evt.target);
+                var keyword = target.attr("data-add-keyword");
+                target.removeAttr("data-add-keyword");
+                target.text("Pending");
+
+                $.ajax({
+                    url: "@Url.Action("AddKeyword", "BotCommand")/" + encodeURI(keyword),
+                }).done(function() {
+                }).fail(function() { 
+                    target.attr("data-add-keyword",keyword);
+                    target.text("Add");
+                });
             });
         });
 

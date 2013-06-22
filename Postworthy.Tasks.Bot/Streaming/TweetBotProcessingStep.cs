@@ -21,6 +21,7 @@ namespace Postworthy.Tasks.Bot.Streaming
     public class TweetBotProcessingStep : IProcessingStep, ITweepProcessingStep, IKeywordSuggestionStep
     {
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
+        private const string COMMAND_REPO_KEY = "BotCommands";
         private const int POTENTIAL_TWEET_BUFFER_MAX = 10;
         private const int POTENTIAL_TWEEP_BUFFER_MAX = 50;
         private const int MIN_TWEEP_NOTICED = 5;
@@ -38,7 +39,8 @@ namespace Postworthy.Tasks.Bot.Streaming
         private TextWriter log = null;
         private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
         private TweetBotRuntimeSettings RuntimeSettings = null;
-        private Repository<TweetBotRuntimeSettings> repo = Repository<TweetBotRuntimeSettings>.Instance;
+        private Repository<TweetBotRuntimeSettings> settingsRepo = Repository<TweetBotRuntimeSettings>.Instance;
+        private Repository<BotCommand> commandRepo = Repository<BotCommand>.Instance;
         private bool ForceSimulationMode = false;
         private bool hasNewKeywordSuggestions = false;
         private List<string> StopWords = new List<string>();
@@ -52,7 +54,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             }
         }
 
-        private string RepoKey
+        private string RuntimeRepoKey
         {
             get
             {
@@ -60,11 +62,19 @@ namespace Postworthy.Tasks.Bot.Streaming
             }
         }
 
+        public string CommandRepoKey
+        {
+            get
+            {
+                return PrimaryTweep.ScreenName + "_"+ COMMAND_REPO_KEY;
+            }
+        }
+
         public void Init(TextWriter log)
         {
             this.log = log;
 
-            RuntimeSettings = (repo.Query(RepoKey)
+            RuntimeSettings = (settingsRepo.Query(RuntimeRepoKey)
                 ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault()
                 ?? new TweetBotRuntimeSettings();
 
@@ -118,6 +128,8 @@ namespace Postworthy.Tasks.Bot.Streaming
                 {
                     RuntimeSettings.TotalTweetsProcessed += tweets.Count();
 
+                    ExecutePendingCommands();
+
                     RespondToTweets(tweets);
 
                     FindPotentialTweets(tweets);
@@ -158,7 +170,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 try
                 {
-                    repo.Save(RepoKey, RuntimeSettings);
+                    settingsRepo.Save(RuntimeRepoKey, RuntimeSettings);
                     saved = true;
                 }
                 catch (Enyim.Caching.Memcached.MemcachedException mcex)
@@ -541,7 +553,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                             .ToList()
                             .ForEach(t =>
                         {
-                            if (t.Key.Type != Tweep.TweepType.Target)
+                            if (t.Key.Type != Tweep.TweepType.Target && t.Key.Type != Tweep.TweepType.IgnoreAlways)
                                 t.Key.Type = Tweep.TweepType.None;
 
                             t.Count++;
@@ -738,6 +750,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
                 .Where(x => !long.TryParse(x.Key, out nothing)) //Ignore Numbers
                 .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
+                .Where(x => !RuntimeSettings.KeywordsManuallyIgnored.Contains(x.Key)) //Exclude Manually Ignored Words/Phrases
                 .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
                 .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
@@ -764,6 +777,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             return RuntimeSettings.KeywordSuggestions
                 .Where(x => x.Count >= MINIMUM_KEYWORD_COUNT)
                 .Select(x => x.Key)
+                .Union(RuntimeSettings.KeywordsManuallyAdded)
                 .ToList();
         }
 
@@ -789,6 +803,58 @@ namespace Postworthy.Tasks.Bot.Streaming
                     PrimaryTweep.OverrideFollowers(tweeps.ToList());
                     return tweeps;
                 }));
+        }
+
+        private void ExecutePendingCommands()
+        {
+            var unexecutedCommands = commandRepo.Query(RUNTIME_REPO_KEY, Repository<BotCommand>.Limit.Limit100, x => !x.HasBeenExecuted);
+            if (unexecutedCommands != null)
+            {
+                unexecutedCommands.ForEach(command =>
+                {
+                    switch (command.Command)
+                    {
+                        case BotCommand.CommandType.AddKeyword:
+                            if (!RuntimeSettings.KeywordsManuallyAdded.Contains(command.Value))
+                            {
+                                RuntimeSettings.KeywordsManuallyAdded.Add(command.Value);
+                                RuntimeSettings.KeywordsManuallyIgnored.Remove(command.Value);
+                                hasNewKeywordSuggestions = true;
+                            }
+                            break;
+                        case BotCommand.CommandType.IgnoreKeyword:
+                            if (!RuntimeSettings.KeywordsManuallyAdded.Contains(command.Value))
+                            {
+                                RuntimeSettings.KeywordsManuallyIgnored.Add(command.Value);
+                                var shouldResetKeywords = RuntimeSettings.KeywordsManuallyAdded.Remove(command.Value)
+                                 || RuntimeSettings.KeywordSuggestions.Remove(RuntimeSettings.KeywordSuggestions.Where(x => x.Key == command.Value).FirstOrDefault());
+                                if(shouldResetKeywords)
+                                    hasNewKeywordSuggestions = true;
+                            }
+                            break;
+                        case BotCommand.CommandType.IgnoreTweep:
+                            var tweepIgnore = RuntimeSettings.PotentialFriendRequests.Where(x => x.Key.UniqueKey == command.Value).FirstOrDefault();
+                            if (tweepIgnore != null)
+                                tweepIgnore.Key.Type = Tweep.TweepType.IgnoreAlways;
+                            break;
+                        case BotCommand.CommandType.TargetTweep:
+                            var tweepTarget = RuntimeSettings.PotentialFriendRequests.Where(x => x.Key.UniqueKey == command.Value).FirstOrDefault();
+                            if (tweepTarget != null)
+                                tweepTarget.Key.Type = Tweep.TweepType.Target;
+                            break;
+                        case BotCommand.CommandType.RemovePotentialRetweet:
+                            RuntimeSettings.PotentialReTweets.Remove(RuntimeSettings.PotentialReTweets.Where(x => x.UniqueKey == command.Value).FirstOrDefault());
+                            break;
+                        case BotCommand.CommandType.RemovePotentialTweet:
+                            RuntimeSettings.PotentialTweets.Remove(RuntimeSettings.PotentialTweets.Where(x => x.UniqueKey == command.Value).FirstOrDefault());
+                            break;
+                    }
+
+                    command.HasBeenExecuted = true;
+                });
+
+                commandRepo.Save(CommandRepoKey, unexecutedCommands);
+            }
         }
     }
 }

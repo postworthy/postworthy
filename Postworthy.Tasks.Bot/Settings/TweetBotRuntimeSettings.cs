@@ -27,6 +27,8 @@ namespace Postworthy.Tasks.Bot.Settings
         public List<CountableItem> Keywords { get; set; }
         public List<CountableItem> KeywordSuggestions { get; set; }
         public List<string> KeywordsToIgnore { get; set; }
+        public List<string> KeywordsManuallyAdded { get; set; }
+        public List<string> KeywordsManuallyIgnored { get; set; }
         public List<CountableItem<Tweep>> PotentialFriendRequests { get; set; }
         public List<Tweep> TwitterFollowSuggestions { get; set; }
 
@@ -70,6 +72,8 @@ namespace Postworthy.Tasks.Bot.Settings
             Keywords = new List<CountableItem>();
             KeywordSuggestions = new List<CountableItem>();
             KeywordsToIgnore = new List<string>();
+            KeywordsManuallyAdded = new List<string>();
+            KeywordsManuallyIgnored = new List<string>();
             TwitterFollowSuggestions = new List<Tweep>();
         }
 
