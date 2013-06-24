@@ -43,6 +43,7 @@ namespace Postworthy.Web.Bot.Models
         public List<string> SeededKeywords { get; set; }
         public List<string> PendingKeywordAdd { get; set; }
         public List<string> PendingKeywordIgnore { get; set; }
+        public List<string> PendingTweetRemoval { get; set; }
 
         public double TwitterStreamVolume { get; set; }
 
@@ -63,6 +64,8 @@ namespace Postworthy.Web.Bot.Models
             TwitterFollowSuggestions = new List<Tweep>();
             PendingKeywordAdd = new List<string>();
             PendingKeywordIgnore = new List<string>();
+            PendingTweetRemoval = new List<string>();
+
 
             LoadFromRepository();
         }
@@ -152,6 +155,7 @@ namespace Postworthy.Web.Bot.Models
             {
                 PendingKeywordAdd = commands.Where(c => c.Command == BotCommand.CommandType.AddKeyword && !c.HasBeenExecuted).Select(c => c.Value).Distinct().ToList();
                 PendingKeywordIgnore = commands.Where(c => c.Command == BotCommand.CommandType.IgnoreKeyword && !c.HasBeenExecuted).Select(c => c.Value).Distinct().ToList();
+                PendingTweetRemoval = commands.Where(c => (c.Command == BotCommand.CommandType.RemovePotentialTweet || c.Command == BotCommand.CommandType.RemovePotentialRetweet) && !c.HasBeenExecuted).Select(c => c.Value).Distinct().ToList();
             }
         }
     }

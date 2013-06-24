@@ -18,22 +18,30 @@
                     </div>
                     <div class="block-content collapse in" id="">
                         <div>
-                            <table style="width:100%;">
-                                
-                        @foreach (var item in Model.PotentialTweets)
-                        {
-                                <tr>
-                                    <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
-                                    <td style="padding-left:10px;">
-                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
-                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
-                                        <span>@Html.Raw(item.TweetText)</span>
-                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
-                                    </td>
-                                    <td class="pull-right wid">@item.TweetTime</td>
-                                    <td><div class="btn btn-info btn-mini">Tweet</div></td>
-                                </tr>
-                        }
+                            <table style="width: 100%;">
+
+                                @foreach (var item in Model.PotentialTweets)
+                                {
+                                    <tr>
+                                        <td>
+                                            <img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
+                                        <td style="padding-left: 10px;">
+                                            <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
+                                            @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                            <span>@Html.Raw(item.TweetText)</span>
+                                            <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                        </td>
+                                        <td class="pull-right wid">@item.TweetTime</td>
+                                        <td>
+                                            @{
+                                            var isPendingRemove = Model.PendingTweetRemoval.Contains(item.UniqueKey);
+                                            var dataRemove = isPendingRemove ? "" : "data-remove-tweet='" + item.UniqueKey + "'";
+                                            var text = isPendingRemove ? "Pending" : "Remove";
+                                            }
+                                            <div class="btn btn-warning btn-mini" style="width:50px" @Html.Raw(dataRemove)>@text</div>
+                                        </td>
+                                    </tr>
+                                }
                             </table>
                         </div>
                     </div>
@@ -48,28 +56,36 @@
                     </div>
                     <div class="block-content collapse in">
                         <div>
-                            <table style="width:100%;">
-                                
-                        @foreach (var item in Model.PotentialReTweets)
-                        {
-                                <tr>
-                                    <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
-                                    <td style="padding-left:10px;">
-                                        <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
-                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
-                                        <span>@Html.Raw(item.TweetText)</span>
-                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
-                                    </td>
-                                    <td class="pull-right wid">@item.TweetTime</td>
-                                    <td><div class="btn btn-info btn-mini">Tweet</div></td>
-                                </tr>
-                        }
+                            <table style="width: 100%;">
+
+                                @foreach (var item in Model.PotentialReTweets)
+                                {
+                                    <tr>
+                                        <td>
+                                            <img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
+                                        <td style="padding-left: 10px;">
+                                            <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.Identifier.ScreenName</a>
+                                            @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                            <span>@Html.Raw(item.TweetText)</span>
+                                            <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                        </td>
+                                        <td class="pull-right wid">@item.TweetTime</td>
+                                        <td>
+                                            @{
+                                            var isPendingRemove = Model.PendingTweetRemoval.Contains(item.UniqueKey);
+                                            var dataRemove = isPendingRemove ? "" : "data-remove-retweet='" + item.UniqueKey + "'";
+                                            var text = isPendingRemove ? "Pending" : "Remove";
+                                            }
+                                            <div class="btn btn-warning btn-mini" style="width:50px" @Html.Raw(dataRemove)>@text</div>
+                                        </td>
+                                    </tr>
+                                }
                             </table>
                         </div>
                     </div>
                 </div>
 
-                 <div class="block" id="tweeted">
+                <div class="block" id="tweeted">
                     <div class="navbar navbar-inner block-header">
                         <div class="muted pull-left">Tweeted</div>
                         <div class="pull-right">
@@ -78,21 +94,22 @@
                     </div>
                     <div class="block-content collapse in">
                         <div>
-                            <table style="width:100%;">
-                                
-                        @foreach (var item in Model.Tweeted.Reverse<Postworthy.Models.Twitter.Tweet>())
-                        {
-                                <tr>
-                                    <td><img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
-                                    <td style="padding-left:10px;">
-                                        <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
-                                       @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
-                                        <span>@Html.Raw(item.TweetText)</span>
-                                        <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
-                                    </td>
-                                    <td class="pull-right wid">@item.TweetTime</td>
-                                </tr>
-                        }
+                            <table style="width: 100%;">
+
+                                @foreach (var item in Model.Tweeted.Reverse<Postworthy.Models.Twitter.Tweet>())
+                                {
+                                    <tr>
+                                        <td>
+                                            <img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
+                                        <td style="padding-left: 10px;">
+                                            <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
+                                            @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
+                                            <span>@Html.Raw(item.TweetText)</span>
+                                            <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
+                                        </td>
+                                        <td class="pull-right wid">@item.TweetTime</td>
+                                    </tr>
+                                }
                             </table>
                         </div>
                     </div>
@@ -106,3 +123,35 @@
 </div>
 
 
+@section scripts {
+    <script type="text/javascript">
+        $("[data-remove-tweet]").on("click", function (evt) {
+            var target = $(evt.target);
+            var id = target.attr("data-remove-tweet");
+            target.removeAttr("data-remove-tweet");
+            target.text("Pending");
+
+            $.ajax({
+                url: "@Url.Action("RemovePotentialTweet", "BotCommand")/" + encodeURI(id),
+                }).done(function () {
+                }).fail(function () {
+                    target.attr("data-remove-tweet", id);
+                    target.text("Remove");
+                });
+        });
+        $("[data-remove-retweet]").on("click", function (evt) {
+            var target = $(evt.target);
+            var id = target.attr("data-remove-retweet");
+            target.removeAttr("data-remove-retweet");
+            target.text("Pending");
+
+            $.ajax({
+                url: "@Url.Action("RemovePotentialRetweet", "BotCommand")/" + encodeURI(id),
+            }).done(function () {
+            }).fail(function () {
+                target.attr("data-remove-retweet", id);
+                target.text("Remove");
+            });
+        });
+    </script>
+}
