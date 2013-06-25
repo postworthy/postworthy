@@ -50,44 +50,46 @@ namespace Postworthy.Models.Repository
             MemoryCache = GetStorageProvider("OverrideLocalStorageProvider", () => { return new MemoryCache<TYPE>(QueueChange); });
             SharedCache = GetStorageProvider("OverrideSharedStorageProvider", () => { return new DistributedSharedCache<TYPE>(); });
             LongTermStorageCache = GetStorageProvider("OverrideLongTermStorageProvider", () => { return new FileSystemCache<TYPE>(); });
-            
 
-            ChangeQueue = new Dictionary<string,List<TYPE>>();
+            if (MemoryCache is MemoryCache<TYPE>)
+            {
+                ChangeQueue = new Dictionary<string, List<TYPE>>();
 
-            SaveTimer = new Timer(30000);
-            SaveTimer.Elapsed += new ElapsedEventHandler((x,y)=>
+                SaveTimer = new Timer(30000);
+                SaveTimer.Elapsed += new ElapsedEventHandler((x, y) =>
+                    {
+                        SaveTimer.Enabled = false;
+                        try
+                        {
+                            SaveQueue();
+                        }
+                        catch { }
+                        SaveTimer.Enabled = true;
+                    });
+                SaveTimer.Start();
+
+                RefreshTimer = new Timer(300000);
+                RefreshTimer.Elapsed += new ElapsedEventHandler((x, y) =>
                 {
-                    SaveTimer.Enabled = false;
+                    RefreshTimer.Enabled = false;
                     try
                     {
-                        SaveQueue();
-                    }
-                    catch { }
-                    SaveTimer.Enabled = true;
-                });
-            SaveTimer.Start();
-
-            RefreshTimer = new Timer(300000);
-            RefreshTimer.Elapsed += new ElapsedEventHandler((x, y) =>
-            {
-                RefreshTimer.Enabled = false;
-                try
-                {
-                    if (RefreshData != null)
-                    {
-                        var keys = MemoryCache.Keys;
-                        foreach (var key in keys)
+                        if (RefreshData != null)
                         {
-                            var newData = RefreshData(key);
-                            if (newData != null)
-                                Save(key, newData);
+                            var keys = (MemoryCache as MemoryCache<TYPE>).Keys;
+                            foreach (var key in keys)
+                            {
+                                var newData = RefreshData(key);
+                                if (newData != null)
+                                    Save(key, newData);
+                            }
                         }
                     }
-                }
-                catch { }
-                RefreshTimer.Enabled = true;
-            });
-            RefreshTimer.Start();
+                    catch { }
+                    RefreshTimer.Enabled = true;
+                });
+                RefreshTimer.Start();
+            }
         }
         public static Repository<TYPE> Instance
         {
