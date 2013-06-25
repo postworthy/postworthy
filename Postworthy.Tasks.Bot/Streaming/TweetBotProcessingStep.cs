@@ -262,15 +262,16 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private bool SendTweet(Tweet tweet, bool isRetweet)
         {
+            string[] ignore = (ConfigurationManager.AppSettings["Ignore"] ?? "").ToLower().Split(',');
             if (!SimulationMode)
             {
                 if (!isRetweet)
                 {
                     tweet.PopulateExtendedData();
                     var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
-                    if (link != null)
+                    if (link != null && ignore.Where(x=>link.Title.ToLower().Contains(x)).Count() == 0)
                     {
-                        string statusText = link.ToString() == link.Title ?
+                        string statusText = !link.Title.ToLower().StartsWith("http") ?
                             (link.Title.Length > 116 ? link.Title.Substring(0, 116) : link.Title) + " " + link.Uri.ToString()
                             :
                             link.Uri.ToString();
