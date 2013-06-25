@@ -497,7 +497,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             if (tweet_tweep_pairs.Count() > 0)
             {
                 RuntimeSettings.PotentialReTweets = tweet_tweep_pairs
-                    .Where(x => friendsAndFollows.Contains(x.tweep.UniqueKey))
+                    .Where(x => friendsAndFollows.Contains(x.tweep.User.Identifier.ID))
                     .Select(x => x.tweet)
                     .Union(RuntimeSettings.PotentialReTweets, Tweet.GetTweetTextComparer())
                     .OrderByDescending(x => x.RetweetCount)
@@ -505,7 +505,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                     .ToList();
 
                 RuntimeSettings.PotentialTweets = tweet_tweep_pairs
-                    .Where(x => !friendsAndFollows.Contains(x.tweep.UniqueKey) &&
+                    .Where(x => !friendsAndFollows.Contains(x.tweep.User.Identifier.ID) &&
                         //x.tweet.Status.Entities.UserMentions.Count() == 0 &&
                         (x.tweet.Status.Entities.UrlMentions.Count() > 0 || x.tweet.Status.Entities.MediaMentions.Count() > 0))
                     .Select(x => x.tweet)
