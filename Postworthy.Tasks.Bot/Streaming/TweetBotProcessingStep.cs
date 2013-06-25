@@ -807,7 +807,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void ExecutePendingCommands()
         {
-            var unexecutedCommands = commandRepo.Query(RUNTIME_REPO_KEY, Repository<BotCommand>.Limit.Limit100, x => !x.HasBeenExecuted);
+            var unexecutedCommands = commandRepo.Query(COMMAND_REPO_KEY, Repository<BotCommand>.Limit.Limit100, x => !x.HasBeenExecuted);
             if (unexecutedCommands != null)
             {
                 unexecutedCommands.ForEach(command =>
