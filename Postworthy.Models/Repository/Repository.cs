@@ -39,7 +39,7 @@ namespace Postworthy.Models.Repository
         private static object keynotfound_lock = new object();
         private Timer SaveTimer;
         private Timer RefreshTimer;
-        private MemoryCache<TYPE> MemoryCache;
+        private RepositoryStorageProvider<TYPE> MemoryCache;
         private RepositoryStorageProvider<TYPE> SharedCache;
         private RepositoryStorageProvider<TYPE> LongTermStorageCache;
         private Dictionary<string, List<TYPE>> ChangeQueue;
@@ -47,7 +47,7 @@ namespace Postworthy.Models.Repository
         public event Func<string, List<TYPE>> RefreshData;
         private Repository() 
         {
-            MemoryCache = new MemoryCache<TYPE>(QueueChange);
+            MemoryCache = GetStorageProvider("OverrideLocalStorageProvider", () => { return new MemoryCache<TYPE>(QueueChange); });
             SharedCache = GetStorageProvider("OverrideSharedStorageProvider", () => { return new DistributedSharedCache<TYPE>(); });
             LongTermStorageCache = GetStorageProvider("OverrideLongTermStorageProvider", () => { return new FileSystemCache<TYPE>(); });
             
