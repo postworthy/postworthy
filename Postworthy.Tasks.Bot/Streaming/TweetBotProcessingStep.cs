@@ -700,7 +700,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
             //Get Current Keyword Counts
             var currentKeywords = words
-                .Intersect(RuntimeSettings.KeywordsToIgnore) //Find Words we are currently tracking
+                .Intersect(RuntimeSettings.KeywordsToIgnore.Concat(RuntimeSettings.KeywordsManuallyAdded)) //Find Words we are currently tracking
                 .GroupBy(w => w) //Group Similar Words
                 .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
                 .ToList();
@@ -752,6 +752,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .Where(x => !long.TryParse(x.Key, out nothing)) //Ignore Numbers
                 .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
                 .Where(x => !RuntimeSettings.KeywordsManuallyIgnored.Contains(x.Key)) //Exclude Manually Ignored Words/Phrases
+                .Where(x => !RuntimeSettings.KeywordsManuallyAdded.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Manually Added Words
                 .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
                 .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
@@ -819,6 +820,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                             if (!RuntimeSettings.KeywordsManuallyAdded.Contains(command.Value))
                             {
                                 RuntimeSettings.KeywordsManuallyAdded.Add(command.Value);
+                                RuntimeSettings.Keywords.Add(new CountableItem(command.Value, 0));
                                 RuntimeSettings.KeywordsManuallyIgnored.Remove(command.Value);
                                 hasNewKeywordSuggestions = true;
                             }
@@ -827,8 +829,12 @@ namespace Postworthy.Tasks.Bot.Streaming
                             if (!RuntimeSettings.KeywordsManuallyAdded.Contains(command.Value))
                             {
                                 RuntimeSettings.KeywordsManuallyIgnored.Add(command.Value);
+
+                                RuntimeSettings.Keywords.Remove(RuntimeSettings.Keywords.Where(x => x.Key == command.Value).FirstOrDefault());
+
                                 var shouldResetKeywords = RuntimeSettings.KeywordsManuallyAdded.Remove(command.Value)
                                  || RuntimeSettings.KeywordSuggestions.Remove(RuntimeSettings.KeywordSuggestions.Where(x => x.Key == command.Value).FirstOrDefault());
+                                
                                 if(shouldResetKeywords)
                                     hasNewKeywordSuggestions = true;
                             }
@@ -855,6 +861,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 });
 
                 commandRepo.Save(CommandRepoKey, unexecutedCommands);
+                settingsRepo.Save(RuntimeRepoKey, RuntimeSettings);
             }
         }
     }
