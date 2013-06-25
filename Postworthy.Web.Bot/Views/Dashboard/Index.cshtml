@@ -229,13 +229,22 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @{
-                                        int idx = 0;
-                                        foreach (var item in Model.KeywordsWithOccurrenceCount)
-                                        {
-                                            idx++;
-                                            var isSeeded = Model.SeededKeywords.Contains(item.Key);
-                                            var isPendingIgnore = Model.PendingKeywordIgnore.Contains(item.Key);
+                                    <tr>
+                                        <td>*</td>
+                                        <td>
+                                            <input type="text" style="width: 90%" id="txtNewKeyword" />
+                                        </td>
+                                        <td>-</td>
+                                        <td>
+                                            <div class="btn btn-success btn-mini" style="width: 50px" id="btnNewKeyword">Add New</div>
+                                        </td>
+                                    </tr>
+                                    @{ int idx = 0;}
+                                    @foreach (var item in Model.KeywordsWithOccurrenceCount)
+                                    {
+                                        idx++;
+                                        var isSeeded = Model.SeededKeywords.Contains(item.Key);
+                                        var isPendingIgnore = Model.PendingKeywordIgnore.Contains(item.Key);
                                         <tr style="@(isSeeded ? "font-weight:bold; color:#51a351;" : "")">
                                             <td>@idx</td>
                                             <td>@item.Key</td>
@@ -249,8 +258,22 @@
                                                 }
                                             </td>
                                         </tr>
-                                        }
                                     }
+                                    @foreach (var item in Model.PendingKeywordAdd)
+                                    {
+                                        idx++;
+                                        var count = Model.PotentialKeywordsWithOccurrenceCount.Where(x => x.Key == item).Select(x => x.Value).FirstOrDefault();
+                                        
+                                        <tr>
+                                            <td>@idx</td>
+                                            <td>@item</td>
+                                            <td>@count</td>
+                                            <td>
+                                                <div class="btn btn-warning btn-mini" style="width: 50px">Pending</div>
+                                            </td>
+                                        </tr>
+                                    }
+
                                 </tbody>
                             </table>
                         </div>
@@ -275,22 +298,18 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @{
-                                        int idx2 = 0;
-                                        foreach (var item in Model.PotentialKeywordsWithOccurrenceCount)
+                                    @{ int idx2 = 0;}
+                                    @foreach (var item in Model.PotentialKeywordsWithOccurrenceCount)
+                                    {
+                                        if (!Model.PendingKeywordAdd.Contains(item.Key))
                                         {
                                             idx2++;
-                                            var isPendingAdd = Model.PendingKeywordAdd.Contains(item.Key);
                                         <tr>
                                             <td>@idx2</td>
                                             <td>@item.Key</td>
                                             <td>@item.Value</td>
                                             <td>
-                                                @{
-                                                    var dataAdd = isPendingAdd ? "" : "data-add-keyword='" + item.Key + "'";
-                                                    var text = isPendingAdd ? "Pending" : "Add";
-                                                    }
-                                                    <div class="btn btn-success btn-mini" style="width:50px" @Html.Raw(dataAdd)>@text</div>
+                                                <div class="btn btn-success btn-mini" style="width:50px" data-add-keyword="@item.Key">Add</div>
                                             </td>
                                         </tr>
                                         }
@@ -359,6 +378,24 @@
                     target.attr("data-add-keyword",keyword);
                     target.text("Add");
                 });
+            });
+            $("#btnNewKeyword").on("click",function(evt){ 
+                var target = $(evt.target);
+                var keyword = $("#txtNewKeyword").val();
+
+                if(keyword.length >= 3)
+                {
+                    $.ajax({
+                        url: "@Url.Action("AddKeyword", "BotCommand")/" + encodeURI(keyword),
+                    }).done(function() {
+                        $("#txtNewKeyword").val("");
+                        var nextIndex = target.closest("tbody").children().length
+                        var newRow = $("<tr><td>" + nextIndex + "</td><td>" + keyword + "</td><td>-</td><td><div class='btn btn-warning btn-mini' style='width:50px'>Pending</div></td></tr>");
+                        target.closest("tbody").append(newRow);
+                    }).fail(function() { 
+                        $("#txtNewKeyword").val("");
+                    });
+                }
             });
         });
 
