@@ -277,7 +277,7 @@ namespace Postworthy.Tasks.StreamMonitor
 
 
                         context.Streaming
-                            .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == string.Join(",", trackList))
+                            .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == string.Join(",", trackList.Distinct()))
                             .Select(strm => strm)
                             .StreamingCallback(strm =>
                             {
