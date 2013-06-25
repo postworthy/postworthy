@@ -686,6 +686,27 @@ namespace Postworthy.Tasks.Bot.Streaming
             var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
             var cleanedPastTweets = RuntimeSettings.Tweeted.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", "").ToLower()).ToList();
 
+
+            //Get All Words Added by User (From Config & Dashboard)
+            var manuallyAddedWords = RuntimeSettings.KeywordsToIgnore.Concat(RuntimeSettings.KeywordsManuallyAdded).Select(x => x.ToLower());
+
+            //Get Current Keyword Counts
+            var currentKeywords = manuallyAddedWords.Select(maw => 
+                new { 
+                    Word = maw, 
+                    Count = cleanedTweets.Select(t => new Regex(maw).Matches(t).Count).Sum() 
+                }).ToList();
+
+            //Update Master Keyword List
+            currentKeywords.ForEach(w =>
+            {
+                var item = RuntimeSettings.Keywords.Where(x => x.Key == w.Word).FirstOrDefault();
+                if (item != null)
+                    item.Count += w.Count;
+                else
+                    RuntimeSettings.Keywords.Add(new CountableItem(w.Word, w.Count));
+            });
+
             var cleanedAll = cleanedTweets.Concat(cleanedTweets);
 
             var words = cleanedTweets
@@ -697,23 +718,6 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .Where(x => !x.StartsWith("http")) //No URLs
                 .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
                 .ToList();
-
-            //Get Current Keyword Counts
-            var currentKeywords = words
-                .Intersect(RuntimeSettings.KeywordsToIgnore.Concat(RuntimeSettings.KeywordsManuallyAdded)) //Find Words we are currently tracking
-                .GroupBy(w => w) //Group Similar Words
-                .Select(g => new { Word = g.Key, Count = g.Count() }) // Get Keyword Counts
-                .ToList();
-
-            //Update Master Keyword List
-            currentKeywords.ForEach(w =>
-            {
-                var item = RuntimeSettings.Keywords.Where(x => x.Key == w.Word).FirstOrDefault();
-                if (item != null)
-                    item.Count += w.Count;
-                else
-                    RuntimeSettings.Keywords.Add(new CountableItem(w.Word, w.Count));
-            });
 
             //Only words we are tracking from config
             RuntimeSettings.Keywords = RuntimeSettings.Keywords.Where(w => RuntimeSettings.KeywordsToIgnore.Contains(w.Key)).ToList();
@@ -752,8 +756,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .Where(x => !long.TryParse(x.Key, out nothing)) //Ignore Numbers
                 .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
                 .Where(x => !RuntimeSettings.KeywordsManuallyIgnored.Contains(x.Key)) //Exclude Manually Ignored Words/Phrases
-                .Where(x => !RuntimeSettings.KeywordsManuallyAdded.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Manually Added Words
-                .Where(x => !RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Ignore Words
+                .Where(x => !manuallyAddedWords.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Manually Added Words
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
                 .Where(x => x.Key.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Where(x => Encoding.UTF8.GetByteCount(x.Key) == x.Key.Length) //Only ASCII for me...
