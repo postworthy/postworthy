@@ -44,6 +44,9 @@ namespace Postworthy.Tasks.Bot.Streaming
         private bool ForceSimulationMode = false;
         private bool hasNewKeywordSuggestions = false;
         private IEnumerable<string> StopWords = null;
+        private Regex StopWordsRegex = null;
+        private Regex PunctuationRegex = new Regex(@"(\p{P})|\t|\n|\r", RegexOptions.Compiled);
+        private Regex WhiteSpaceRegex = new Regex(@"\s{2,}", RegexOptions.Compiled);
         private DateTime LastUpdatedTwitterSuggestedFollows = DateTime.MinValue;
 
         public bool SimulationMode
@@ -114,6 +117,8 @@ namespace Postworthy.Tasks.Bot.Streaming
                 StopWords = File.OpenText("Resources/stopwords.txt")
                     .ReadToEnd()
                     .Split('\n').Select(x => x.Replace("\r", "").ToLower());
+                if (StopWords.Count() > 0)
+                    StopWordsRegex = new Regex("(" + string.Join("|", StopWords.Select(sw=>"\\b" + sw + "\\b")) + ")", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                 log.WriteLine("{0}: Stop Words: {1}",
                     DateTime.Now,
                     string.Join(",", StopWords));
@@ -683,9 +688,9 @@ namespace Postworthy.Tasks.Bot.Streaming
         private void FindKeywordsFromCurrentTweets(IEnumerable<Tweet> tweets)
         {
             long nothing;
-            //Strip Punctuation, Force Lowercase
-            var cleanedTweets = tweets.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", " ", RegexOptions.Compiled).ToLower()).ToList();
-            var cleanedPastTweets = RuntimeSettings.Tweeted.Select(t => Regex.Replace(t.TweetText, @"(\p{P})|\t|\n|\r", " ", RegexOptions.Compiled).ToLower()).ToList();
+            //Strip Punctuation, Strip Stop Words, Force Lowercase
+            var cleanedTweets = tweets.Select(t => WhiteSpaceRegex.Replace(StopWordsRegex.Replace(PunctuationRegex.Replace(t.TweetText, " "), ""), " ").ToLower()).ToList();
+            var cleanedPastTweets = RuntimeSettings.Tweeted.Select(t => WhiteSpaceRegex.Replace(StopWordsRegex.Replace(PunctuationRegex.Replace(t.TweetText, " "), ""), " ").ToLower()).ToList();
 
 
             //Get All Words Added by User (From Config & Dashboard)
@@ -719,7 +724,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .Where(w => !long.TryParse(w, out nothing)) //Ignore Numbers
                 .Where(x => x.Length >= MINIMUM_NEW_KEYWORD_LENGTH) //Must be Minimum Length
                 .Except(RuntimeSettings.KeywordsToIgnore.SelectMany(y => y.Split(' ').Concat(new string[] { y }))) //Exclude Ignore Words, which are current keywords
-                .Except(StopWords) //Exclude Stop Words
+                //.Except(StopWords) //Exclude Stop Words
                 .Where(x => !x.StartsWith("http")) //No URLs
                 .Where(x => Encoding.UTF8.GetByteCount(x) == x.Length) //Only ASCII for me...
                 .ToList();
@@ -736,7 +741,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                  (\w+)  # another word; capture that into backref 2.
                 )       # End of lookahead.", 
                 RegexOptions.IgnorePatternWhitespace);
-            foreach (var t in cleanedAll)
+            foreach (var t in cleanedTweets)
             {
                 var matchResult = regexObj.Match(t);
                 while (matchResult.Success)
@@ -781,7 +786,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
             RuntimeSettings.KeywordSuggestions = RuntimeSettings.KeywordSuggestions
                 .Where(x => !long.TryParse(x.Key, out nothing)) //Ignore Numbers
-                .Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
+                //.Where(x => !StopWords.Contains(x.Key)) //Exclude Stop Words
                 .Where(x => !RuntimeSettings.KeywordsManuallyIgnored.Contains(x.Key)) //Exclude Manually Ignored Words/Phrases
                 .Where(x => !manuallyAddedWords.SelectMany(y => y.Split(' ').Concat(new string[] { y })).Contains(x.Key)) //Exclude Manually Added Words
                 .Where(x => !x.Key.StartsWith("http")) //No URLs
