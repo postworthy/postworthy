@@ -404,7 +404,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 log.WriteLine("{0}: Keywords: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Keywords
-                        .Concat(RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT))
+                        //.Concat(RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT))
                         .OrderByDescending(x => x.Count)
                         .ThenByDescending(x => x.Key)
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
@@ -416,7 +416,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 log.WriteLine("{0}: Keyword Suggestions: {1}",
                     DateTime.Now,
                     Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.KeywordSuggestions
-                        .Where(x => x.Count < MINIMUM_KEYWORD_COUNT)
+                        //.Where(x => x.Count < MINIMUM_KEYWORD_COUNT)
                         .OrderByDescending(x => x.Count)
                         .ThenByDescending(x => x.Key)
                         .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
@@ -767,7 +767,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             words = words.Except(validPairs.SelectMany(x => x.Split(' '))).Concat(validPairs).ToList();
 
             //For Later
-            var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
+            //var oldSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
 
             var keywords = words
                 .GroupBy(w => w) //Group Similar Words
@@ -802,20 +802,23 @@ namespace Postworthy.Tasks.Bot.Streaming
                 .ToList();
 
             //For Comparison
-            var newSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
+            //var newSuggestionCount = RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT).Count();
 
             //If we have difference then set the flag
-            if (newSuggestionCount != oldSuggestionCount)
-                hasNewKeywordSuggestions = true;
+            //if (newSuggestionCount != oldSuggestionCount)
+            //    hasNewKeywordSuggestions = true;
         }
 
         public List<string> GetKeywordSuggestions()
         {
+            return RuntimeSettings.KeywordsManuallyAdded;
+            /*
             return RuntimeSettings.KeywordSuggestions
                 .Where(x => x.Count >= MINIMUM_KEYWORD_COUNT)
                 .Select(x => x.Key)
                 .Union(RuntimeSettings.KeywordsManuallyAdded)
                 .ToList();
+             */
         }
 
         public void ResetHasNewKeywordSuggestions()
@@ -867,8 +870,8 @@ namespace Postworthy.Tasks.Bot.Streaming
 
                                 RuntimeSettings.Keywords.Remove(RuntimeSettings.Keywords.Where(x => x.Key == command.Value).FirstOrDefault());
 
-                                var shouldResetKeywords = RuntimeSettings.KeywordsManuallyAdded.Remove(command.Value)
-                                 || RuntimeSettings.KeywordSuggestions.Remove(RuntimeSettings.KeywordSuggestions.Where(x => x.Key == command.Value).FirstOrDefault());
+                                var shouldResetKeywords = RuntimeSettings.KeywordsManuallyAdded.Remove(command.Value);
+                                 //|| RuntimeSettings.KeywordSuggestions.Remove(RuntimeSettings.KeywordSuggestions.Where(x => x.Key == command.Value).FirstOrDefault());
 
                                 if (shouldResetKeywords)
                                     hasNewKeywordSuggestions = true;

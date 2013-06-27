@@ -139,13 +139,13 @@ namespace Postworthy.Web.Bot.Models
                     .ToList();
                 SeededKeywords = runtimeSettings.KeywordsToIgnore;
                 KeywordsWithOccurrenceCount = runtimeSettings.Keywords
-                    .Concat(runtimeSettings.KeywordSuggestions.Where(x => x.Count >= TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT))
+                    //.Concat(runtimeSettings.KeywordSuggestions.Where(x => x.Count >= TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT))
                     .OrderByDescending(x => x.Count)
                     .ThenByDescending(x => x.Key)
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count))
                     .ToList();
                 PotentialKeywordsWithOccurrenceCount = runtimeSettings.KeywordSuggestions
-                    .Where(x => x.Count < TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT)
+                    //.Where(x => x.Count < TweetBotProcessingStep.MINIMUM_KEYWORD_COUNT)
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
             }
 
