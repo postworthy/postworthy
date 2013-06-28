@@ -864,7 +864,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                             }
                             break;
                         case BotCommand.CommandType.IgnoreKeyword:
-                            if (!RuntimeSettings.KeywordsManuallyAdded.Contains(command.Value))
+                            if (!RuntimeSettings.KeywordsManuallyIgnored.Contains(command.Value))
                             {
                                 RuntimeSettings.KeywordsManuallyIgnored.Add(command.Value);
 
