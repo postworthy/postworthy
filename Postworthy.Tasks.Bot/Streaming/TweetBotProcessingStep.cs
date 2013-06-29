@@ -699,8 +699,8 @@ namespace Postworthy.Tasks.Bot.Streaming
             //Get Current Keyword Counts
             var currentKeywords = manuallyAddedWords.Select(maw => 
                 new { 
-                    Word = maw, 
-                    Count = cleanedTweets.Select(t => new Regex(maw).Matches(t).Count).Sum() 
+                    Word = maw,
+                    Count = tweets.Select(t=>t.TweetText).Select(t => new Regex(maw).Matches(t).Count).Sum() 
                 }).ToList();
 
             //Update Master Keyword List
