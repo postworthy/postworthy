@@ -536,7 +536,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             var friendsAndFollows = PrimaryTweep.Followers().Select(x => x.ID);
             var tweet_tweep_pairs = tweets
                 .Select(x =>
-                    x.Status.Retweeted ?
+                    x.Status.Retweeted && !friendsAndFollows.Contains(x.Status.User.Identifier.ID) ?
                     new
                     {
                         tweet = new Tweet(x.Status.RetweetedStatus),
@@ -626,7 +626,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             double minClout = friends.Count() + 1.0;
             return (int)Math.Max(minClout, friends.Count() > 0 ? Math.Floor(friends.Average(x => x.Clout())) : 0);
             */
-            return PrimaryTweep.Followers().Count();
+            return PrimaryTweep.Clout();
         }
 
         private double GetMinWeight()
