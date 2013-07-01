@@ -1,5 +1,9 @@
 ﻿@model Postworthy.Web.Bot.Models.DashboardModel
 
+@{
+    var Keywords = Model.KeywordsWithOccurrenceCount.Select(x => x.Key.ToLower());
+}
+
 @Html.Partial("_TopMenu")
 
 <div class="container-fluid">
@@ -122,21 +126,20 @@
                     </div>
                 </div>
             </div>
-            @if (Model.PotentialFriendRequests.Count > 0)
+            @if (Model.TopFriendTweetCounts.Count > 0)
             {
-                <div class="block">
+            <div class="block">
                     <div class="navbar navbar-inner block-header">
-                        <div class="muted pull-left">Potentail Friends</div>
+                        <div class="muted pull-left">Friends</div>
                         <div class="pull-right">
                             <span class="badge badge-warning">View More</span>
                         </div>
                     </div>
                     <div class="block-content collapse in">
                         <div class="row-fluid">
-                            @foreach (var group in Model.PotentialFriendRequests
-                            .Where(x => x.Key.Type != Postworthy.Models.Twitter.Tweep.TweepType.Ignore)
+                            @foreach (var group in Model.TopFriendTweetCounts
                             .OrderByDescending(x => x.Value)
-                            .Take(Model.TwitterFollowSuggestions.Count == 0 ? 12 : 6)
+                            .Take(6)
                             .Select((x, i) => new { index = i, value = x })
                             .GroupBy(x => x.index / 6)
                             )
@@ -166,19 +169,64 @@
                     </div>
                 </div>
             }
+            @if (Model.PotentialFriendRequests.Count > 0)
+            {
+                <div class="block">
+                    <div class="navbar navbar-inner block-header">
+                        <div class="muted pull-left">Potential Friends</div>
+                        <div class="pull-right">
+                            <a class="badge badge-warning" href='@(Url.Action("PotentialFriends", "Dashboard"))'>View More</a>
+                        </div>
+                    </div>
+                    <div class="block-content collapse in">
+                        <div class="row-fluid">
+                            @foreach (var group in Model.PotentialFriendRequests
+                            .Where(x => x.Key.Type != Postworthy.Models.Twitter.Tweep.TweepType.Ignore)
+                            .OrderByDescending(x => Keywords.Any(y => (x.Key.User.Description ?? "").ToLower().Contains(y)))
+                            .ThenByDescending(x => x.Key.Clout())
+                            .Take(Model.TwitterFollowSuggestions.Count == 0 ? 12 : 6)
+                            .Select((x, i) => new { index = i, value = x })
+                            .GroupBy(x => x.index / 6)
+                            )
+                            {
+                                <div class="row-fluid group@(group.Key)" style="margin-bottom:21px;">
+                                    @foreach (var groupItem in group)
+                                    {
+                                        var item = groupItem.value;
+                            
+                                        <div class="thumbnail span2 centered" @Html.Raw(item.Key.Type == Postworthy.Models.Twitter.Tweep.TweepType.Target ? "style=\"font-weight:bold;background-color: #ff2413;\"" : "") data-squared="height" data-squared-max="200">
+                                            <div class="@(item.Key.UniqueKey) thumbnail-bg semi-translucent fill"></div>
+                                            <a data-squared="content" href="http://twitter.com/@(item.Key.ScreenName)" target="_blank" style="color: rgba(0, 0, 0, 0.9);">
+                                                <h4>@item.Key.ScreenName</h4>
+                                            </a>
+                                            <style type="text/css">
+                                            .@(item.Key.UniqueKey) {
+                                                background-image: url('@item.Key.User.ProfileImageUrl.Replace("_normal", "")');
+                                            }
+                                        </style>
+                                        </div>
+                            
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
             @if (Model.TwitterFollowSuggestions.Count > 0)
             {
                 <div class="block">
                     <div class="navbar navbar-inner block-header">
                         <div class="muted pull-left">Twitter Suggested Friends</div>
                         <div class="pull-right">
-                            <span class="badge badge-warning">View More</span>
+                            <a class="badge badge-warning" href='@(Url.Action("SuggestedFriends", "Dashboard"))'>View More</a>
                         </div>
                     </div>
                     <div class="block-content collapse in">
                         <div class="row-fluid">
                             @foreach (var group in Model.TwitterFollowSuggestions
-                            .OrderByDescending(x => x.Clout())
+                            .OrderByDescending(x => Keywords.Any(y => (x.User.Description ?? "").ToLower().Contains(y)))
+                            .ThenByDescending(x => x.Clout())
                             .Take(Model.PotentialFriendRequests.Count == 0 ? 12 : 6)
                             .Select((x, i) => new { index = i, value = x })
                             .GroupBy(x => x.index / 6)

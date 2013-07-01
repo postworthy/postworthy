@@ -1,0 +1,88 @@
+﻿@model Postworthy.Web.Bot.Models.DashboardModel
+
+@{
+    var Keywords = Model.KeywordsWithOccurrenceCount.Select(x => x.Key.ToLower());
+}
+
+@Html.Partial("_TopMenu")
+
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12" id="content">
+<div class="block">
+    <div class="navbar navbar-inner block-header">
+        <div class="muted pull-left">Twitter Suggested Friends</div>
+    </div>
+    <div class="block-content collapse in">
+        <div class="row-fluid">
+            @foreach (var group in Model.TwitterFollowSuggestions
+                .Where(x => Keywords.Any(y => (x.User.Description ?? "").ToLower().Contains(y)))
+                .OrderByDescending(x => x.Clout())
+                .Select((x, i) => new { index = i, value = x })
+                .GroupBy(x => x.index / 3))
+            {
+                <div class="row-fluid group@(group.Key)" style="margin-bottom:21px;">
+                    @foreach (var groupItem in group)
+                    {
+                        var item = groupItem.value;
+                            
+                        <div class="thumbnail span4 centered" @Html.Raw(item.Type == Postworthy.Models.Twitter.Tweep.TweepType.Target ? "style=\"font-weight:bold;background-color: #ff2413;\"" : "") data-squared="height" data-squared-max="200">
+                            <div class="@(item.UniqueKey) thumbnail-bg semi-translucent fill"></div>
+                            <a data-squared="content" href="http://twitter.com/@(item.ScreenName)" target="_blank" style="color: rgba(0, 0, 0, 0.9);">
+                                <h4>@item.ScreenName</h4>
+                                <div>
+                                    @item.User.Description
+                                </div>
+                            </a>
+                            <style type="text/css">
+                            .@(item.UniqueKey) {
+                                background-image: url('@item.User.ProfileImageUrl.Replace("_normal", "")');
+                            }
+                        </style>
+                        </div>
+                            
+                    }
+                </div>
+            }
+
+             @foreach (var group in Model.TwitterFollowSuggestions
+                .Where(x => !Keywords.Any(y => (x.User.Description ?? "").ToLower().Contains(y)))
+                .OrderByDescending(x => x.Clout())
+                .Select((x, i) => new { index = i, value = x })
+                .GroupBy(x => x.index / 6))
+            {
+                <div class="row-fluid group@(group.Key)" style="margin-bottom:21px;">
+                    @foreach (var groupItem in group)
+                    {
+                        var item = groupItem.value;
+                            
+                        <div class="thumbnail span2 centered" @Html.Raw(item.Type == Postworthy.Models.Twitter.Tweep.TweepType.Target ? "style=\"font-weight:bold;background-color: #ff2413;\"" : "") data-squared="height" data-squared-max="200">
+                            <div class="@(item.UniqueKey) thumbnail-bg semi-translucent fill"></div>
+                            <a data-squared="content" href="http://twitter.com/@(item.ScreenName)" target="_blank" style="color: rgba(0, 0, 0, 0.9);">
+                                <h4>@item.ScreenName</h4>
+                            </a>
+                            <style type="text/css">
+                            .@(item.UniqueKey) {
+                                background-image: url('@item.User.ProfileImageUrl.Replace("_normal", "")');
+                            }
+                        </style>
+                        </div>
+                            
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div></div></div></div>
+
+@section scripts {
+
+    @Scripts.Render("~/bundles/squaredup")
+
+    <script type="text/javascript">
+        $(function () {
+            
+        });
+    </script>
+
+}
