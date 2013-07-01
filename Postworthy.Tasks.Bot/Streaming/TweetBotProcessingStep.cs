@@ -201,7 +201,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                         //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
                         (RuntimeSettings.PotentialTweets.Count > 0 && (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialTweets.Count > 0)))
                     {
-                        var tweet = RuntimeSettings.PotentialTweets.First();
+                        var tweet = RuntimeSettings.PotentialTweets.OrderByDescending(t=>t.TweetRank).First();
                         var groups = RuntimeSettings.Tweeted
                             .Reverse<Tweet>()
                             .Take(50)
@@ -223,7 +223,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                                 RuntimeSettings.TweetsSentSinceLastFriendRequest++;
                                 RuntimeSettings.LastTweetTime = DateTime.Now;
                                 RuntimeSettings.PotentialTweets.Remove(tweet);
-                                RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
+                                //RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                             }
                             else
                                 RuntimeSettings.PotentialReTweets.Remove(tweet);
@@ -237,7 +237,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                         //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
                         (RuntimeSettings.PotentialReTweets.Count > 0 && (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialReTweets.Count > 0)))
                     {
-                        var tweet = RuntimeSettings.PotentialReTweets.First();
+                        var tweet = RuntimeSettings.PotentialReTweets.OrderByDescending(t => t.TweetRank).First();
                         var groups = RuntimeSettings.Tweeted
                             .Reverse<Tweet>()
                             .Take(50)
@@ -259,7 +259,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                                 RuntimeSettings.TweetsSentSinceLastFriendRequest++;
                                 RuntimeSettings.LastTweetTime = DateTime.Now;
                                 RuntimeSettings.PotentialReTweets.Remove(tweet);
-                                RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
+                                //RuntimeSettings.PotentialReTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                             }
                             else
                                 RuntimeSettings.PotentialReTweets.Remove(tweet);
@@ -278,7 +278,10 @@ namespace Postworthy.Tasks.Bot.Streaming
                 {
                     tweet.PopulateExtendedData();
                     var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
-                    if (link != null && ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0)
+                    if (link != null && 
+                        ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0 && //Cant Contain an Ignore Word
+                        !link.Uri.ToString().Contains(tweet.User.Url) //Can not be from same url as user tweeting this
+                        )
                     {
                         string statusText = !link.Title.ToLower().StartsWith("http") ?
                             (link.Title.Length > 116 ? link.Title.Substring(0, 116) : link.Title) + " " + link.Uri.ToString()
@@ -486,7 +489,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
             var tweet_tweep_pairs = tweets
                 .Select(x =>
-                    x.Status.Retweeted ?
+                    x.Status.Retweeted && !friendsAndFollows.Contains(x.Status.User.Identifier.ID) ?
                     new
                     {
                         tweet = new Tweet(x.Status.RetweetedStatus),
