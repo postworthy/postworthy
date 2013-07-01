@@ -594,15 +594,17 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 try
                 {
+                    var friendsAndFollows = PrimaryTweep.Followers().Select(x => x.ID);
                     var keywords = RuntimeSettings.Keywords.Select(x => x.Key).Union(GetKeywordSuggestions());
-                    Func<Tweep, bool> where = (x => x.User.Description != null && keywords.Where(w => x.User.Description.ToLower().Contains(w)).Count() >= 2);
+                    //Func<Tweep, bool> where = (x => x.User.Description != null && keywords.Where(w => x.User.Description.ToLower().Contains(w)).Count() >= 2);
+                    Func<Tweep, bool> where = (x => !friendsAndFollows.Contains(x.User.Identifier.ID));
 
                     var results = TwitterModel.Instance.GetSuggestedFollowsForPrimaryUser()
-                        //.Where(where)
+                        .Where(where)
                         .ToList();
 
                     RuntimeSettings.TwitterFollowSuggestions = RuntimeSettings.TwitterFollowSuggestions
-                        //.Where(where)
+                        .Where(where)
                         .Union(results).ToList();
                 }
                 catch (Exception ex)
