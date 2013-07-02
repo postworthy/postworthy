@@ -26,6 +26,7 @@ namespace Postworthy.Tasks.Bot.Streaming
         private const int POTENTIAL_TWEEP_BUFFER_MAX = 50;
         private const int MIN_TWEEP_NOTICED = 5;
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
+        private const int MATCHING_KEYWORDS_AUTOMATIC = 3;
         private const int MAX_TIME_BETWEEN_TWEETS = 3;
         public const int MINIMUM_KEYWORD_COUNT = 30;
         private const int MINIMUM_NEW_KEYWORD_LENGTH = 3;
@@ -271,6 +272,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private bool SendTweet(Tweet tweet, bool isRetweet)
         {
+            var friendsAndFollows = PrimaryTweep.Followers().Select(x => x.ID);
             string[] ignore = (ConfigurationManager.AppSettings["Ignore"] ?? "").ToLower().Split(',');
             if (!SimulationMode)
             {
@@ -280,7 +282,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                     var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
                     if (link != null && 
                         ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0 && //Cant Contain an Ignore Word
-                        !link.Uri.ToString().Contains(tweet.User.Url) //Can not be from same url as user tweeting this
+                        (friendsAndFollows.Contains(tweet.User.Identifier.ID) || !link.Uri.ToString().Contains(tweet.User.Url)) //Can not be from same url as user tweeting this, unless you are a friend
                         )
                     {
                         string statusText = !link.Title.ToLower().StartsWith("http") ?
@@ -305,32 +307,50 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void EstablishTargets()
         {
+            var newFriends = false;
             if (RuntimeSettings.TweetsSentSinceLastFriendRequest >= 2)
             {
-                RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
-
                 var primaryFollowers = PrimaryTweep.Followers().Select(y => y.ID);
 
-                var tweeps = RuntimeSettings.PotentialFriendRequests
+
+                var potential = RuntimeSettings.PotentialFriendRequests
                     .Where(x => x.Count > MIN_TWEEP_NOTICED)
-                    .Where(x => x.Key.Type == Tweep.TweepType.None || x.Key.Type == Tweep.TweepType.Target);
+                    .Where(x => x.Key.Type == Tweep.TweepType.None || x.Key.Type == Tweep.TweepType.Target)
+                    .Where(x => !primaryFollowers.Contains(x.Key.User.Identifier.UserID))
+                    .Select(x => new
+                    {
+                        Key = x.Key,
+                        Count = x.Count,
+                        MatchingKeywords = RuntimeSettings.Keywords.Count(y => (x.Key.User.Description ?? "").ToLower().Contains(y.Key)),
+                        Remove = new Action(() => RuntimeSettings.PotentialFriendRequests.Remove(x))
+                    })
+                    .OrderByDescending(x => x.Count);
 
-                //Remove Existing Friends
-                var existing = tweeps.Where(x => primaryFollowers.Contains(x.Key.User.Identifier.UserID));
-                foreach (var x in existing)
-                {
-                    RuntimeSettings.PotentialFriendRequests.Remove(x);
-                }
+                var suggested = RuntimeSettings.TwitterFollowSuggestions
+                    .Where(x => !primaryFollowers.Contains(x.User.Identifier.UserID))
+                    .Where(x => RuntimeSettings.Keywords.Any(y => (x.User.Description ?? "").ToLower().Contains(y.Key)))
+                    .Select(x => new
+                    {
+                        Key = x,
+                        Count = 0,
+                        MatchingKeywords = RuntimeSettings.Keywords.Count(y => (x.User.Description ?? "").ToLower().Contains(y.Key)),
+                        Remove = new Action(() => RuntimeSettings.TwitterFollowSuggestions.Remove(x))
+                    })
+                    .OrderByDescending(x => x.MatchingKeywords);
 
-                //Process Potential Friends
-                var potential = tweeps.Where(x => !primaryFollowers.Contains(x.Key.User.Identifier.UserID));
-                foreach (var x in potential)
+                var combined = potential.Concat(suggested);
+
+                foreach (var x in combined)
                 {
                     var followers = x.Key.Followers().Select(y => y.ID);
 
-                    if ((x.Count > TWEEP_NOTICED_AUTOMATIC ||
-                        followers.Union(primaryFollowers).Count() != (followers.Count() + primaryFollowers.Count())))
+                    //Test to see if we should make friends
+                    if ((x.Count >= TWEEP_NOTICED_AUTOMATIC || //I have seen enough of you...
+                        x.MatchingKeywords >= MATCHING_KEYWORDS_AUTOMATIC || //Your description says enough for you...
+                        followers.Union(primaryFollowers).Count() != (followers.Count() + primaryFollowers.Count()))) //You are friends with my friends...
                     {
+                        RuntimeSettings.TweetsSentSinceLastFriendRequest = 0;
+
                         x.Key.Type = Tweep.TweepType.Target;
 
                         if (!SimulationMode)
@@ -339,14 +359,17 @@ namespace Postworthy.Tasks.Bot.Streaming
 
                             if (follow.Type == Tweep.TweepType.Following)
                             {
-                                PrimaryTweep.Followers(true);
-                                RuntimeSettings.PotentialFriendRequests.Remove(x);
+                                newFriends = true;
+                                x.Remove();
                             }
                         }
                     }
                     else
                         x.Key.Type = Tweep.TweepType.Ignore;
                 }
+
+                if (newFriends)
+                    PrimaryTweep.Followers(true);
             }
         }
 
@@ -583,6 +606,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             //Limit
             RuntimeSettings.PotentialFriendRequests = RuntimeSettings.PotentialFriendRequests
                 .Where(x => x.Key.Type == Tweep.TweepType.Target || x.LastModifiedTime.AddHours(FRIEND_FALLOUT_MINUTES) > DateTime.Now) //Only watch them for a limited time
+                .Where(x => !friendsAndFollows.Contains(x.Key.User.Identifier.UserID))
                 .OrderByDescending(x => x.Key.Clout())
                 .Take(POTENTIAL_TWEEP_BUFFER_MAX)
                 .ToList();
