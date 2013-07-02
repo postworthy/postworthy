@@ -17,7 +17,8 @@
         <div class="row-fluid">
             @foreach (var group in Model.TwitterFollowSuggestions
                 .Where(x => Keywords.Any(y => (x.User.Description ?? "").ToLower().Contains(y)))
-                .OrderByDescending(x => x.Clout())
+                .OrderByDescending(x => Keywords.Count(y => (x.User.Description ?? "").ToLower().Contains(y)))
+                .ThenByDescending(x => x.Clout())
                 .Select((x, i) => new { index = i, value = x })
                 .GroupBy(x => x.index / 3))
             {

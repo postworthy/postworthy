@@ -182,7 +182,7 @@
                         <div class="row-fluid">
                             @foreach (var group in Model.PotentialFriendRequests
                             .Where(x => x.Key.Type != Postworthy.Models.Twitter.Tweep.TweepType.Ignore)
-                            .OrderByDescending(x => Keywords.Any(y => (x.Key.User.Description ?? "").ToLower().Contains(y)))
+                            .OrderByDescending(x => Keywords.Count(y => (x.Key.User.Description ?? "").ToLower().Contains(y)))
                             .ThenByDescending(x => x.Key.Clout())
                             .Take(Model.TwitterFollowSuggestions.Count == 0 ? 12 : 6)
                             .Select((x, i) => new { index = i, value = x })
@@ -225,7 +225,7 @@
                     <div class="block-content collapse in">
                         <div class="row-fluid">
                             @foreach (var group in Model.TwitterFollowSuggestions
-                            .OrderByDescending(x => Keywords.Any(y => (x.User.Description ?? "").ToLower().Contains(y)))
+                            .OrderByDescending(x => Keywords.Count(y => (x.User.Description ?? "").ToLower().Contains(y)))
                             .ThenByDescending(x => x.Clout())
                             .Take(Model.PotentialFriendRequests.Count == 0 ? 12 : 6)
                             .Select((x, i) => new { index = i, value = x })
