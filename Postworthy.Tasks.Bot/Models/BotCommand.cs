@@ -17,6 +17,7 @@ namespace Postworthy.Tasks.Bot.Models
             IgnoreKeyword,
             TargetTweep,
             IgnoreTweep,
+            Refresh,
         }
         public Guid ID { get; set; }
         public CommandType Command { get; set; }

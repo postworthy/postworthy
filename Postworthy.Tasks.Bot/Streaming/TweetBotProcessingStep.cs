@@ -22,7 +22,8 @@ namespace Postworthy.Tasks.Bot.Streaming
     {
         private const string RUNTIME_REPO_KEY = "TweetBotRuntimeSettings";
         private const string COMMAND_REPO_KEY = "BotCommands";
-        private const int POTENTIAL_TWEET_BUFFER_MAX = 10;
+        private const int POTENTIAL_TWEET_BUFFER_MIN = 10;
+        private const int POTENTIAL_TWEET_BUFFER_MAX = 50;
         private const int POTENTIAL_TWEEP_BUFFER_MAX = 50;
         private const int MIN_TWEEP_NOTICED = 5;
         private const int TWEEP_NOTICED_AUTOMATIC = 25;
@@ -119,7 +120,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                     .ReadToEnd()
                     .Split('\n').Select(x => x.Replace("\r", "").ToLower());
                 if (StopWords.Count() > 0)
-                    StopWordsRegex = new Regex("(" + string.Join("|", StopWords.Select(sw=>"\\b" + sw + "\\b")) + ")", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    StopWordsRegex = new Regex("(" + string.Join("|", StopWords.Select(sw => "\\b" + sw + "\\b")) + ")", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                 log.WriteLine("{0}: Stop Words: {1}",
                     DateTime.Now,
                     string.Join(",", StopWords));
@@ -198,11 +199,11 @@ namespace Postworthy.Tasks.Bot.Streaming
                 if (RuntimeSettings.TweetOrRetweet)
                 {
                     RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                    if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
+                    if (RuntimeSettings.PotentialTweets.Count >= POTENTIAL_TWEET_BUFFER_MIN ||
                         //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                        (RuntimeSettings.PotentialTweets.Count > 0 && (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialTweets.Count > 0)))
+                        (RuntimeSettings.PotentialTweets.Count > 0 && DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS)))
                     {
-                        var tweet = RuntimeSettings.PotentialTweets.OrderByDescending(t=>t.TweetRank).First();
+                        var tweet = RuntimeSettings.PotentialTweets.OrderByDescending(t => t.TweetRank).First();
                         var groups = RuntimeSettings.Tweeted
                             .Reverse<Tweet>()
                             .Take(50)
@@ -227,16 +228,16 @@ namespace Postworthy.Tasks.Bot.Streaming
                                 //RuntimeSettings.PotentialTweets.RemoveAll(x => x.RetweetCount < GetMinRetweets());
                             }
                             else
-                                RuntimeSettings.PotentialReTweets.Remove(tweet);
+                                RuntimeSettings.PotentialTweets.Remove(tweet);
                         }
                     }
                 }
                 else
                 {
                     RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
-                    if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MAX ||
+                    if (RuntimeSettings.PotentialReTweets.Count >= POTENTIAL_TWEET_BUFFER_MIN ||
                         //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                        (RuntimeSettings.PotentialReTweets.Count > 0 && (DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS) && RuntimeSettings.PotentialReTweets.Count > 0)))
+                        (RuntimeSettings.PotentialReTweets.Count > 0 && DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS)))
                     {
                         var tweet = RuntimeSettings.PotentialReTweets.OrderByDescending(t => t.TweetRank).First();
                         var groups = RuntimeSettings.Tweeted
@@ -280,7 +281,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 {
                     tweet.PopulateExtendedData();
                     var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
-                    if (link != null && 
+                    if (link != null &&
                         ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0 && //Cant Contain an Ignore Word
                         (friendsAndFollows.Contains(tweet.User.Identifier.ID) || !link.Uri.ToString().Contains(tweet.User.Url)) //Can not be from same url as user tweeting this, unless you are a friend
                         )
@@ -377,92 +378,36 @@ namespace Postworthy.Tasks.Bot.Streaming
         {
             log.WriteLine("****************************");
             log.WriteLine("****************************");
-            if (RuntimeSettings.Tweeted.Count() > 0)
-            {
-                log.WriteLine("####################");
-                log.WriteLine("{0}: Past Tweets: {1}",
-                    DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Tweeted.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText).Reverse<string>().Take(10)));
-                log.WriteLine("####################");
-            }
-            if (RuntimeSettings.PotentialTweets.Count() > 0)
-            {
-                log.WriteLine("####################");
-                log.WriteLine("{0}: Potential Tweets: {1}",
-                    DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialTweets.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
-                log.WriteLine("####################");
-            }
-            if (RuntimeSettings.PotentialReTweets.Count() > 0)
-            {
-                log.WriteLine("####################");
-                log.WriteLine("{0}: Potential Retweets: {1}",
-                    DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialReTweets.Select(x => (x.RetweetCount + 1) + ":" + x.TweetText)));
-                log.WriteLine("####################");
-            }
-            if (RuntimeSettings.PotentialFriendRequests.Count() > 0)
-            {
-                log.WriteLine("####################");
-                log.WriteLine("{0}: Potential Friend Requests: {1}",
-                    DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.PotentialFriendRequests
-                        .OrderByDescending(x => x.Key.User.FollowersCount.ToString().Length)
-                        .ThenByDescending(x => x.Count)
-                        .ThenBy(x => x.Key.ScreenName)
-                        .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
-                log.WriteLine("####################");
-            }
-            if (RuntimeSettings.TwitterFollowSuggestions.Count() > 0)
-            {
-                log.WriteLine("####################");
-                log.WriteLine("{0}: Twitter Friend Suggestions: {1}",
-                    DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.TwitterFollowSuggestions
-                        .OrderByDescending(x => x.User.FollowersCount.ToString().Length)
-                        .ThenBy(x => x.ScreenName)
-                        .Select(x => x)));
-                log.WriteLine("####################");
-            }
-            if (RuntimeSettings.Keywords.Count() > 0)
-            {
-                log.WriteLine("####################");
-                log.WriteLine("{0}: Keywords: {1}",
-                    DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.Keywords
-                        //.Concat(RuntimeSettings.KeywordSuggestions.Where(x => x.Count >= MINIMUM_KEYWORD_COUNT))
-                        .OrderByDescending(x => x.Count)
-                        .ThenByDescending(x => x.Key)
-                        .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
-                log.WriteLine("####################");
-            }
-            if (RuntimeSettings.KeywordSuggestions.Count() > 0)
-            {
-                log.WriteLine("####################");
-                log.WriteLine("{0}: Keyword Suggestions: {1}",
-                    DateTime.Now,
-                    Environment.NewLine + "\t" + string.Join(Environment.NewLine + "\t", RuntimeSettings.KeywordSuggestions
-                        //.Where(x => x.Count < MINIMUM_KEYWORD_COUNT)
-                        .OrderByDescending(x => x.Count)
-                        .ThenByDescending(x => x.Key)
-                        .Select(x => x.Count.ToString().PadLeft(3, '0') + "\t" + x.Key)));
-                log.WriteLine("####################");
-            }
-
-            log.WriteLine("####################");
+            log.WriteLine("{0}: Past Tweets: {1}",
+                DateTime.Now,
+                RuntimeSettings.Tweeted.Count);
+            log.WriteLine("{0}: Potential Tweets: {1}",
+                DateTime.Now,
+                RuntimeSettings.PotentialTweets.Count);
+            log.WriteLine("{0}: Potential Retweets: {1}",
+                DateTime.Now,
+                RuntimeSettings.PotentialReTweets.Count);
+            log.WriteLine("{0}: Potential Friend Requests: {1}",
+                DateTime.Now,
+                RuntimeSettings.PotentialFriendRequests.Count);
+            log.WriteLine("{0}: Twitter Friend Suggestions: {1}",
+                DateTime.Now,
+                RuntimeSettings.TwitterFollowSuggestions.Count);
+            log.WriteLine("{0}: Keywords: {1}",
+                DateTime.Now,
+                RuntimeSettings.Keywords.Count);
+            log.WriteLine("{0}: Keyword Suggestions: {1}",
+                DateTime.Now,
+                RuntimeSettings.KeywordSuggestions.Count);
             log.WriteLine("{0}: Minimum Weight: {1:F5}",
                 DateTime.Now,
                 GetMinWeight());
-
             log.WriteLine("{0}: Minimum Retweets: {1:F2}",
                 DateTime.Now,
                 GetMinRetweets());
-
             log.WriteLine("{0}: Running {1}",
                 DateTime.Now,
                 SimulationMode ? "**In Simulation Mode**" : "**In the Wild**");
-            log.WriteLine("####################");
-
             log.WriteLine("****************************");
             log.WriteLine("****************************");
         }
@@ -726,10 +671,11 @@ namespace Postworthy.Tasks.Bot.Streaming
             var manuallyAddedWords = RuntimeSettings.KeywordsToIgnore.Concat(RuntimeSettings.KeywordsManuallyAdded).Select(x => x.ToLower());
 
             //Get Current Keyword Counts
-            var currentKeywords = manuallyAddedWords.Select(maw => 
-                new { 
+            var currentKeywords = manuallyAddedWords.Select(maw =>
+                new
+                {
                     Word = maw,
-                    Count = tweets.Select(t=>t.TweetText).Select(t => new Regex(maw).Matches(t).Count).Sum() 
+                    Count = tweets.Select(t => t.TweetText).Select(t => new Regex(maw).Matches(t).Count).Sum()
                 }).ToList();
 
             //Update Master Keyword List
@@ -768,7 +714,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 )       # End of capturing group 1.
                 (?=     # Assert that there follows...
                  (\w+)  # another word; capture that into backref 2.
-                )       # End of lookahead.", 
+                )       # End of lookahead.",
                 RegexOptions.IgnorePatternWhitespace);
             foreach (var t in cleanedTweets)
             {
@@ -782,7 +728,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                         match.Count++;
                     else
                         wordPairs.Add(new CountableItem<string>(pair, 1));
-                    
+
                     matchResult = matchResult.NextMatch();
                 }
             }
@@ -883,6 +829,9 @@ namespace Postworthy.Tasks.Bot.Streaming
                 {
                     switch (command.Command)
                     {
+                        case BotCommand.CommandType.Refresh:
+                            //We dont have to do anything since the data is saved to repo below...
+                            break;
                         case BotCommand.CommandType.AddKeyword:
                             if (!RuntimeSettings.KeywordsManuallyAdded.Contains(command.Value))
                             {
@@ -900,7 +849,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                                 RuntimeSettings.Keywords.Remove(RuntimeSettings.Keywords.Where(x => x.Key == command.Value).FirstOrDefault());
 
                                 var shouldResetKeywords = RuntimeSettings.KeywordsManuallyAdded.Remove(command.Value);
-                                 //|| RuntimeSettings.KeywordSuggestions.Remove(RuntimeSettings.KeywordSuggestions.Where(x => x.Key == command.Value).FirstOrDefault());
+                                //|| RuntimeSettings.KeywordSuggestions.Remove(RuntimeSettings.KeywordSuggestions.Where(x => x.Key == command.Value).FirstOrDefault());
 
                                 if (shouldResetKeywords)
                                     hasNewKeywordSuggestions = true;
