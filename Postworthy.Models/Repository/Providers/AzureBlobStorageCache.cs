@@ -80,7 +80,7 @@ namespace Postworthy.Models.Repository.Providers
         {
             return container.GetDirectoryReference(key)
                 .ListBlobs().Cast<CloudBlockBlob>()
-                .Reverse<CloudBlockBlob>()
+                .OrderByDescending(b=>b.Properties.LastModified)
                 .Take(limit)
                 .Select(x=>DownloadBlob<TYPE>(x))
                 .ToList();

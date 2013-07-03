@@ -19,7 +19,8 @@ namespace Postworthy.Models.Twitter
             Target,
             Ignore,
             None,
-            Suggested
+            Suggested,
+            IgnoreAlways
         }
 
         private User _User;

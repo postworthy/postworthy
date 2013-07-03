@@ -27,6 +27,8 @@ namespace Postworthy.Tasks.Bot.Settings
         public List<CountableItem> Keywords { get; set; }
         public List<CountableItem> KeywordSuggestions { get; set; }
         public List<string> KeywordsToIgnore { get; set; }
+        public List<string> KeywordsManuallyAdded { get; set; }
+        public List<string> KeywordsManuallyIgnored { get; set; }
         public List<CountableItem<Tweep>> PotentialFriendRequests { get; set; }
         public List<Tweep> TwitterFollowSuggestions { get; set; }
 
@@ -36,7 +38,7 @@ namespace Postworthy.Tasks.Bot.Settings
             {
                 if (this.Tweeted != null && this.Tweeted.Count > 5)
                 {
-                    double less = Math.Max((60.0 - ((DateTime.Now - LastTweetTime).TotalMinutes / 2)) / 100.0, 0.2); //Allows us to progressivly lower the bar of what we accept over time
+                    double less = Math.Max((60.0 - ((DateTime.Now - LastTweetTime).TotalMinutes)) / 100.0, 0.1); //Allows us to progressivly lower the bar of what we accept over time
                     double stdev = 0;
                     var values = this.Tweeted.Select(x => x.RetweetCount);
                     double avg = values.Average();
@@ -70,6 +72,8 @@ namespace Postworthy.Tasks.Bot.Settings
             Keywords = new List<CountableItem>();
             KeywordSuggestions = new List<CountableItem>();
             KeywordsToIgnore = new List<string>();
+            KeywordsManuallyAdded = new List<string>();
+            KeywordsManuallyIgnored = new List<string>();
             TwitterFollowSuggestions = new List<Tweep>();
         }
 
