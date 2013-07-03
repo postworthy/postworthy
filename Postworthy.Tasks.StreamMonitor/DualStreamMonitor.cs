@@ -277,7 +277,7 @@ namespace Postworthy.Tasks.StreamMonitor
 
 
                         context.Streaming
-                            .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == track)
+                            .Where(s => s.Type == LinqToTwitter.StreamingType.Filter && s.Track == string.Join(",", trackList.Distinct()))
                             .Select(strm => strm)
                             .StreamingCallback(strm =>
                             {
@@ -408,7 +408,9 @@ namespace Postworthy.Tasks.StreamMonitor
                                                     .FirstOrDefault(x => x.Key == "friends");
 
                                                 //If this is a friends collection update we will notify you
-                                                if (jsonDataFriends.Value.IsArray)
+                                                if (!jsonDataFriends.Equals(default(KeyValuePair<string,LitJson.JsonData>)) && 
+                                                    jsonDataFriends.Value != null && 
+                                                    jsonDataFriends.Value.IsArray)
                                                 {
                                                     var friends = new List<LazyLoader<Tweep>>();
                                                     for (int i = 0; i < jsonDataFriends.Value.Count; i++)

@@ -59,3 +59,170 @@ textarea {
 .validation-summary-valid {
     display: none;
 }
+
+/* Custom for Postworthy Bot Dashboard */
+@media (max-width: 979px) {
+    body {
+        padding-top: 0;
+    }
+}
+
+.xx {
+    font-size: xx-large;
+}
+
+.tweets {
+    width: 55%;
+    border: 2px solid gray;
+    height: 40em;
+    overflow: scroll;
+    overflow-x: hidden;
+    background-color: Black;
+    color: White;
+    padding: 0.5em;
+    position: relative;
+}
+
+    .tweets table {
+        border-width: 0;
+    }
+
+    .tweets tr {
+        vertical-align: top;
+    }
+
+    .tweets td {
+        padding: 0.4em 0.3em 1em 0.4em;
+        border-width: 0;
+    }
+
+    .tweets img {
+        width: 4em;
+    }
+
+.tweetInfo {
+    color: Gray;
+    font-size: 0.9em;
+}
+
+.twitterUser {
+    color: #77AAFF;
+    text-decoration: none;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.wid {
+    width: 150px;
+}
+
+.thumbnail {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.thumbnail * {
+    position: relative;
+    z-index: 100;
+}
+
+.thumbnail-bg {
+    z-index:2;
+    width: 100%;
+    height: 100%;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%
+}
+    .thumbnail-bg.lower-right {
+        width: 40%;
+        height: 40%;
+    }
+
+    .thumbnail-bg.lower-right.rounded {
+        width: 75px;
+        height: 75px;
+        -moz-border-radius: 50%;
+        border-radius: 50%;
+        margin-right:5px;
+        margin-bottom:5px;
+    }
+
+    .thumbnail-bg.translucent {
+        opacity: 0.2;
+        filter: alpha(opacity = 20);
+    }
+
+    .thumbnail-bg.semi-translucent {
+        opacity: 0.6;
+        filter: alpha(opacity = 60);
+    }
+
+    .thumbnail-bg.chart {
+        opacity: 0.7;
+        filter: alpha(opacity = 70);
+        width:210px;
+        height:210px;
+        left:50%;
+        margin-left:-105px
+    }
+
+    .thumbnail-bg.bars {
+        opacity: 0.7;
+        filter: alpha(opacity = 70);
+        width:100%;
+        height:210px;
+        overflow: hidden;
+    }
+
+    .thumbnail-bg.fill {
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
+
+.centered {
+    text-align: center;
+}
+
+.dashboardWidget {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+    .dashboardWidget a {
+        color: rgba(255, 255, 255, 0.7);
+        z-index:100;
+        position:relative;
+    }
+
+    .dashboardWidget.lightblue {
+        background-color: #12b0c5;
+    }
+
+    .dashboardWidget.darkblue {
+        background-color: #254fce;
+    }
+
+    .dashboardWidget.brightgreen {
+        background-color: #10dc34;
+    }
+
+    .dashboardWidget.brightorange {
+        background-color: #ff8413;
+    }
+
+    .dashboardWidget.brightred {
+        background-color: #ff2413;
+    }
+
+.icon-profile-image {
+background-position: 0 0;
+width: 24px;
+height: 24px;
+margin-top: -5px;
+}

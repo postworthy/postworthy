@@ -16,7 +16,41 @@ namespace Postworthy.Web.Bot.Controllers
         [AuthorizePrimaryUser]
         public ActionResult Index()
         {
-            var model = new DashboardModel(UsersCollection.Single(User.Identity.Name));
+            ViewBag.IsDashboardSection = true;
+            var user = UsersCollection.Single(User.Identity.Name);
+            var model = new DashboardModel(user);
+            return View(model);
+        }
+
+        public ActionResult Tweets()
+        {
+            ViewBag.IsTweetsSection = true;
+            var user = UsersCollection.Single(User.Identity.Name);
+            var model = new DashboardModel(user);
+            return View(model);
+        }
+
+        public ActionResult Charts()
+        {
+            ViewBag.IsChartsSection = true;
+            var user = UsersCollection.Single(User.Identity.Name);
+            var model = new DashboardModel(user);
+            return View(model);
+        }
+
+        public ActionResult PotentialFriends()
+        {
+            ViewBag.IsChartsSection = true;
+            var user = UsersCollection.Single(User.Identity.Name);
+            var model = new DashboardModel(user);
+            return View(model);
+        }
+
+        public ActionResult SuggestedFriends()
+        {
+            ViewBag.IsChartsSection = true;
+            var user = UsersCollection.Single(User.Identity.Name);
+            var model = new DashboardModel(user);
             return View(model);
         }
 

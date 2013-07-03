@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Drawing;
 using Newtonsoft.Json;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Postworthy.Models.Twitter
 {
@@ -340,6 +341,11 @@ namespace Postworthy.Models.Twitter
             return GenericEqualityComparerFactory<Tweet>.Build(
                 (x, y) => x.IsEqual(y),
                 x => x.TweetText.GetHashCode());
+        }
+
+        public Tweet Clone()
+        {
+            return JsonConvert.DeserializeObject<Tweet>(JsonConvert.SerializeObject(this));
         }
     }
 }
