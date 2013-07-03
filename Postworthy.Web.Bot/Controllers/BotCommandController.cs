@@ -21,6 +21,12 @@ namespace Postworthy.Web.Bot.Controllers
             }
         }
         private Repository<BotCommand> commandRepo = Repository<BotCommand>.Instance;
+        public JsonResult Refresh()
+        {
+            var command = new BotCommand() { Value = DateTime.Now.ToString(), Command = BotCommand.CommandType.Refresh };
+            commandRepo.Save(RepoKey, command);
+            return Json(command, JsonRequestBehavior.AllowGet);
+        }
         public JsonResult RemovePotentialTweet(string id)
         {
             var command = new BotCommand() { Value = id, Command = BotCommand.CommandType.RemovePotentialTweet };
