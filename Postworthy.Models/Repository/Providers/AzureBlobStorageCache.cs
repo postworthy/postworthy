@@ -76,14 +76,16 @@ namespace Postworthy.Models.Repository.Providers
                 ?? new StorageEntityIndex(key);
         }
 
-        public override List<TYPE> Get(string key, int limit)
+        public override IEnumerable<TYPE> Get(string key)
         {
-            return container.GetDirectoryReference(key)
+            var items = container.GetDirectoryReference(key)
                 .ListBlobs().Cast<CloudBlockBlob>()
-                .OrderByDescending(b=>b.Properties.LastModified)
-                .Take(limit)
-                .Select(x=>DownloadBlob<TYPE>(x))
-                .ToList();
+                .OrderByDescending(b => b.Properties.LastModified);
+
+            foreach (var item in items)
+            {
+                yield return DownloadBlob<TYPE>(item);
+            }
         }
 
         public override void Store(string key, TYPE obj)

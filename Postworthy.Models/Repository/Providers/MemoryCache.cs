@@ -30,14 +30,20 @@ namespace Postworthy.Models.Repository.Providers
             if (this.ChangeHandler == null) throw new ArgumentNullException("ChangeHandler");
         }
 
-        public override List<TYPE> Get(string key, int limit)
+        public override IEnumerable<TYPE> Get(string key)
         {
             key = key.ToLower();
             var objects = LocalCache[key] as List<TYPE>;
             if (objects != null)
-                return objects.Reverse<TYPE>().Take(limit).ToList();
+            {
+                var items = objects.Reverse<TYPE>();
+                foreach (var item in items)
+                {
+                    yield return item;
+                }
+            }
             else
-                return null;
+                yield return null;
         }
 
         public override void Store(string key, TYPE obj)

@@ -86,47 +86,33 @@ namespace Postworthy.Models.Repository.Providers
             return Deserialize<List<string>>(SharedCache.Get(key) as string);
         }
 
-        public override List<TYPE> Get(string key, int limit)
+        public override IEnumerable<TYPE> Get(string key)
         {
             key = key.ToLower();
             var objKeys = GetSharedCacheItemKeys(key);
             if (objKeys != null)
             {
-                var objectsWithKey = objKeys
-                    .Reverse<string>()
-                    .Take(limit > 0 ? limit : objKeys.Count)
-                    .Select(k => new { key = k, obj = Deserialize<TYPE>(SharedCache.Get(k) as string) })
-                    .ToList();
+                var items = objKeys.Reverse<string>();
 
-                var ltObjects = objectsWithKey.Where(o => o.obj == null).ToList();
-                ltObjects.Clear();
-
-                foreach (var o in objectsWithKey)
+                foreach(var item in items)
                 {
-                    if (o.obj == null)
+                    var obj = Deserialize<TYPE>(SharedCache.Get(item) as string);
+                    if(obj == null)
                     {
-                        var ltObj = Deserialize<TYPE>(GetLocal(o.key) as string);
-                        if (ltObj != null)
+                        obj = Deserialize<TYPE>(GetLocal(item) as string);
+                        if (obj != null)
                         {
                             //It is possible an object was to big for cache and you could get an error here.
                             //One possible solution could be to eat the error and always let it pull large objects from Local
                             //For Now I will leave this unhandled
-                            SharedCache.Store(StoreMode.Set, ltObj.UniqueKey.ToString(), Serialize(ltObj));
-                            ltObjects.Add(new { key = o.key, obj = ltObj });
+                            SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj));
                         }
                     }
+
+                    yield return obj;
                 }
-
-                objectsWithKey.AddRange(ltObjects);
-
-                var objects = objectsWithKey
-                    .Where(o => o.obj != null)
-                    .Select(o => o.obj);
-
-                if (objects != null)
-                    return objects.ToList();
             }
-            return null;
+            yield return null;
         }
 
         public override void Store(string key, TYPE obj)

@@ -8,7 +8,7 @@ namespace Postworthy.Models.Repository
 {
     public abstract class RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
-        public abstract List<TYPE> Get(string key, int limit);
+        public abstract IEnumerable<TYPE> Get(string key);
         public abstract void Store(string key, TYPE obj);
         public abstract void Store(string key, List<TYPE> obj);
         public abstract void Remove(string key, TYPE obj);

@@ -255,15 +255,15 @@ namespace Postworthy.Models.Repository
         }
         private List<TYPE> CheckLocalCache(string key, int limit)
         {
-            return MemoryCache.Get(key, limit);
+            return MemoryCache.Get(key).Take(limit).ToList();
         }
         private List<TYPE> CheckSharedCache(string key, int limit)
         {
-            return SharedCache.Get(key, limit);
+            return SharedCache.Get(key).Take(limit).ToList();
         }
         private List<TYPE> CheckLongTermStorage(string key, int limit)
         {
-            return LongTermStorageCache.Get(key, limit);
+            return LongTermStorageCache.Get(key).Take(limit).ToList();
         }
         private void InsertIntoLocalCache(string key, TYPE obj)
         {

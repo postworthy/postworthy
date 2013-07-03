@@ -14,7 +14,7 @@ namespace Postworthy.Models.Repository.Providers
         {
             return FileUtility.GetPath(key + ".json");
         }
-        private string Get(string key)
+        private string GetFileData(string key)
         {
             var path = GetPath(key);
             string output = null;
@@ -89,24 +89,23 @@ namespace Postworthy.Models.Repository.Providers
         private List<string> GetLongTermStorageItemKeys(string key)
         {
             key = key.ToLower();
-            return Deserialize<List<string>>(this.Get(key) as string);
+            return Deserialize<List<string>>(this.GetFileData(key) as string);
         }
 
-        public override List<TYPE> Get(string key, int limit)
+        public override IEnumerable<TYPE> Get(string key)
         {
             key = key.ToLower();
             var objKeys = GetLongTermStorageItemKeys(key);
             if (objKeys != null)
             {
-                var objects = objKeys
-                    .Reverse<string>()
-                    .Take(limit > 0 ? limit : objKeys.Count)
-                    .Select(k => Deserialize<TYPE>(this.Get(k) as string))
-                    .Where(o => o != null);
-                if (objects != null)
-                    return objects.ToList();
+                var items = objKeys.Reverse<string>();
+
+                foreach(var item in items)
+                {
+                    yield return Deserialize<TYPE>(this.GetFileData(item));
+                }
             }
-            return null;
+            yield return null;
         }
 
         public override void Store(string key, TYPE obj)

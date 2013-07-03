@@ -7,7 +7,7 @@ namespace Postworthy.Models.Repository.Providers
 {
     public class PassThroughCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
-        public override List<TYPE> Get(string key, int limit)
+        public override IEnumerable<TYPE> Get(string key)
         {
             return null;
         }
