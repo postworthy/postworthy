@@ -149,7 +149,7 @@ namespace Postworthy.Web.Bot.Models
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
             }
 
-            var commands = commandRepo.Query(CommandRepoKey, Repository<BotCommand>.Limit.Limit100, x => !x.HasBeenExecuted);
+            var commands = commandRepo.Query(CommandRepoKey, where: x => !x.HasBeenExecuted);
 
             if (commands != null)
             {

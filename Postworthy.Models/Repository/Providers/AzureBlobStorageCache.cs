@@ -88,6 +88,11 @@ namespace Postworthy.Models.Repository.Providers
             }
         }
 
+        public override TYPE Single(string collectionKey, string itemKey)
+        {
+            return DownloadBlob<TYPE>(container.GetDirectoryReference(collectionKey).GetBlockBlobReference(itemKey));
+        }
+
         public override void Store(string key, TYPE obj)
         {
             key = key.ToLower();
@@ -102,7 +107,7 @@ namespace Postworthy.Models.Repository.Providers
             UploadBlob(container.GetDirectoryReference(StorageEntityIndex.DIRECTORY_KEY).GetBlockBlobReference(key), index);
         }
 
-        public override void Store(string key, List<TYPE> obj)
+        public override void Store(string key, IEnumerable<TYPE> obj)
         {
             key = key.ToLower();
             var index = GetStorageEntityIndex(key);
@@ -112,10 +117,10 @@ namespace Postworthy.Models.Repository.Providers
             else
                 index.EntityKeys = obj.Select(x => x.UniqueKey).ToList();
 
-            obj.ForEach(o =>
+            foreach(var o in obj)
             {
                 UploadBlob(container.GetDirectoryReference(key).GetBlockBlobReference(o.UniqueKey), o);
-            });
+            }
 
             UploadBlob(container.GetDirectoryReference(StorageEntityIndex.DIRECTORY_KEY).GetBlockBlobReference(key), index);
         }
@@ -125,12 +130,12 @@ namespace Postworthy.Models.Repository.Providers
             container.GetDirectoryReference(key).GetBlockBlobReference(obj.UniqueKey).Delete();
         }
 
-        public override void Remove(string key, List<TYPE> obj)
+        public override void Remove(string key, IEnumerable<TYPE> obj)
         {
-            obj.ForEach(o =>
+            foreach(var o in obj)
             {
                 Remove(key, o);
-            });
+            }
         }
 
         #region Internal Blob Azure Classes

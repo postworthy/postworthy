@@ -46,6 +46,18 @@ namespace Postworthy.Models.Repository.Providers
                 yield return null;
         }
 
+        public override TYPE Single(string collectionKey, string itemKey)
+        {
+            var key = collectionKey.ToLower();
+            var objects = LocalCache[key] as List<TYPE>;
+            if (objects != null)
+            {
+                return objects.Where(x => x.UniqueKey == itemKey).FirstOrDefault();
+            }
+            else
+                return null;
+        }
+
         public override void Store(string key, TYPE obj)
         {
             key = key.ToLower();
@@ -65,7 +77,7 @@ namespace Postworthy.Models.Repository.Providers
             }
         }
 
-        public override void Store(string key, List<TYPE> obj)
+        public override void Store(string key, IEnumerable<TYPE> obj)
         {
             throw new NotImplementedException();
         }
@@ -79,7 +91,7 @@ namespace Postworthy.Models.Repository.Providers
                 objects.Remove(obj);
         }
 
-        public override void Remove(string key, List<TYPE> obj)
+        public override void Remove(string key, IEnumerable<TYPE> obj)
         {
             throw new NotImplementedException();
         }

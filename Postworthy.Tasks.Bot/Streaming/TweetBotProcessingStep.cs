@@ -822,7 +822,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
         private void ExecutePendingCommands()
         {
-            var unexecutedCommands = commandRepo.Query(CommandRepoKey, Repository<BotCommand>.Limit.Limit100, x => !x.HasBeenExecuted);
+            var unexecutedCommands = commandRepo.Query(CommandRepoKey, where: x => !x.HasBeenExecuted);
             if (unexecutedCommands != null)
             {
                 foreach (var command in unexecutedCommands)

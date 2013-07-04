@@ -12,12 +12,17 @@ namespace Postworthy.Models.Repository.Providers
             throw new NotImplementedException();
         }
 
+        public override TYPE Single(string collectionKey, string itemKey)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Store(string key, TYPE obj)
         {
             throw new NotImplementedException();
         }
 
-        public override void Store(string key, List<TYPE> obj)
+        public override void Store(string key, IEnumerable<TYPE> obj)
         {
             throw new NotImplementedException();
         }
@@ -27,7 +32,7 @@ namespace Postworthy.Models.Repository.Providers
             throw new NotImplementedException();
         }
 
-        public override void Remove(string key, List<TYPE> obj)
+        public override void Remove(string key, IEnumerable<TYPE> obj)
         {
             throw new NotImplementedException();
         }

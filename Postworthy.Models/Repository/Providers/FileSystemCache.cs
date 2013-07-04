@@ -102,10 +102,15 @@ namespace Postworthy.Models.Repository.Providers
 
                 foreach(var item in items)
                 {
-                    yield return Deserialize<TYPE>(this.GetFileData(item));
+                    yield return Single(key, item);
                 }
             }
             yield return null;
+        }
+
+        public override TYPE Single(string collectionKey, string itemKey)
+        {
+            return Deserialize<TYPE>(this.GetFileData(itemKey));
         }
 
         public override void Store(string key, TYPE obj)
@@ -122,7 +127,7 @@ namespace Postworthy.Models.Repository.Providers
             this.Store(key, Serialize(objects));
         }
 
-        public override void Store(string key, List<TYPE> obj)
+        public override void Store(string key, IEnumerable<TYPE> obj)
         {
             key = key.ToLower();
             var objects = GetLongTermStorageItemKeys(key);
@@ -132,10 +137,10 @@ namespace Postworthy.Models.Repository.Providers
             else
                 objects = obj.Select(x => x.UniqueKey).ToList();
 
-            obj.ForEach(o =>
+            foreach (var o in obj)
             {
                 this.Store(o.UniqueKey.ToString(), Serialize(o));
-            });
+            }
             this.Store(key, Serialize(objects));
         }
 
@@ -156,18 +161,18 @@ namespace Postworthy.Models.Repository.Providers
             }
         }
 
-        public override void Remove(string key, List<TYPE> obj)
+        public override void Remove(string key, IEnumerable<TYPE> obj)
         {
             key = key.ToLower();
             var objects = GetLongTermStorageItemKeys(key);
 
             if (objects != null)
             {
-                obj.ForEach(o =>
+                foreach (var o in obj)
                 {
                     objects.Remove(o.UniqueKey);
                     this.Remove(o.UniqueKey.ToString());
-                });
+                }
 
                 if (objects.Count > 0)
                     this.Store(key, Serialize(objects));

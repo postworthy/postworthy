@@ -12,12 +12,17 @@ namespace Postworthy.Models.Repository.Providers
             return null;
         }
 
+        public override TYPE Single(string collectionKey, string itemKey)
+        {
+            return null;
+        }
+
         public override void Store(string key, TYPE obj)
         {
             
         }
 
-        public override void Store(string key, List<TYPE> obj)
+        public override void Store(string key, IEnumerable<TYPE> obj)
         {
             
         }
@@ -27,7 +32,7 @@ namespace Postworthy.Models.Repository.Providers
             
         }
 
-        public override void Remove(string key, List<TYPE> obj)
+        public override void Remove(string key, IEnumerable<TYPE> obj)
         {
             
         }

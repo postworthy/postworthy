@@ -90,7 +90,7 @@ namespace Postworthy.Models.Twitter
                 returnTweets = cachedResponse;
             else
             {
-                var sharedResult = Repository<TweetGroup>.Instance.Query(GROUPING, (Repository<TweetGroup>.Limit)0);
+                var sharedResult = Repository<TweetGroup>.Instance.Query(GROUPING, pageSize: 1000);
                 //Check to see if we have a recent grouping available (by recent it must be within the last 30 minutes)
                 //This is what the Grouping task does for us in the background
                 var useShared = sharedResult != null && sharedResult.Count() > 0 && sharedResult[0].CreatedOn.AddMinutes(30) > DateTime.Now;
@@ -149,7 +149,7 @@ namespace Postworthy.Models.Twitter
 
             int RetweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
 
-            Expression<Func<Tweet, bool>> where = t =>
+            Func<Tweet, bool> where = t =>
                 //If there are any IDs we want to filter out
                 (excludeStatusIDs == null || !excludeStatusIDs.Contains(t.StatusID)) &&
                 //Should everything be displayed or do you only want content
@@ -159,14 +159,14 @@ namespace Postworthy.Models.Twitter
 
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
-                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
+                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
                 .OrderByDescending(t => t.TweetRank)
                 .Distinct(Tweet.GetTweetTextComparer())
                 .ToList();
 
             if(!string.IsNullOrEmpty(UsersCollection.PrimaryUser().Track))
-                tweets.AddRange(Repository<Tweet>.Instance.Query(TRACKER + TWEETS, limit: Repository<Tweet>.Limit.Limit1000, where: where) ?? new List<Tweet>());
+                tweets.AddRange(Repository<Tweet>.Instance.Query(TRACKER + TWEETS, pageSize: 1000, where: where) ?? new List<Tweet>());
 
             return tweets.Cast<ITweet>().ToList();
         }

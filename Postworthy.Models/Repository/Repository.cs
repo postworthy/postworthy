@@ -20,20 +20,6 @@ namespace Postworthy.Models.Repository
 {  
     public sealed class Repository<TYPE> where TYPE : RepositoryEntity
     {
-        public enum Limit : int
-        {
-            Limit10 = 10,
-            Limit20 = 20,
-            Limit30 = 30,
-            Limit40 = 40,
-            Limit50 = 50,
-            Limit60 = 60,
-            Limit70 = 70,
-            Limit80 = 80,
-            Limit90 = 90,
-            Limit100 = 100,
-            Limit1000 = 1000
-        }
         private static volatile Repository<TYPE> instance;
         private static object instance_lock = new object();
         private static object keynotfound_lock = new object();
@@ -48,8 +34,8 @@ namespace Postworthy.Models.Repository
         private Repository() 
         {
             MemoryCache = GetStorageProvider("OverrideLocalStorageProvider", () => { return new MemoryCache<TYPE>(QueueChange); });
-            SharedCache = GetStorageProvider("OverrideSharedStorageProvider", () => { return new DistributedSharedCache<TYPE>(); });
             LongTermStorageCache = GetStorageProvider("OverrideLongTermStorageProvider", () => { return new FileSystemCache<TYPE>(); });
+            SharedCache = GetStorageProvider("OverrideSharedStorageProvider", () => { return new DistributedSharedCache<TYPE>(LongTermStorageCache); });
 
             if (MemoryCache is MemoryCache<TYPE>)
             {
@@ -109,39 +95,31 @@ namespace Postworthy.Models.Repository
         public bool ContainsKey(string key)
         {
             key = key.ToLower();
-            var list = Find(key, triggerNotFound: false);
-            return list != null && list.Count > 0;
+            return Find(key, triggerNotFound: false).FirstOrDefault() != null;
         }
         public void RefreshLocalCache(string key)
         {
             UpdateLocalCache(key);
         }
-        public List<TYPE> Query(string key, Limit limit = Limit.Limit100, Expression<Func<TYPE, bool>> where = null)
+        public List<TYPE> Query(string key, int pageIndex = 0, int pageSize = 100, Func<TYPE, bool> where = null)
         {
             key = key.ToLower();
-            //var whereKey = where != null ? "where_" + key + "_" + where.ToString().GetHashCode() : "";
-            //var savedQuery = !string.IsNullOrEmpty(whereKey) ? Find(whereKey, triggerNotFound: false) : null;
-            //if (savedQuery == null || savedQuery.Count == 0)
-            //{
-                var objects = Find(key, (int)limit);
 
-                if (objects != null)
+            var objects = Find(key);
+
+            if (objects != null)
+            {
+                if (where != null)
                 {
-                    if (where != null)
-                    {
-                        objects = objects.Where(where.Compile()).ToList();
-            //            if(objects != null && objects.Count > 0) Save(whereKey, objects);
-                    }
-                    else
-                        objects = objects.ToList();
-
-                    return objects;
+                    objects = objects.Where(where).ToList();
                 }
                 else
-                    return null;
-            //}
-            //else 
-            //    return savedQuery;
+                    objects = objects.ToList();
+
+                return objects.Skip(pageIndex).Take((int)pageSize).ToList();
+            }
+            else
+                return null;
         }
         public void Save(string key, TYPE obj)
         {
@@ -151,14 +129,14 @@ namespace Postworthy.Models.Repository
             InsertIntoSharedCache(key, obj);
             InsertIntoLongTermStorage(key, obj);
         }
-        public void Save(string key, List<TYPE> objects)
+        public void Save(string key, IEnumerable<TYPE> objects)
         {
             key = key.ToLower();
-            objects.ForEach(o =>
+            foreach (var o in objects)
             {
                 o.RepositoryKey = key;
                 InsertIntoLocalCache(key, o);
-            });
+            }
 
             InsertIntoSharedCache(key, objects);
             InsertIntoLongTermStorage(key, objects);
@@ -166,7 +144,7 @@ namespace Postworthy.Models.Repository
         public void Delete(string key)
         {
             key = key.ToLower();
-            Delete(key, Find(key, 0, false));
+            Delete(key, Find(key, false));
             
         }
         public void Delete(string key, TYPE obj)
@@ -176,15 +154,15 @@ namespace Postworthy.Models.Repository
             DeleteFromSharedCache(key, obj);
             DeleteFromLongTermStorage(key, obj);
         }
-        public void Delete(string key, List<TYPE> objects)
+        public void Delete(string key, IEnumerable<TYPE> objects)
         {
             key = key.ToLower();
             if (objects != null)
             {
-                objects.ForEach(o =>
+                foreach (var o in objects)
                 {
                     DeleteFromLocalCache(key, o);
-                });
+                }
 
                 DeleteFromSharedCache(key, objects);
                 DeleteFromLongTermStorage(key, objects);
@@ -194,21 +172,21 @@ namespace Postworthy.Models.Repository
         {
             SaveQueue();
         }
-        private List<TYPE> UpdateLocalCache(string key, int limit = (int)Limit.Limit100, bool triggerNotFound = true)
+        private IEnumerable<TYPE> UpdateLocalCache(string key, bool triggerNotFound = true)
         {
             key = key.ToLower();
-            var objects = CheckSharedCache(key, limit);
+            var objects = CheckSharedCache(key);
 
-            if (objects == null || objects.Count == 0)
+            if (objects == null)
             {
-                objects = CheckLongTermStorage(key, limit);
+                objects = CheckLongTermStorage(key);
 
                 if (objects != null)
                 {
-                    objects.ForEach(o =>
+                    foreach(var o in objects)
                     {
                         InsertIntoLocalCache(key, o);
-                    });
+                    }
 
                     InsertIntoSharedCache(key, objects);
                 }
@@ -216,8 +194,8 @@ namespace Postworthy.Models.Repository
                 {
                     lock (keynotfound_lock)
                     {
-                        objects = CheckLocalCache(key, limit);
-                        if (objects == null || objects.Count == 0)
+                        objects = CheckLocalCache(key);
+                        if (objects == null)
                         {
                             objects = KeyNotFound(key);
                             if (objects != null)
@@ -228,42 +206,42 @@ namespace Postworthy.Models.Repository
             }
             else
             {
-                objects.ForEach(o =>
+                foreach (var o in objects)
                 {
                     InsertIntoLocalCache(key, o);
-                });
+                }
             }
 
             return objects;
         }
-        private List<TYPE> Find(string key, int limit = (int)Limit.Limit100, bool triggerNotFound = true)
+        private IEnumerable<TYPE> Find(string key, bool triggerNotFound = true)
         {
             key = key.ToLower();
             if (!string.IsNullOrEmpty(key))
             {
-                var objects = CheckLocalCache(key, limit);
+                var objects = CheckLocalCache(key);
 
-                if (objects == null || objects.Count == 0)
+                if (objects == null)
                 {
-                    objects = UpdateLocalCache(key, limit, triggerNotFound);
+                    objects = UpdateLocalCache(key, triggerNotFound);
                 }
 
-                return objects != null ? objects.Distinct().ToList() : null;
+                return objects != null ? objects.Distinct() : null;
             }
             else
                 return null;
         }
-        private List<TYPE> CheckLocalCache(string key, int limit)
+        private IEnumerable<TYPE> CheckLocalCache(string key)
         {
-            return MemoryCache.Get(key).Take(limit).ToList();
+            return MemoryCache.Get(key);
         }
-        private List<TYPE> CheckSharedCache(string key, int limit)
+        private IEnumerable<TYPE> CheckSharedCache(string key)
         {
-            return SharedCache.Get(key).Take(limit).ToList();
+            return SharedCache.Get(key);
         }
-        private List<TYPE> CheckLongTermStorage(string key, int limit)
+        private IEnumerable<TYPE> CheckLongTermStorage(string key)
         {
-            return LongTermStorageCache.Get(key).Take(limit).ToList();
+            return LongTermStorageCache.Get(key);
         }
         private void InsertIntoLocalCache(string key, TYPE obj)
         {
@@ -273,7 +251,7 @@ namespace Postworthy.Models.Repository
         {
             SharedCache.Store(key, obj);
         }
-        private void InsertIntoSharedCache(string key, List<TYPE> obj)
+        private void InsertIntoSharedCache(string key, IEnumerable<TYPE> obj)
         {
             SharedCache.Store(key, obj);
         }
@@ -281,7 +259,7 @@ namespace Postworthy.Models.Repository
         {
             LongTermStorageCache.Store(key, obj);
         }
-        private void InsertIntoLongTermStorage(string key, List<TYPE> obj)
+        private void InsertIntoLongTermStorage(string key, IEnumerable<TYPE> obj)
         {
             LongTermStorageCache.Store(key, obj);
         }
@@ -293,7 +271,7 @@ namespace Postworthy.Models.Repository
         {
             SharedCache.Remove(key, obj);
         }
-        private void DeleteFromSharedCache(string key, List<TYPE> obj)
+        private void DeleteFromSharedCache(string key, IEnumerable<TYPE> obj)
         {
             SharedCache.Remove(key, obj);
         }
@@ -301,7 +279,7 @@ namespace Postworthy.Models.Repository
         {
             LongTermStorageCache.Remove(key, obj);
         }
-        private void DeleteFromLongTermStorage(string key, List<TYPE> obj)
+        private void DeleteFromLongTermStorage(string key, IEnumerable<TYPE> obj)
         {
             LongTermStorageCache.Remove(key, obj);
         }

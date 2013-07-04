@@ -14,70 +14,12 @@ namespace Postworthy.Models.Repository.Providers
     public class DistributedSharedCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
         private MemcachedClient SharedCache;
-
-        private string GetPath(string key)
-        {
-            return FileUtility.GetPath(key + ".json");
-        }
-
-        private string GetLocal(string key)
-        {
-            var path = GetPath(key);
-            string output = null;
-            if (File.Exists(path))
-            {
-                LockFile(path, FileMode.Open, fs =>
-                {
-                    using (var reader = new StreamReader(fs))
-                    {
-                        output = reader.ReadToEnd();
-                    }
-                });
-
-                return output;
-            }
-            return "";
-        }
-
-        private static void LockFile(string path, FileMode mode, Action<FileStream> action)
-        {
-            var autoResetEvent = new AutoResetEvent(false);
-
-            while (true)
-            {
-                try
-                {
-                    using (var file = File.Open(path, mode, FileAccess.ReadWrite, FileShare.Write))
-                    {
-                        action(file);
-                        break;
-                    }
-                }
-                catch (IOException)
-                {
-                    var fileSystemWatcher =
-                        new FileSystemWatcher(Path.GetDirectoryName(path))
-                        {
-                            EnableRaisingEvents = true
-                        };
-
-                    fileSystemWatcher.Changed +=
-                        (o, e) =>
-                        {
-                            if (Path.GetFullPath(e.FullPath) == Path.GetFullPath(path))
-                            {
-                                autoResetEvent.Set();
-                            }
-                        };
-
-                    autoResetEvent.WaitOne();
-                }
-            }
-        }
-
-        public DistributedSharedCache()
+        private RepositoryStorageProvider<TYPE> LongTermStorage;
+        
+        public DistributedSharedCache(RepositoryStorageProvider<TYPE> longTerm)
         {
             SharedCache = new MemcachedClient();
+            LongTermStorage = longTerm;
         }
 
         private List<string> GetSharedCacheItemKeys(string key)
@@ -96,23 +38,27 @@ namespace Postworthy.Models.Repository.Providers
 
                 foreach(var item in items)
                 {
-                    var obj = Deserialize<TYPE>(SharedCache.Get(item) as string);
-                    if(obj == null)
-                    {
-                        obj = Deserialize<TYPE>(GetLocal(item) as string);
-                        if (obj != null)
-                        {
-                            //It is possible an object was to big for cache and you could get an error here.
-                            //One possible solution could be to eat the error and always let it pull large objects from Local
-                            //For Now I will leave this unhandled
-                            SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj));
-                        }
-                    }
-
-                    yield return obj;
+                    yield return Single(key, item);
                 }
             }
             yield return null;
+        }
+
+        public override TYPE Single(string collectionKey, string itemKey)
+        {
+            var obj = Deserialize<TYPE>(SharedCache.Get(itemKey) as string);
+            if (obj == null)
+            {
+                obj = LongTermStorage.Single(collectionKey, itemKey);
+                if (obj != null)
+                {
+                    //It is possible an object was to big for cache and you could get an error here.
+                    //One possible solution could be to eat the error and always let it pull large objects from Local
+                    //For Now I will leave this unhandled
+                    SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj));
+                }
+            }
+            return obj;
         }
 
         public override void Store(string key, TYPE obj)
@@ -140,7 +86,7 @@ namespace Postworthy.Models.Repository.Providers
                 SharedCache.Store(StoreMode.Set, key, Serialize(objects));
         }
 
-        public override void Store(string key, List<TYPE> obj)
+        public override void Store(string key, IEnumerable<TYPE> obj)
         {
             key = key.ToLower();
             var objects = GetSharedCacheItemKeys(key);
@@ -150,7 +96,7 @@ namespace Postworthy.Models.Repository.Providers
             else
                 objects = obj.Select(x => x.UniqueKey).ToList();
 
-            obj.ForEach(o =>
+            foreach (var o in obj)
             {
                 try
                 {
@@ -162,7 +108,7 @@ namespace Postworthy.Models.Repository.Providers
 
                     objects.Remove(o.UniqueKey);
                 }
-            });
+            }
             if (objects.Count > 0) 
                 SharedCache.Store(StoreMode.Set, key, Serialize(objects));
         }
@@ -184,18 +130,18 @@ namespace Postworthy.Models.Repository.Providers
             }
         }
 
-        public override void Remove(string key, List<TYPE> obj)
+        public override void Remove(string key, IEnumerable<TYPE> obj)
         {
             key = key.ToLower();
             var objects = GetSharedCacheItemKeys(key);
 
             if (objects != null)
             {
-                obj.ForEach(o =>
+                foreach (var o in obj)
                 {
                     objects.Remove(o.UniqueKey);
                     SharedCache.Remove(o.UniqueKey.ToString());
-                });
+                }
 
                 if (objects.Count > 0)
                     SharedCache.Store(StoreMode.Set, key, Serialize(objects));

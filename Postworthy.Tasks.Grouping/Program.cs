@@ -45,7 +45,7 @@ namespace Postworthy.Tasks.Grouping
 
             int RetweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
 
-            Expression<Func<Tweet, bool>> where = t =>
+            Func<Tweet, bool> where = t =>
                 //Should everything be displayed or do you only want content
                 (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) &&
                     //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
@@ -56,7 +56,7 @@ namespace Postworthy.Tasks.Grouping
 
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
-                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TwitterModel.TWEETS, limit: Repository<Tweet>.Limit.Limit100, where: where) ?? new List<Tweet>())
+                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TwitterModel.TWEETS, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank (TweetRank takes into acount many important factors, i.e. - time, mentions, hotness, ect.)
                 .OrderByDescending(t => t.TweetRank)
                 //Just to make sure we are not trying to group a very very large number of items
