@@ -13,7 +13,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Postworthy.Models.Twitter
 {
-    public class Tweet : RepositoryEntity, ISimilarText, ISimilarImage, ITweet, IEquatable<Tweet>
+    public class Tweet : RepositoryEntity, ISimilarText, ISimilarImage, ISimilarLinks, ITweet, IEquatable<Tweet>
     {
         private Status _Status;
 

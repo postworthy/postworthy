@@ -283,7 +283,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                     var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
                     if (link != null &&
                         ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0 && //Cant Contain an Ignore Word
-                        (friendsAndFollows.Contains(tweet.User.Identifier.ID) || !link.Uri.ToString().Contains(tweet.User.Url)) //Can not be from same url as user tweeting this, unless you are a friend
+                        (tweet.User.Url == null || !link.Uri.ToString().Contains(tweet.User.Url) || friendsAndFollows.Contains(tweet.User.Identifier.ID)) //Can not be from same url as user tweeting this, unless you are a friend
                         )
                     {
                         string statusText = !link.Title.ToLower().StartsWith("http") ?

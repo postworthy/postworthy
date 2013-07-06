@@ -99,6 +99,7 @@
     <Compile Include="Core\ISimilarImage.cs" />
     <Compile Include="Core\CustomTaskScheduler.cs" />
     <Compile Include="Core\FileUtility.cs" />
+    <Compile Include="Core\ISimilarLinks.cs" />
     <Compile Include="Core\LazyLoader.cs" />
     <Compile Include="Repository\Providers\AzureBlobStorageCache.cs" />
     <Compile Include="Repository\Providers\DistributedSharedCache.cs" />

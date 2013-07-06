@@ -18,7 +18,7 @@ namespace Postworthy.Models.Core
         private const decimal GOOD = .46M;
         private const decimal STRONG = .75M;
 
-        private class SimilarObject<T> where T : ISimilarText, ISimilarImage
+        private class SimilarObject<T> where T : ISimilarText, ISimilarImage, ISimilarLinks
         {
             public T Object { get; set; }
             public T ParentObject { get; set; }
@@ -26,13 +26,13 @@ namespace Postworthy.Models.Core
             public int PassNumber { get; set; }
         }
 
-        public class SimilarObjects<T> : List<T>, IGrouping<T, T> where T : ISimilarText, ISimilarImage
+        public class SimilarObjects<T> : List<T>, IGrouping<T, T> where T : ISimilarText, ISimilarImage, ISimilarLinks
         {
             public T Key { get; set; }
         }
 
 
-        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t, decimal MinSimilarity = GOOD, TextWriter log = null) where T : ISimilarText, ISimilarImage
+        public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t, decimal MinSimilarity = GOOD, TextWriter log = null) where T : ISimilarText, ISimilarImage, ISimilarLinks
         {
             #region Variable Definitions
             var input = t.ToList();
@@ -121,6 +121,25 @@ namespace Postworthy.Models.Core
                                     }
                                 }
                                 #endregion
+                                #region Compare Links and Assign Similarity (Pass 3)
+                                if (so[i].Object.Links != null && so[j].Object.Links != null)
+                                {
+                                    var iLinks = so[i].Object.Links.Select(x => x.Uri);
+                                    var jLinks = so[j].Object.Links.Select(x => x.Uri);
+                                    var linkCount = iLinks.Count() + jLinks.Count();
+                                    if (linkCount > 0)
+                                    {
+                                        var matchPercentage = (2.0M * iLinks.Count(x => jLinks == x)) / linkCount;
+                                        if (matchPercentage != 0)
+                                        {
+                                            so[j].ParentObject = so[i].Object;
+                                            so[j].SimilarityIndex = matchPercentage;
+                                            so[j].PassNumber = 3;
+                                            break;
+                                        }
+                                    }
+                                }
+                                #endregion
                             }
                         }
                     }
@@ -129,11 +148,12 @@ namespace Postworthy.Models.Core
 
                 if (log != null)
                 {
-                    log.WriteLine("{0}: [GroupSimilar] Compared {1} items and found {2} with similar text and {3} with similar images", 
+                    log.WriteLine("{0}: [GroupSimilar] Compared {1} items and found {2} with similar text, {3} with similar images, and {4} with similar links", 
                         DateTime.Now, 
                         soLength, 
                         so.Count(x=>x.PassNumber == 1),
-                        so.Count(x => x.PassNumber == 2));
+                        so.Count(x => x.PassNumber == 2),
+                        so.Count(x => x.PassNumber == 3));
                 }
             }
             #endregion
