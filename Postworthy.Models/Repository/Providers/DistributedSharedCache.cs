@@ -13,13 +13,17 @@ namespace Postworthy.Models.Repository.Providers
 {
     public class DistributedSharedCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
+        private const string SPLIT_BY = "\u271D\u271D";
         private MemcachedClient SharedCache;
         private RepositoryStorageProvider<TYPE> LongTermStorage;
+        private TimeSpan ItemTTL;
         
-        public DistributedSharedCache(RepositoryStorageProvider<TYPE> longTerm)
+        public DistributedSharedCache(RepositoryStorageProvider<TYPE> longTerm, TimeSpan? itemTTL = null)
         {
             SharedCache = new MemcachedClient();
             LongTermStorage = longTerm;
+
+            ItemTTL = itemTTL ?? new TimeSpan(1, 0, 0);
         }
 
         private List<string> GetSharedCacheItemKeys(string key)
@@ -34,31 +38,74 @@ namespace Postworthy.Models.Repository.Providers
             var objKeys = GetSharedCacheItemKeys(key);
             if (objKeys != null)
             {
-                var items = objKeys.Reverse<string>();
-
-                foreach(var item in items)
+                var items = objKeys.Reverse<string>().ToList();
+                if (items.Count > 0)
                 {
-                    yield return Single(key, item);
+                    foreach (var item in items)
+                    {
+                        yield return Single(key, item);
+                    }
                 }
             }
-            yield return null;
+
+            yield break;
         }
 
         public override TYPE Single(string collectionKey, string itemKey)
         {
-            var obj = Deserialize<TYPE>(SharedCache.Get(itemKey) as string);
+            var obj = SharedCache.Get(itemKey + "_0") as string;
             if (obj == null)
             {
-                obj = LongTermStorage.Single(collectionKey, itemKey);
-                if (obj != null)
+                var ltobj = LongTermStorage.Single(collectionKey, itemKey);
+                if (ltobj != null)
                 {
-                    //It is possible an object was to big for cache and you could get an error here.
-                    //One possible solution could be to eat the error and always let it pull large objects from Local
-                    //For Now I will leave this unhandled
-                    SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj));
+                    StoreSingle(ltobj);
+                }
+                return ltobj;
+            }
+            else
+            {
+                var split = obj.Split(new string[] { SPLIT_BY }, StringSplitOptions.RemoveEmptyEntries);
+                int next = int.Parse(split[0]);
+                if (next == 0)
+                    return Deserialize<TYPE>(split[1]);
+                else
+                {
+                    var bigObj = split[1];
+                    while (next > 0)
+                    {
+                        var temp = SharedCache.Get(itemKey + "_" + next) as string;
+                        split = temp.Split(new string[] { SPLIT_BY }, StringSplitOptions.RemoveEmptyEntries);
+                        next = int.Parse(split[0]);
+                        bigObj += split[1];
+                    }
+
+                    return Deserialize<TYPE>(bigObj);
                 }
             }
-            return obj;
+        }
+
+        private void StoreSingle(TYPE obj)
+        {
+            int chunkSize = 512*1000;
+            var serializedData = Serialize(obj);
+            List<string> chunks = new List<string>();
+            int chunkCount = (int)Math.Ceiling(serializedData.Length / ((chunkSize + ((SPLIT_BY.Length + "000".Length) * 2)) * 1.0));
+
+            if (chunkCount > 1)
+            {
+                var serializedDataCharacters = serializedData.ToList();
+                for (int i = 0; i < chunkCount; i++)
+                {
+                    var next = i + 1 < chunkCount ? i + 1 : 0;
+                    SharedCache.Store(StoreMode.Set, 
+                        obj.UniqueKey.ToString() + "_" + i, 
+                        next + SPLIT_BY + string.Join("", serializedDataCharacters.Skip(i * chunkSize).Take(chunkSize)), 
+                        ItemTTL);
+                }
+            }
+            else
+                SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString() + "_0", "0" + SPLIT_BY + serializedData, ItemTTL);
         }
 
         public override void Store(string key, TYPE obj)
@@ -73,7 +120,8 @@ namespace Postworthy.Models.Repository.Providers
 
             try
             {
-                SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj));
+                //SharedCache.Store(StoreMode.Set, obj.UniqueKey.ToString(), Serialize(obj), ItemTTL);
+                StoreSingle(obj);
             }
             catch (MemcachedException ex)
             {
@@ -83,7 +131,7 @@ namespace Postworthy.Models.Repository.Providers
             }
 
             if(objects.Count > 0) 
-                SharedCache.Store(StoreMode.Set, key, Serialize(objects));
+                SharedCache.Store(StoreMode.Set, key, Serialize(objects), ItemTTL);
         }
 
         public override void Store(string key, IEnumerable<TYPE> obj)
@@ -100,7 +148,8 @@ namespace Postworthy.Models.Repository.Providers
             {
                 try
                 {
-                    SharedCache.Store(StoreMode.Set, o.UniqueKey.ToString(), Serialize(o));
+                    //SharedCache.Store(StoreMode.Set, o.UniqueKey.ToString(), Serialize(o), ItemTTL);
+                    StoreSingle(o);
                 }
                 catch (MemcachedException ex)
                 {
@@ -109,8 +158,8 @@ namespace Postworthy.Models.Repository.Providers
                     objects.Remove(o.UniqueKey);
                 }
             }
-            if (objects.Count > 0) 
-                SharedCache.Store(StoreMode.Set, key, Serialize(objects));
+            if (objects.Count > 0)
+                SharedCache.Store(StoreMode.Set, key, Serialize(objects), ItemTTL);
         }
 
         public override void Remove(string key, TYPE obj)
@@ -124,7 +173,7 @@ namespace Postworthy.Models.Repository.Providers
                 SharedCache.Remove(obj.UniqueKey.ToString());
 
                 if (objects.Count > 0)
-                    SharedCache.Store(StoreMode.Set, key, Serialize(objects));
+                    SharedCache.Store(StoreMode.Set, key, Serialize(objects), ItemTTL);
                 else
                     SharedCache.Remove(key);
             }
@@ -144,7 +193,7 @@ namespace Postworthy.Models.Repository.Providers
                 }
 
                 if (objects.Count > 0)
-                    SharedCache.Store(StoreMode.Set, key, Serialize(objects));
+                    SharedCache.Store(StoreMode.Set, key, Serialize(objects), ItemTTL);
                 else
                     SharedCache.Remove(key);
             }

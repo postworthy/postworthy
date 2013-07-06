@@ -20,7 +20,7 @@ namespace Postworthy.Web.Bot.Controllers
                 return User.Identity.Name + "_" + COMMAND_REPO_KEY;
             }
         }
-        private Repository<BotCommand> commandRepo = Repository<BotCommand>.Instance;
+        private SimpleRepository<BotCommand> commandRepo = new SimpleRepository<BotCommand>();
         public JsonResult Refresh()
         {
             var command = new BotCommand() { Value = DateTime.Now.ToString(), Command = BotCommand.CommandType.Refresh };

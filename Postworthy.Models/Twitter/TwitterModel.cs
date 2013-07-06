@@ -39,22 +39,25 @@ namespace Postworthy.Models.Twitter
 
         private TwitterModel()
         {
-
+            /*
             #region Tweets
-            Repository<Tweet>.Instance.RefreshData += new Func<string,List<Tweet>>(key => 
+            
+            CachedRepository<Tweet>.Instance.RefreshData += new Func<string,List<Tweet>>(key => 
                 {
-                    Repository<Tweet>.Instance.RefreshLocalCache(key);
+                    CachedRepository<Tweet>.Instance.RefreshLocalCache(key);
                     return null;
                 });
+             
             #endregion
 
             #region Friends
-            Repository<Tweep>.Instance.RefreshData += new Func<string, List<Tweep>>(key =>
+            CachedRepository<Tweep>.Instance.RefreshData += new Func<string, List<Tweep>>(key =>
             {
-                Repository<Tweep>.Instance.RefreshLocalCache(key);
+                CachedRepository<Tweep>.Instance.RefreshLocalCache(key);
                 return null;
             });
             #endregion
+             */
         }
 
         public static TwitterModel Instance
@@ -90,10 +93,10 @@ namespace Postworthy.Models.Twitter
                 returnTweets = cachedResponse;
             else
             {
-                var sharedResult = Repository<TweetGroup>.Instance.Query(GROUPING, pageSize: 1000);
+                var sharedResult = CachedRepository<TweetGroup>.Instance.Query(GROUPING, pageSize: 1000);
                 //Check to see if we have a recent grouping available (by recent it must be within the last 30 minutes)
                 //This is what the Grouping task does for us in the background
-                var useShared = sharedResult != null && sharedResult.Count() > 0 && sharedResult[0].CreatedOn.AddMinutes(30) > DateTime.Now;
+                var useShared = sharedResult != null && sharedResult.Count() > 0 && sharedResult.First().CreatedOn.AddMinutes(30) > DateTime.Now;
                 if (useShared)
                 {
                     lock (tweets_lock)
@@ -159,14 +162,14 @@ namespace Postworthy.Models.Twitter
 
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
-                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TWEETS, where: where) ?? new List<Tweet>())
+                .SelectMany(x => CachedRepository<Tweet>.Instance.Query(x + TWEETS, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
                 .OrderByDescending(t => t.TweetRank)
                 .Distinct(Tweet.GetTweetTextComparer())
                 .ToList();
 
             if(!string.IsNullOrEmpty(UsersCollection.PrimaryUser().Track))
-                tweets.AddRange(Repository<Tweet>.Instance.Query(TRACKER + TWEETS, pageSize: 1000, where: where) ?? new List<Tweet>());
+                tweets.AddRange(CachedRepository<Tweet>.Instance.Query(TRACKER + TWEETS, pageSize: 1000, where: where) ?? new List<Tweet>());
 
             return tweets.Cast<ITweet>().ToList();
         }
@@ -183,12 +186,12 @@ namespace Postworthy.Models.Twitter
 
         public List<Tweep> Friends(string screenname)
         {
-            var friends = Repository<Tweep>.Instance.Query(screenname + FRIENDS);
+            var friends = CachedRepository<Tweep>.Instance.Query(screenname + FRIENDS).ToList();
             /*
             if (friends == null)
             {
                 LoadFriendCache();
-                friends = Repository<Tweep>.Instance.Find(screenname + FRIENDS);
+                friends = CachedRepository<Tweep>.Instance.Find(screenname + FRIENDS);
             }
              * */
             return friends ?? new List<Tweep>();
@@ -220,7 +223,7 @@ namespace Postworthy.Models.Twitter
                 {
                     var tweet = new Tweet(status);
                     tweet.PopulateExtendedData();
-                    Repository<Tweet>.Instance.Save(screenname + TWEETS, tweet);
+                    CachedRepository<Tweet>.Instance.Save(screenname + TWEETS, tweet);
                 }
             }
         }
@@ -243,16 +246,16 @@ namespace Postworthy.Models.Twitter
                 {
                     var friends = GetFollowers(screenname);
 
-                    if (friends != null && Repository<Tweep>.Instance.ContainsKey(screenname + FRIENDS))
+                    if (friends != null && CachedRepository<Tweep>.Instance.ContainsKey(screenname + FRIENDS))
                     {
-                        var repoFriends = Repository<Tweep>.Instance.Query(screenname + FRIENDS);
+                        var repoFriends = CachedRepository<Tweep>.Instance.Query(screenname + FRIENDS);
                         friends = friends.Except(repoFriends).ToList();
                     }
 
                     if (friends != null)
                     {
-                        Repository<Tweep>.Instance.Save(screenname + FRIENDS, friends);
-                        Repository<Tweep>.Instance.FlushChanges();
+                        CachedRepository<Tweep>.Instance.Save(screenname + FRIENDS, friends);
+                        //CachedRepository<Tweep>.Instance.FlushChanges();
                     }
                 }
                 catch { }

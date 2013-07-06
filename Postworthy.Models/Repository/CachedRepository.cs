@@ -13,10 +13,12 @@ namespace Postworthy.Models.Repository
         private static object instance_lock = new object();
         private SimpleRepository<TYPE> Storage;
         private SimpleRepository<TYPE> Cache;
-        private CachedRepository() 
+
+        protected CachedRepository() 
         {
-            Storage = SimpleRepository<TYPE>.Instance;
-            Cache = SimpleRepository<TYPE>.Instance.SetProvider(new DistributedSharedCache<TYPE>(Storage.GetProvider()));
+            Storage = new SimpleRepository<TYPE>();
+            Cache = new SimpleRepository<TYPE>()
+                .SetProvider(new DistributedSharedCache<TYPE>(Storage.GetProvider(), new TimeSpan(0, 20, 0)));
         }
 
         public static CachedRepository<TYPE> Instance
@@ -35,6 +37,11 @@ namespace Postworthy.Models.Repository
             }
         }
 
+        public void SetCacheTTL(TimeSpan itemTTL)
+        {
+            Cache.SetProvider(new DistributedSharedCache<TYPE>(Storage.GetProvider(), itemTTL));
+        }
+
         public bool ContainsKey(string key)
         {
             return Storage.ContainsKey(key);
@@ -44,10 +51,14 @@ namespace Postworthy.Models.Repository
         {
             string cacheKey = key + "_" + pageIndex + "_" + pageSize;
             var result = Cache.Query(cacheKey, 0, 0, where);
-            if (result == null)
+            if (result == null || result.FirstOrDefault() == null)
             {
-                Cache.Save(cacheKey, Storage.Query(key, pageIndex, pageSize, where));
-                result = Cache.Query(cacheKey, 0, 0, where);
+                var storedResult = Storage.Query(key, pageIndex, pageSize, where);
+                if (storedResult != null && storedResult.FirstOrDefault() != null)
+                {
+                    Cache.Save(cacheKey, storedResult);
+                    result = storedResult;
+                }
             }
 
             return result;

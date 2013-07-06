@@ -32,7 +32,7 @@ namespace Postworthy.Tasks.Update.Models
             List<Tweet> tweets = new List<Tweet>();
             screenNames.ForEach(name =>
             {
-                var t = Repository<Tweet>.Instance.Query(name + TwitterModel.TWEETS);
+                var t = CachedRepository<Tweet>.Instance.Query(name + TwitterModel.TWEETS);
                 if (t != null) tweets.AddRange(t);
             });
             if (tweets != null)

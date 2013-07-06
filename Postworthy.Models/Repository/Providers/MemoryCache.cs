@@ -36,14 +36,17 @@ namespace Postworthy.Models.Repository.Providers
             var objects = LocalCache[key] as List<TYPE>;
             if (objects != null)
             {
-                var items = objects.Reverse<TYPE>();
-                foreach (var item in items)
+                var items = objects.Reverse<TYPE>().ToList();
+                if (items.Count > 0)
                 {
-                    yield return item;
+                    foreach (var item in items)
+                    {
+                        yield return item;
+                    }
                 }
             }
-            else
-                yield return null;
+
+            yield break;
         }
 
         public override TYPE Single(string collectionKey, string itemKey)

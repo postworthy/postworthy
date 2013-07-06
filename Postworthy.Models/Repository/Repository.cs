@@ -18,9 +18,9 @@ using System.Reflection;
 
 namespace Postworthy.Models.Repository
 {  
-    public sealed class Repository<TYPE> where TYPE : RepositoryEntity
+    public sealed class __Repository<TYPE> where TYPE : RepositoryEntity
     {
-        private static volatile Repository<TYPE> instance;
+        private static volatile __Repository<TYPE> instance;
         private static object instance_lock = new object();
         private static object keynotfound_lock = new object();
         private Timer SaveTimer;
@@ -31,7 +31,7 @@ namespace Postworthy.Models.Repository
         private Dictionary<string, List<TYPE>> ChangeQueue;
         public event Func<string, List<TYPE>> KeyNotFound;
         public event Func<string, List<TYPE>> RefreshData;
-        private Repository() 
+        private __Repository() 
         {
             MemoryCache = GetStorageProvider("OverrideLocalStorageProvider", () => { return new MemoryCache<TYPE>(QueueChange); });
             LongTermStorageCache = GetStorageProvider("OverrideLongTermStorageProvider", () => { return new FileSystemCache<TYPE>(); });
@@ -77,7 +77,7 @@ namespace Postworthy.Models.Repository
                 RefreshTimer.Start();
             }
         }
-        public static Repository<TYPE> Instance
+        public static __Repository<TYPE> Instance
         {
             get 
             {
@@ -86,7 +86,7 @@ namespace Postworthy.Models.Repository
                     lock (instance_lock)
                     {
                         if (instance == null)
-                            instance = new Repository<TYPE>();
+                            instance = new __Repository<TYPE>();
                     }
                 }
                 return instance;

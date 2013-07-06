@@ -10,27 +10,11 @@ namespace Postworthy.Models.Repository
     public class SimpleRepository<TYPE> : IRepository<TYPE> 
         where TYPE : RepositoryEntity
     {
-        private static volatile SimpleRepository<TYPE> instance;
         private static object instance_lock = new object();
         private RepositoryStorageProvider<TYPE> Storage;
-        private SimpleRepository() 
+        public SimpleRepository() 
         {
             Storage = GetStorageProvider("StorageProvider", () => { return new FileSystemCache<TYPE>(); });
-        }
-        public static SimpleRepository<TYPE> Instance
-        {
-            get 
-            {
-                if (instance == null)
-                {
-                    lock (instance_lock)
-                    {
-                        if (instance == null)
-                            instance = new SimpleRepository<TYPE>();
-                    }
-                }
-                return instance;
-            }
         }
         public RepositoryStorageProvider<TYPE> GetProvider()
         {
@@ -39,7 +23,7 @@ namespace Postworthy.Models.Repository
         public SimpleRepository<TYPE> SetProvider(RepositoryStorageProvider<TYPE> provider)
         {
             Storage = provider;
-            return instance;
+            return this;
         }
         public bool ContainsKey(string key)
         {
@@ -57,7 +41,7 @@ namespace Postworthy.Models.Repository
                 if (where != null)
                     objects = objects.Where(where);
 
-                return pageSize > 0 ? objects.Skip(pageIndex).Take((int)pageSize) : objects;
+                return (pageSize > 0 ? objects.Skip(pageIndex).Take((int)pageSize) : objects).ToList();
             }
             else
                 return null;

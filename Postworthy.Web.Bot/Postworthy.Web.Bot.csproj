@@ -283,7 +283,6 @@
     <Content Include="Content\vendors\jGrowl\jgrowl.jquery.json" />
     <Content Include="Content\vendors\jGrowl\LICENSE" />
     <Content Include="Content\vendors\jGrowl\README.md" />
-    <Content Include="data.tsv" />
     <Content Include="Scripts\d3.v3.js" />
     <Content Include="Scripts\d3.v3.min.js" />
     <Content Include="Scripts\smartResize.js" />

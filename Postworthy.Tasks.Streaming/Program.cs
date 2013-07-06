@@ -129,11 +129,11 @@ namespace Postworthy.Tasks.Streaming
                             .ToList()
                             .ForEach(g =>
                         {
-                            Repository<Tweet>.Instance.Save(g.Key + TwitterModel.TWEETS, g.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
+                            CachedRepository<Tweet>.Instance.Save(g.Key + TwitterModel.TWEETS, g.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
                             Console.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, g.Count(), g.Key);
                         });
 
-                        Repository<Tweet>.Instance.FlushChanges();
+                        //CachedRepository<Tweet>.Instance.FlushChanges();
 
                         if (hubConnection != null && streamingHub != null)
                         {

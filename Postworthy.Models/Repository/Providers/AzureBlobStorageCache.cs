@@ -80,12 +80,18 @@ namespace Postworthy.Models.Repository.Providers
         {
             var items = container.GetDirectoryReference(key)
                 .ListBlobs().Cast<CloudBlockBlob>()
-                .OrderByDescending(b => b.Properties.LastModified);
+                .OrderByDescending(b => b.Properties.LastModified)
+                .ToList();
 
-            foreach (var item in items)
+            if (items.Count > 0)
             {
-                yield return DownloadBlob<TYPE>(item);
+                foreach (var item in items)
+                {
+                    yield return DownloadBlob<TYPE>(item);
+                }
             }
+
+            yield break;
         }
 
         public override TYPE Single(string collectionKey, string itemKey)

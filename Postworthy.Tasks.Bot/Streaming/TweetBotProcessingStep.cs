@@ -41,8 +41,8 @@ namespace Postworthy.Tasks.Bot.Streaming
         private TextWriter log = null;
         private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
         private TweetBotRuntimeSettings RuntimeSettings = null;
-        private Repository<TweetBotRuntimeSettings> settingsRepo = Repository<TweetBotRuntimeSettings>.Instance;
-        private Repository<BotCommand> commandRepo = Repository<BotCommand>.Instance;
+        private CachedRepository<TweetBotRuntimeSettings> settingsRepo = CachedRepository<TweetBotRuntimeSettings>.Instance;
+        private SimpleRepository<BotCommand> commandRepo = new SimpleRepository<BotCommand>();
         private bool ForceSimulationMode = false;
         private bool hasNewKeywordSuggestions = false;
         private IEnumerable<string> StopWords = null;

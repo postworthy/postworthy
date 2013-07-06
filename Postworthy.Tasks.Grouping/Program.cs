@@ -28,7 +28,7 @@ namespace Postworthy.Tasks.Grouping
             var primaryUserName = UsersCollection.PrimaryUser().TwitterScreenName;
 
             Console.WriteLine("{0}: Deleting old groups from files from storage", DateTime.Now);
-            Repository<TweetGroup>.Instance.Delete(TwitterModel.GROUPING);
+            CachedRepository<TweetGroup>.Instance.Delete(TwitterModel.GROUPING);
             /*
             var fileNames = Directory.GetFiles(FileUtility.GetPath("tweetgroup_*.json"));
             foreach (var fn in fileNames)
@@ -56,7 +56,7 @@ namespace Postworthy.Tasks.Grouping
 
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
-                .SelectMany(x => Repository<Tweet>.Instance.Query(x + TwitterModel.TWEETS, where: where) ?? new List<Tweet>())
+                .SelectMany(x => CachedRepository<Tweet>.Instance.Query(x + TwitterModel.TWEETS, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank (TweetRank takes into acount many important factors, i.e. - time, mentions, hotness, ect.)
                 .OrderByDescending(t => t.TweetRank)
                 //Just to make sure we are not trying to group a very very large number of items
@@ -78,7 +78,7 @@ namespace Postworthy.Tasks.Grouping
             Console.WriteLine("Storing data in repository");
             if (results != null && results.Count > 0)
             {
-                Repository<TweetGroup>.Instance.Save(TwitterModel.GROUPING, results);
+                CachedRepository<TweetGroup>.Instance.Save(TwitterModel.GROUPING, results);
             }
 
             var end = DateTime.Now;

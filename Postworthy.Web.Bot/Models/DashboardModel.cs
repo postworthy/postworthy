@@ -89,8 +89,8 @@ namespace Postworthy.Web.Bot.Models
         private void LoadFromRepository()
         {
             var me = new Tweep(User, Tweep.TweepType.None);
-            Repository<TweetBotRuntimeSettings> settingsRepo = Repository<TweetBotRuntimeSettings>.Instance;
-            Repository<BotCommand> commandRepo = Repository<BotCommand>.Instance;
+            CachedRepository<TweetBotRuntimeSettings> settingsRepo = CachedRepository<TweetBotRuntimeSettings>.Instance;
+            SimpleRepository<BotCommand> commandRepo = new SimpleRepository<BotCommand>();
 
             //var runtimeSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<TweetBotRuntimeSettings>(System.IO.File.OpenText("c:\\temp\\runtimesettings.demo.json.txt").ReadToEnd());
 

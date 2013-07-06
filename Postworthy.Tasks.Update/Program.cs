@@ -51,11 +51,11 @@ namespace Postworthy.Tasks.Update
                     .ToList()
                     .ForEach(g =>
                     {
-                        Repository<Tweet>.Instance.Save(g.Key + TwitterModel.TWEETS, g.Select(x => x).ToList());
+                        CachedRepository<Tweet>.Instance.Save(g.Key + TwitterModel.TWEETS, g.Select(x => x).ToList());
                         Console.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, g.Count(), g.Key);
                     });
 
-                Repository<Tweet>.Instance.FlushChanges();
+                //CachedRepository<Tweet>.Instance.FlushChanges();
             }
             else
                 tweets = new List<Tweet>();
@@ -68,11 +68,11 @@ namespace Postworthy.Tasks.Update
 
             foreach (var screenName in screenNames)
             {
-                var tweetsToUpdate = Repository<Tweet>.Instance.Query(screenName + TwitterModel.TWEETS, where: t => t.CreatedAt > DateTime.Now.AddHours(-48));
-                if (tweetsToUpdate != null && tweetsToUpdate.Count > 1)
+                var tweetsToUpdate = CachedRepository<Tweet>.Instance.Query(screenName + TwitterModel.TWEETS, where: t => t.CreatedAt > DateTime.Now.AddHours(-48));
+                if (tweetsToUpdate != null && tweetsToUpdate.Count() > 1)
                 {
                     tweetsToUpdate = tweetsToUpdate.Except(tweets).OrderByDescending(t => t.Status.CreatedAt).ToList();
-                    if (tweetsToUpdate != null && tweetsToUpdate.Count > 1)
+                    if (tweetsToUpdate != null && tweetsToUpdate.Count() > 1)
                     {
                         Console.WriteLine("{0}: Updating Retweet Counts for {1}", DateTime.Now, screenName);
                         var updatedStatuses = StatusTimeline.Get(screenName, tweetsToUpdate.First().StatusID);
@@ -100,7 +100,7 @@ namespace Postworthy.Tasks.Update
                 Console.WriteLine("{0}: Processing {1} Tweets with New Retweet Counts", DateTime.Now, updateTweets.Count);
                 tp = new TweetProcessor(updateTweets);
                 tp.Start();
-                Repository<Tweet>.Instance.FlushChanges();
+                //CachedRepository<Tweet>.Instance.FlushChanges();
             }
 
             var end = DateTime.Now;

@@ -105,7 +105,8 @@ namespace Postworthy.Models.Repository.Providers
                     yield return Single(key, item);
                 }
             }
-            yield return null;
+
+            yield break;
         }
 
         public override TYPE Single(string collectionKey, string itemKey)
