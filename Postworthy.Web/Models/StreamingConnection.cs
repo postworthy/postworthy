@@ -22,10 +22,13 @@ public class StreamingConnection : PersistentConnection
     public StreamingConnection()
         : base()
     {
-      HttpContextBase httpContextBase = new HttpContextWrapper(HttpContext.Current);
-      RouteData routeData = new RouteData();
-      routeData.Values.Add("controller", "Home");
-      HomeContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new HomeController());
+        if (HttpContext.Current != null)
+        {
+            HttpContextBase httpContextBase = new HttpContextWrapper(HttpContext.Current);
+            RouteData routeData = new RouteData();
+            routeData.Values.Add("controller", "Home");
+            HomeContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new HomeController());
+        }
     }
     protected override Task OnReceivedAsync(IRequest request, string connectionId, string data)
     {

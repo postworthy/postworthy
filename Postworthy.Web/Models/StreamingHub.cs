@@ -24,36 +24,50 @@ namespace Postworthy.Web.Models
         public StreamingHub()
             : base()
         {
-            HttpContextBase httpContextBase = new HttpContextWrapper(HttpContext.Current);
-            RouteData routeData = new RouteData();
-            routeData.Values.Add("controller", "Home");
-            HomeContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new HomeController());
+            if (HttpContext.Current != null)
+            {
+                HttpContextBase httpContextBase = new HttpContextWrapper(HttpContext.Current);
+                RouteData routeData = new RouteData();
+                routeData.Values.Add("controller", "Home");
+                HomeContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new HomeController());
 
-            routeData = new RouteData();
-            routeData.Values.Add("controller", "Mobile");
-            MobileContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new MobileController());
+                routeData = new RouteData();
+                routeData.Values.Add("controller", "Mobile");
+                MobileContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new MobileController());
+            }
         }
         
         public Task Disconnect()
         {
             return Groups.Remove(Context.ConnectionId, "web")
-                .ContinueWith(new Action<Task>(x => { Groups.Remove(Context.ConnectionId, "mobile"); }));
+                .ContinueWith(new Action<Task>(x => { Groups.Remove(Context.ConnectionId, "mobile"); }))
+                .ContinueWith(new Action<Task>(x => { Groups.Remove(Context.ConnectionId, "other"); }));
         }
 
         public Task Connect()
         {
-            if(HttpContext.Current.Request.UrlReferrer.ToString().ToLower().Contains("/mobile"))
-                return Groups.Add(Context.ConnectionId, "mobile");
+            if (HttpContext.Current != null && HttpContext.Current.Request.UrlReferrer != null)
+            {
+                if (HttpContext.Current.Request.UrlReferrer.ToString().ToLower().Contains("/mobile"))
+                    return Groups.Add(Context.ConnectionId, "mobile");
+                else
+                    return Groups.Add(Context.ConnectionId, "web");
+            }
             else
-                return Groups.Add(Context.ConnectionId, "web");
+                return Groups.Add(Context.ConnectionId, "other");
         }
 
         public Task Reconnect(IEnumerable<string> groups)
         {
-            if (HttpContext.Current.Request.UrlReferrer.ToString().ToLower().Contains("/mobile"))
-                return Groups.Add(Context.ConnectionId, "mobile");
+            if (HttpContext.Current != null && HttpContext.Current.Request.UrlReferrer != null)
+            {
+                if (HttpContext.Current.Request.UrlReferrer.ToString().ToLower().Contains("/mobile"))
+                    return Groups.Add(Context.ConnectionId, "mobile");
+                else
+                    return Groups.Add(Context.ConnectionId, "web");
+            }
             else
-                return Groups.Add(Context.ConnectionId, "web");
+                return Groups.Add(Context.ConnectionId, "other");
         }
 
         private void UpdateMobile(List<string> data)
