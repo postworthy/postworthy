@@ -6,6 +6,7 @@ using System.Web;
 using System.IO;
 using System.Xml.Serialization;
 using System.Configuration;
+using Postworthy.Models.Repository;
 
 namespace Postworthy.Models.Account
 {
@@ -15,7 +16,15 @@ namespace Postworthy.Models.Account
 
         public static PostworthyUser PrimaryUser()
         {
-            return Single(ConfigurationManager.AppSettings["PrimaryUser"]);
+            var userName = ConfigurationManager.AppSettings["PrimaryUser"];
+
+            if(string.IsNullOrEmpty(userName) && HttpContext.Current != null)
+                userName = HttpContext.Current.User.Identity.Name;
+
+            if (!string.IsNullOrEmpty(userName))
+                return Single(userName);
+            else 
+                return null;
         }
 
         public static PostworthyUser Single(string ScreenName, bool force = false, bool addIfNotFound = false)
@@ -23,7 +32,16 @@ namespace Postworthy.Models.Account
             return All(force).SingleOrDefault(x => x.TwitterScreenName.ToLower() == ScreenName.ToLower()) ?? ((addIfNotFound) ? Add(ScreenName) : null);
         }
 
-        public static List<PostworthyUser> All(bool force = false)
+        private static bool IsPullingFromRepo()
+        {
+            var path = ConfigurationManager.AppSettings["UsersCollection"] ?? "";
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                return false;
+            else
+                return true;
+        }
+
+        private static List<PostworthyUser> All(bool force = false)
         {
             if (force) HttpRuntime.Cache.Remove("PostworthyUsers");
             var model = HttpRuntime.Cache["PostworthyUsers"] as List<PostworthyUser>;
@@ -34,15 +52,21 @@ namespace Postworthy.Models.Account
                     model = HttpRuntime.Cache["PostworthyUsers"] as List<PostworthyUser>;
                     if (model == null)
                     {
-                        var serializer = new XmlSerializer(typeof(List<PostworthyUser>));
-                        using (var fs = new FileStream(ConfigurationManager.AppSettings["UsersCollection"], FileMode.Open))
+                        if (IsPullingFromRepo())
+                            model = CachedRepository<PostworthyUser>.Instance.Query("UsersCollection", 0, 0).ToList();
+                        else
                         {
-                            try
+                            var serializer = new XmlSerializer(typeof(List<PostworthyUser>));
+                            using (var fs = new FileStream(ConfigurationManager.AppSettings["UsersCollection"], FileMode.Open))
                             {
-                                model = (List<PostworthyUser>)serializer.Deserialize(fs);
+                                try
+                                {
+                                    model = (List<PostworthyUser>)serializer.Deserialize(fs);
+                                }
+                                catch { }
                             }
-                            catch { }
                         }
+
                         HttpRuntime.Cache["PostworthyUsers"] = model;
                     }
                 }
@@ -62,13 +86,21 @@ namespace Postworthy.Models.Account
         {
             lock (locker)
             {
-                var serializer = new XmlSerializer(typeof(List<PostworthyUser>));
-                using (TextWriter writer = new StreamWriter(ConfigurationManager.AppSettings["UsersCollection"]))
+                var model = HttpRuntime.Cache["PostworthyUsers"] as List<PostworthyUser>;
+
+                if (IsPullingFromRepo())
                 {
-                    var model = HttpRuntime.Cache["PostworthyUsers"] as List<PostworthyUser>;
-                    serializer.Serialize(writer, model);
-                    writer.Flush();
-                    writer.Close();
+                    CachedRepository<PostworthyUser>.Instance.Save("UsersCollection", model);
+                }
+                else
+                {
+                    var serializer = new XmlSerializer(typeof(List<PostworthyUser>));
+                    using (TextWriter writer = new StreamWriter(ConfigurationManager.AppSettings["UsersCollection"]))
+                    {
+                        serializer.Serialize(writer, model);
+                        writer.Flush();
+                        writer.Close();
+                    }
                 }
             }
         }

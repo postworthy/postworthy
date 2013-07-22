@@ -5,11 +5,12 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Xml.Serialization;
+using Postworthy.Models.Repository;
 
 namespace Postworthy.Models.Account
 {
     [Serializable]
-    public class PostworthyUser
+    public class PostworthyUser : RepositoryEntity
     {
         [Required]
         [Display(Name = "Site Name")]
@@ -70,6 +71,16 @@ namespace Postworthy.Models.Account
             {
                 return TwitterScreenName.ToLower() == ConfigurationManager.AppSettings["PrimaryUser"].ToLower();
             }
+        }
+
+        public override string UniqueKey
+        {
+            get { return this.TwitterScreenName; }
+        }
+
+        public override bool IsEqual(RepositoryEntity other)
+        {
+            return other.UniqueKey == this.UniqueKey;
         }
     }
 }
