@@ -9,12 +9,14 @@ using System.Net.Sockets;
 using System.Net;
 using System.Configuration;
 using System.IO;
+using Postworthy.Models.Communication;
+using Postworthy.Tasks.Bot.Models;
+using System.Threading;
 
 namespace Postworthy.Tasks.Bot
 {
     class Program
     {
-        private const int TCP_PORT = 49152;
         static void Main(string[] args)
         {
             if (!EnsureSingleLoad())
@@ -23,10 +25,20 @@ namespace Postworthy.Tasks.Bot
                 return;
             }
 
+            var botClient = new BotClient(HandleBotManagerCommunication);
+            botClient.Start();
+
             if (UsersCollection.PrimaryUser() == null)
             {
                 Console.WriteLine("{0}: No Primary User Found", DateTime.Now);
-                ListenForPrimaryUser();
+                Console.Write("{0}: Waiting For PrimaryUser to be Set by BotManager", DateTime.Now);
+                while (UsersCollection.PrimaryUser() == null)
+                {
+                    Thread.Sleep(1000);
+                    Console.Write(".");
+                }
+                Console.WriteLine("");
+                Console.WriteLine("{0}: BotManager Set PrimaryUser to be {1}", DateTime.Now, UsersCollection.PrimaryUser().TwitterScreenName);
             }
 
             var streamMonitor = new DualStreamMonitor(Console.Out);
@@ -36,36 +48,21 @@ namespace Postworthy.Tasks.Bot
             streamMonitor.Stop();
         }
 
-        private static void ListenForPrimaryUser()
+        private static void HandleBotManagerCommunication(KeyValuePair<string,string> command)
         {
-            Console.WriteLine("{0}: Waiting For BotManager", DateTime.Now);
-            var listener = new TcpListener(IPAddress.Any, TCP_PORT);
-            listener.Start();
-            while (UsersCollection.PrimaryUser() == null)
+            switch (command.Key.ToLower())
             {
-                var client = listener.AcceptTcpClient();
-                var stream = new StreamReader(client.GetStream());
-                var data = new byte[4096];
-                try
-                {
-                    var message = stream.ReadLine();
-
-                    if (!string.IsNullOrEmpty(message) && message.StartsWith("PrimaryUser:"))
-                    {
-                        Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                        config.AppSettings.Settings.Add(new KeyValueConfigurationElement("PrimaryUser", message.Split(':')[1]));
-                        config.AppSettings.SectionInformation.ForceSave = true;
-                        config.Save(ConfigurationSaveMode.Modified);
-                        ConfigurationManager.RefreshSection("appSettings");
-                    }
-
-                    client.Close();
-                }
-                catch { }
+                case "primaryuser":
+                    Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    config.AppSettings.Settings.Add(new KeyValueConfigurationElement("PrimaryUser", command.Value));
+                    config.AppSettings.SectionInformation.ForceSave = true;
+                    config.Save(ConfigurationSaveMode.Modified);
+                    ConfigurationManager.RefreshSection("appSettings");
+                    break;
+                default:
+                    Console.WriteLine("{0}: Unknown BotManager Command: {1}:{2}", DateTime.Now, command.Key, command.Value);
+                    break;
             }
-            listener.Stop();
-
-            Console.WriteLine("{0}: BotManager Set PrimaryUser as {1}", DateTime.Now, UsersCollection.PrimaryUser().TwitterScreenName);
         }
 
         private static bool EnsureSingleLoad()
