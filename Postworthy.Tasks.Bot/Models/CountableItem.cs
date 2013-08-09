@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Postworthy.Tasks.Bot.Models
+namespace Postworthy.Tasks.Bot.Communication
 {
     public class CountableItem : CountableItem<string>
     {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Postworthy.Models.Communication
@@ -19,6 +20,7 @@ namespace Postworthy.Models.Communication
                     try
                     {
                         listener = new TcpListener(ip, port);
+                        listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
                         listener.Server.ReceiveTimeout = timeout;
                         listener.Start();
                         do
@@ -39,12 +41,13 @@ namespace Postworthy.Models.Communication
                                     }
                                     catch { }
                                 }
+                             
                             }
                         } while (waitForValid);
                     }
                     finally
                     {
-                        if(listener != null)
+                        if (listener != null)
                             listener.Stop();
                     }
 

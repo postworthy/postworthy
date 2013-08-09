@@ -10,7 +10,7 @@ using System.Net;
 using System.Configuration;
 using System.IO;
 using Postworthy.Models.Communication;
-using Postworthy.Tasks.Bot.Models;
+using Postworthy.Tasks.Bot.Communication;
 using System.Threading;
 
 namespace Postworthy.Tasks.Bot
@@ -21,7 +21,7 @@ namespace Postworthy.Tasks.Bot
         {
             if (!EnsureSingleLoad())
             {
-                Console.WriteLine("{0}: Another Instance Currently Runing", DateTime.Now);
+                Console.WriteLine("{0}: Another Instance Currently Running", DateTime.Now);
                 return;
             }
 

@@ -14,7 +14,7 @@ using System.Runtime.ConstrainedExecution;
 using Postworthy.Models.Streaming;
 using Postworthy.Tasks.Bot.Settings;
 using System.Text.RegularExpressions;
-using Postworthy.Tasks.Bot.Models;
+using Postworthy.Tasks.Bot.Communication;
 
 namespace Postworthy.Tasks.Bot.Streaming
 {

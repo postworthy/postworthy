@@ -8,7 +8,7 @@ using Postworthy.Models.Twitter;
 using Postworthy.Tasks.Bot.Settings;
 using Postworthy.Models.Core;
 using Postworthy.Tasks.Bot.Streaming;
-using Postworthy.Tasks.Bot.Models;
+using Postworthy.Tasks.Bot.Communication;
 
 namespace Postworthy.Web.Bot.Models
 {

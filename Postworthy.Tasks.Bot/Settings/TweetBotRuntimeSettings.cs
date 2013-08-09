@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Twitter;
-using Postworthy.Tasks.Bot.Models;
+using Postworthy.Tasks.Bot.Communication;
 
 namespace Postworthy.Tasks.Bot.Settings
 {

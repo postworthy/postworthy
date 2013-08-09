@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Postworthy.Models.Repository;
 
-namespace Postworthy.Tasks.Bot.Models
+namespace Postworthy.Tasks.Bot.Communication
 {
     public class BotCommand : RepositoryEntity
     {

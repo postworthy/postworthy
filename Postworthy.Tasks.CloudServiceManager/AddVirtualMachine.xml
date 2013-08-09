@@ -1,0 +1,46 @@
+﻿<Deployment xmlns="http://schemas.microsoft.com/windowsazure" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+    <!--Your host service name-->
+    <Name>SERVICE_NAME</Name>
+    <DeploymentSlot>Production</DeploymentSlot>
+    <Label>SERVICE_NAME</Label>
+    <RoleList>
+        <Role i:type="PersistentVMRole">
+            <!--Your virtual Machine Name-->
+            <RoleName>MyWinVM</RoleName>
+            <OsVersion i:nil="true"/>
+            <RoleType>PersistentVMRole</RoleType>
+            <ConfigurationSets>
+                <ConfigurationSet i:type="WindowsProvisioningConfigurationSet">
+                    <ConfigurationSetType>WindowsProvisioningConfiguration</ConfigurationSetType>
+                    <!--Your Computer Name-->
+                    <ComputerName>MyWinVM</ComputerName>
+                    <!--Computer pass word-->
+                    <AdminPassword>Password1!</AdminPassword>
+                    <EnableAutomaticUpdates>false</EnableAutomaticUpdates>
+                    <ResetPasswordOnFirstLogon>false</ResetPasswordOnFirstLogon>
+                </ConfigurationSet>
+                <ConfigurationSet i:type="NetworkConfigurationSet">
+                    <ConfigurationSetType>NetworkConfiguration</ConfigurationSetType>
+                    <InputEndpoints>
+                        <InputEndpoint>
+                            <LocalPort>3389</LocalPort>
+                            <Name>RemoteDesktop</Name>
+                            <Protocol>tcp</Protocol>
+                        </InputEndpoint>
+                        <InputEndpoint>
+                            <LocalPort>49152</LocalPort>
+                            <Name>BotCommunication</Name>
+                            <Protocol>tcp</Protocol>
+                        </InputEndpoint>
+                    </InputEndpoints>
+                </ConfigurationSet>
+            </ConfigurationSets>
+            <DataVirtualHardDisks/>
+            <Label>bXlzdmMxZGlubzY=</Label>
+            <OSVirtualHardDisk>
+                <SourceImageName>a699494373c04fc0bc8f2bb1389d6106__Win2K8R2SP1-Datacenter-201212.01-en.us-30GB.vhd</SourceImageName>
+            </OSVirtualHardDisk>
+            <RoleSize>ExtraSmall</RoleSize>
+        </Role>
+    </RoleList>
+</Deployment>

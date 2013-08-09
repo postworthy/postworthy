@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using Postworthy.Models.Repository;
-using Postworthy.Tasks.Bot.Models;
+using Postworthy.Tasks.Bot.Communication;
 
 namespace Postworthy.Web.Bot.Controllers
 {

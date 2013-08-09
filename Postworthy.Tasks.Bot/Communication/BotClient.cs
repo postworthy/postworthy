@@ -7,11 +7,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Postworthy.Tasks.Bot.Models
+namespace Postworthy.Tasks.Bot.Communication
 {
     public class BotClient : IDisposable
     {
-        private const int TCP_PORT = 49152;
+        private const int TCP_PORT = 59152;
         private Thread botThread = null;
         private Action<KeyValuePair<string, string>> handleCommands;
         private volatile bool _stopBot = false;
@@ -30,6 +30,8 @@ namespace Postworthy.Tasks.Bot.Models
                 task.Wait();
                 if (task.Result.HasValue)
                     handleCommands(task.Result.Value);
+                else if (task.IsFaulted)
+                    throw task.Exception;
             }
         }
 
