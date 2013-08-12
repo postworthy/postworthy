@@ -26,7 +26,7 @@ namespace Postworthy.Tasks.Bot.Communication
             var listener = new CommandListener();
             while (!_stopBot)
             {
-                var task = listener.Listen(IPAddress.Any, TCP_PORT, 0, true);
+                var task = listener.Listen(IPAddress.Any, TCP_PORT, 1000, true);
                 task.Wait();
                 if (task.Result.HasValue)
                     handleCommands(task.Result.Value);

@@ -11,6 +11,15 @@ namespace Postworthy.Tasks.Bot.Settings
 {
     public class TweetBotRuntimeSettings : RepositoryEntity
     {
+        private const string PAST_TWEETS = "PAST_TWEETS_";
+        private const string POTENTIAL_TWEETS = "POTENTIAL_TWEETS_";
+        private const string POTENTIAL_RETWEETS = "POTENTIAL_RETWEETS_";
+        private SimpleRepository<Tweet> tweetRepo = new SimpleRepository<Tweet>();
+
+        private List<Tweet> pastTweets = null;
+        private List<Tweet> potentialTweets = null;
+        private List<Tweet> potentialReTweets = null;
+
         public const int SIMULATION_MODE_HOURS = 48;
 
         public Guid SettingsGuid { get; set; }
@@ -21,9 +30,6 @@ namespace Postworthy.Tasks.Bot.Settings
         public DateTime LastTweetTime { get; set; }
         public bool TweetOrRetweet { get; set; }
         public int TweetsSentSinceLastFriendRequest { get; set; }
-        public List<Tweet> PotentialTweets { get; set; }
-        public List<Tweet> PotentialReTweets { get; set; }
-        public List<Tweet> Tweeted { get; set; }
         public List<CountableItem> Keywords { get; set; }
         public List<CountableItem> KeywordSuggestions { get; set; }
         public List<string> KeywordsToIgnore { get; set; }
@@ -36,11 +42,15 @@ namespace Postworthy.Tasks.Bot.Settings
         {
             get
             {
-                if (this.Tweeted != null && this.Tweeted.Count > 5)
+                var pastTweets = this.GetPastTweets();
+                if (
+                    ///TODO: FIND A BETTER WAY TO DETERMINE MINIMUM RETWEET LEVEL
+                    false && //SHORTED OUT FOR NOW...
+                    pastTweets != null && pastTweets.Length > 5)
                 {
                     double less = Math.Max((60.0 - ((DateTime.Now - LastTweetTime).TotalMinutes)) / 100.0, 0.1); //Allows us to progressivly lower the bar of what we accept over time
                     double stdev = 0;
-                    var values = this.Tweeted.Select(x => x.RetweetCount);
+                    var values = pastTweets.Select(x => x.RetweetCount);
                     double avg = values.Average();
                     //Get Standard Deviation
                     stdev = Math.Sqrt(values.Sum(d => (d - avg) * (d - avg)) / values.Count());
@@ -64,9 +74,6 @@ namespace Postworthy.Tasks.Bot.Settings
         {
             BotFirstStart = DateTime.Now;
             SettingsGuid = Guid.NewGuid();
-            PotentialTweets = new List<Tweet>();
-            PotentialReTweets = new List<Tweet>();
-            Tweeted = new List<Tweet>();
             PotentialFriendRequests = new List<CountableItem<Tweep>>();
             LastTweetTime = DateTime.MaxValue;
             Keywords = new List<CountableItem>();
@@ -75,6 +82,80 @@ namespace Postworthy.Tasks.Bot.Settings
             KeywordsManuallyAdded = new List<string>();
             KeywordsManuallyIgnored = new List<string>();
             TwitterFollowSuggestions = new List<Tweep>();
+        }
+
+        public Tweet[] GetPotentialTweets(bool retweets = false)
+        {
+            if (!retweets)
+            {
+                if (potentialTweets == null)
+                    potentialTweets = tweetRepo.Query(POTENTIAL_TWEETS + SettingsGuid, 0, 0).ToList();
+                return potentialTweets.ToArray();
+            }
+            else
+            {
+                if(potentialReTweets == null)
+                    potentialReTweets = tweetRepo.Query(POTENTIAL_RETWEETS + SettingsGuid, 0, 0).ToList();
+                return potentialReTweets.ToArray();
+            }
+        }
+
+        public void AddPotentialTweets(List<Tweet> tweets, bool retweets = false)
+        {
+            if (!retweets)
+            {
+                potentialTweets.AddRange(tweets);
+                tweetRepo.Save(POTENTIAL_TWEETS + SettingsGuid, tweets);
+            }
+            else
+            {
+                potentialReTweets.AddRange(tweets);
+                tweetRepo.Save(POTENTIAL_RETWEETS + SettingsGuid, tweets);
+            }
+        }
+
+        public void RemovePotentialTweet(Tweet tweet, bool retweet = false)
+        {
+            if (!retweet)
+            {
+                var remove = potentialTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();
+                if (remove != null)
+                    potentialTweets.Remove(remove);
+
+                tweetRepo.Delete(POTENTIAL_TWEETS + SettingsGuid, tweet);
+            }
+            else
+            {
+                var remove = potentialReTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();
+                if (remove != null)
+                    potentialReTweets.Remove(remove);
+
+                tweetRepo.Delete(POTENTIAL_RETWEETS + SettingsGuid, tweet);
+            }
+        }
+
+
+        public Tweet[] GetPastTweets(int size = 50)
+        {
+            if(pastTweets == null || pastTweets.Count < size)
+                pastTweets = tweetRepo.Query(PAST_TWEETS + SettingsGuid, 0, size).ToList();
+
+            return pastTweets.ToArray();
+        }
+
+        public void AddPastTweet(Tweet tweet)
+        {
+            pastTweets.Insert(0, tweet);
+            tweetRepo.Save(PAST_TWEETS + SettingsGuid, tweet);
+        }
+
+        public void RemovePastTweet(Tweet tweet)
+        {
+            var remove = pastTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();
+            if (remove != null)
+                pastTweets.Remove(remove);
+
+            tweetRepo.Delete(PAST_TWEETS + SettingsGuid, tweet);
         }
 
         public override string UniqueKey

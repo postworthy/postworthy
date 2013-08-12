@@ -45,6 +45,7 @@ namespace Postworthy.Tasks.Bot
             streamMonitor.Start();
 
             while (Console.ReadLine() != "exit") ;
+            botClient.Stop();
             streamMonitor.Stop();
         }
 

@@ -16,6 +16,7 @@ namespace Postworthy.Models.Communication
         {
             return Task<KeyValuePair<string, string>?>.Factory.StartNew(() =>
                 {
+                    var end = DateTime.Now.AddMilliseconds(timeout);
                     TcpListener listener = null;
                     try
                     {
@@ -25,24 +26,28 @@ namespace Postworthy.Models.Communication
                         listener.Start();
                         do
                         {
-                            using (var client = listener.AcceptTcpClient())
+                            if (listener.Pending())
                             {
-                                using (var stream = new StreamReader(client.GetStream()))
+                                using (var client = listener.AcceptTcpClient())
                                 {
-                                    var data = new byte[4096];
-                                    try
+                                    using (var stream = new StreamReader(client.GetStream()))
                                     {
-                                        var message = stream.ReadLine();
-                                        var split = message.Split(':');
-                                        if (split.Length == 2)
+                                        var data = new byte[4096];
+                                        try
                                         {
-                                            return new KeyValuePair<string, string>(split[0], split[1]);
+                                            var message = stream.ReadLine();
+                                            var split = message.Split(':');
+                                            if (split.Length == 2)
+                                            {
+                                                return new KeyValuePair<string, string>(split[0], split[1]);
+                                            }
                                         }
+                                        catch { }
                                     }
-                                    catch { }
                                 }
-                             
                             }
+                            else if (DateTime.Now >= end) 
+                                return null;
                         } while (waitForValid);
                     }
                     finally

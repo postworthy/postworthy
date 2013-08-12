@@ -102,12 +102,12 @@ namespace Postworthy.Web.Bot.Models
                 BotStartupTime = runtimeSettings.BotFirstStart;
                 LastTweetTime = runtimeSettings.LastTweetTime;
                 TweetsSentSinceLastFriendRequest = runtimeSettings.TweetsSentSinceLastFriendRequest;
-                TweetsPerHour = runtimeSettings.Tweeted.Count() > 1 ? runtimeSettings.Tweeted
+                TweetsPerHour = runtimeSettings.GetPastTweets().Count() > 1 ? runtimeSettings.GetPastTweets()
                     .GroupBy(x => x.CreatedAt.ToShortDateString())
                     .SelectMany(y => y.GroupBy(z => z.CreatedAt.Hour))
                     .Select(x => x.Count())
                     .Average() : 0;
-                TweetsPerHourMax = runtimeSettings.Tweeted.Count() > 2 ? runtimeSettings.Tweeted
+                TweetsPerHourMax = runtimeSettings.GetPastTweets().Count() > 2 ? runtimeSettings.GetPastTweets()
                     .GroupBy(x => x.CreatedAt.ToShortDateString())
                     .SelectMany(y => y.GroupBy(z => z.CreatedAt.Hour))
                     .Select(x => x.Count())
@@ -119,20 +119,20 @@ namespace Postworthy.Web.Bot.Models
                 TwitterStreamVolume = runtimeSettings.TotalTweetsProcessed / (1.0 * Runtime.TotalMinutes);
                     
                 TwitterFollowSuggestions = runtimeSettings.TwitterFollowSuggestions;
-                PotentialTweets = runtimeSettings.PotentialTweets;
-                PotentialReTweets = runtimeSettings.PotentialReTweets;
-                Tweeted = runtimeSettings.Tweeted;
+                PotentialTweets = runtimeSettings.GetPotentialTweets().OrderByDescending(t=>t.TweetRank).ToList();
+                PotentialReTweets = runtimeSettings.GetPotentialTweets(true).OrderByDescending(t => t.TweetRank).ToList();
+                Tweeted = runtimeSettings.GetPastTweets().ToList();
                 PotentialFriendRequests = runtimeSettings.PotentialFriendRequests
                     .Select(x => new KeyValuePair<Tweep, int>(x.Key, x.Count)).ToList();
                 KeywordSuggestions = runtimeSettings.KeywordSuggestions
                     .Select(x => new KeyValuePair<string, int>(x.Key, x.Count)).ToList();
-                runtimeSettings.Tweeted
+                runtimeSettings.GetPastTweets()
                     .Where(t => t.CreatedAt.AddDays(30) >= DateTime.Now)
                     .GroupBy(t => t.CreatedAt.Day)
                     .Select(g => new { i = g.FirstOrDefault().CreatedAt.Day - 1, date = g.FirstOrDefault().CreatedAt, count = g.Count() })
                     .ToList()
                     .ForEach(x => TweetsLastThirtyDays[x.i] = x.count);
-                TopFriendTweetCounts = runtimeSettings.Tweeted
+                TopFriendTweetCounts = runtimeSettings.GetPastTweets()
                     .Where(t => me.Followers().Select(f => f.ID).Contains(t.User.UserID))
                     .GroupBy(t => t.User.UserID)
                     .Select(g => new KeyValuePair<Tweep, int>(new Tweep(g.FirstOrDefault().User, Tweep.TweepType.None), g.Count()))

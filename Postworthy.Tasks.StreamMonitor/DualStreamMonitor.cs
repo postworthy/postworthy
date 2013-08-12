@@ -69,7 +69,6 @@ namespace Postworthy.Tasks.StreamMonitor
 
         public void Stop()
         {
-            log.WriteLine("{0}: Exiting", DateTime.Now);
             if (streams != null)
             {
                 streams.ForEach(s =>
@@ -79,6 +78,8 @@ namespace Postworthy.Tasks.StreamMonitor
             }
             if (processingStep != null)
                 processingStep.Shutdown();
+
+            log.WriteLine("{0}: Exiting", DateTime.Now);
         }
 
         private void StartProcessingQueue(TwitterContext userStreamContext, TwitterContext trackerStreamContext)
