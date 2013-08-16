@@ -38,8 +38,9 @@
     <Reference Include="Enyim.Caching">
       <HintPath>..\packages\EnyimMemcached.2.12\lib\net35\Enyim.Caching.dll</HintPath>
     </Reference>
-    <Reference Include="LinqToTwitter">
-      <HintPath>..\packages\LinqToTwitter.2.1.05\lib\net45\LinqToTwitter.dll</HintPath>
+    <Reference Include="LinqToTwitter, Version=2.1.8.0, Culture=neutral, PublicKeyToken=957107be965c25d9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\LinqToTwitter.2.1.8\lib\net45\LinqToTwitter.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
