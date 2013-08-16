@@ -361,9 +361,7 @@ namespace Postworthy.Models.Twitter
                 });
             }
             else
-            {
-                return new TwitterContext();
-            }
+                throw new Exception("Can Not Authorize User: " + screenname);
 
         }
     }

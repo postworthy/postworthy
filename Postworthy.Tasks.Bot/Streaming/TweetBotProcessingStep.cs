@@ -479,7 +479,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 var newPotentialTweets = tweet_tweep_pairs
                     .Where(x => !friendsAndFollows.Contains(x.tweep.User.Identifier.ID) &&
                         //x.tweet.Status.Entities.UserMentions.Count() == 0 &&
-                        (x.tweet.Status.Entities.UrlMentions.Count() > 0 || x.tweet.Status.Entities.MediaMentions.Count() > 0))
+                        (x.tweet.Status.Entities.UrlEntities.Count() > 0 || x.tweet.Status.Entities.MediaEntities.Count() > 0))
                     .Select(x => x.tweet)
                     .OrderByDescending(x => x.RetweetCount)
                     .Take(POTENTIAL_TWEET_BUFFER_MAX)
@@ -614,13 +614,13 @@ namespace Postworthy.Tasks.Bot.Streaming
                     string tweetedBy = t.User.Identifier.ScreenName.ToLower();
                     if (!NoTweetList.Any(x => x == tweetedBy) && //Don't bug people with constant retweets
                         !t.TweetText.ToLower().Contains(NoTweetList[0]) && //Don't bug them even if they are mentioned in the tweet
-                        (!OnlyWithMentions || t.Status.Entities.UserMentions.Count > 0) //OPTIONAL: Only respond to tweets that mention someone
+                        (!OnlyWithMentions || t.Status.Entities.UserMentionEntities.Count > 0) //OPTIONAL: Only respond to tweets that mention someone
                         )
                     {
                         //Dont want to keep hitting the same person over and over so add them to the ignore list
                         NoTweetList.Add(tweetedBy);
                         //If they were mentioned in a tweet they get ignored in the future just in case they reply
-                        NoTweetList.AddRange(t.Status.Entities.UserMentions.Where(um => !string.IsNullOrEmpty(um.ScreenName)).Select(um => um.ScreenName));
+                        NoTweetList.AddRange(t.Status.Entities.UserMentionEntities.Where(um => !string.IsNullOrEmpty(um.ScreenName)).Select(um => um.ScreenName));
 
                         string message = "";
                         if (t.User.FollowersCount > 9999)

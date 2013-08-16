@@ -67,9 +67,9 @@ namespace Postworthy.Models.Twitter
 
         private void ExtractUriTasks(Tweet tweet)
         {
-            if (tweet.Status.Entities != null && tweet.Status.Entities.UrlMentions != null)
+            if (tweet.Status.Entities != null && tweet.Status.Entities.UrlEntities != null)
             {
-                foreach (var urlmentions in tweet.Status.Entities.UrlMentions)
+                foreach (var urlmentions in tweet.Status.Entities.UrlEntities)
                 {
                     var link = new UriEx(urlmentions.ExpandedUrl);
                     UriActions.Add(new KeyValuePair<string, Action>(link.Uri.Authority, () => CreateUriAction(link, () => ProcessingComplete(tweet, link, urlmentions))));
@@ -77,9 +77,9 @@ namespace Postworthy.Models.Twitter
                     tweet.TweetText = tweet.Status.Text.Replace(urlmentions.Url, "<a target=\"_blank\" href=\"" + urlmentions.ExpandedUrl + "\">[" + link.Title + "]</a>");
                 }
             }
-            if (tweet.Status.Entities != null && tweet.Status.Entities.MediaMentions != null)
+            if (tweet.Status.Entities != null && tweet.Status.Entities.MediaEntities != null)
             {
-                foreach (var media in tweet.Status.Entities.MediaMentions)
+                foreach (var media in tweet.Status.Entities.MediaEntities)
                 {
                     var link = new UriEx(media.ExpandedUrl);
                     UriActions.Add(new KeyValuePair<string, Action>(link.Uri.Authority, () => CreateUriAction(link, () => ProcessingComplete(tweet, link, media))));
@@ -110,7 +110,7 @@ namespace Postworthy.Models.Twitter
 
         private void ProcessingComplete(Tweet tweet, UriEx l, object m)
         {
-            if (m is UrlMention || m is MediaMention)
+            if (m is UrlEntity || m is MediaEntity)
             {
                 tweet.TweetText = tweet.Status.Text.Replace(((dynamic)m).Url, "<a target=\"_blank\" href=\"" + l.Uri + "\">[" + l.Title + "]</a>");
             }
