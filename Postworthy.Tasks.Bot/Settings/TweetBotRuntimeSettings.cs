@@ -102,8 +102,11 @@ namespace Postworthy.Tasks.Bot.Settings
 
         public void AddPotentialTweets(List<Tweet> tweets, bool retweets = false)
         {
+            GetPotentialTweets(retweets); //Loads them up if they are not already loaded up
+
             if (!retweets)
             {
+                GetPotentialTweets(retweets);
                 potentialTweets.AddRange(tweets);
                 tweetRepo.Save(POTENTIAL_TWEETS + SettingsGuid, tweets);
             }
@@ -116,6 +119,8 @@ namespace Postworthy.Tasks.Bot.Settings
 
         public void RemovePotentialTweet(Tweet tweet, bool retweet = false)
         {
+            GetPotentialTweets(retweet); //Loads them up if they are not already loaded up
+
             if (!retweet)
             {
                 var remove = potentialTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();

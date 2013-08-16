@@ -268,26 +268,25 @@ namespace Postworthy.Tasks.Bot.Streaming
             string[] ignore = (ConfigurationManager.AppSettings["Ignore"] ?? "").ToLower().Split(',');
             if (!SimulationMode)
             {
-                if (!isRetweet)
+
+                tweet.PopulateExtendedData();
+                var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
+                if (link != null &&
+                    ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0 && //Cant Contain an Ignore Word
+                    (tweet.User.Url == null || !link.Uri.ToString().Contains(tweet.User.Url) || friendsAndFollows.Contains(tweet.User.Identifier.ID)) //Can not be from same url as user tweeting this, unless you are a friend
+                    )
                 {
-                    tweet.PopulateExtendedData();
-                    var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
-                    if (link != null &&
-                        ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0 && //Cant Contain an Ignore Word
-                        (tweet.User.Url == null || !link.Uri.ToString().Contains(tweet.User.Url) || friendsAndFollows.Contains(tweet.User.Identifier.ID)) //Can not be from same url as user tweeting this, unless you are a friend
-                        )
+                    if (!isRetweet)
                     {
                         string statusText = !link.Title.ToLower().StartsWith("http") ?
                             (link.Title.Length > 116 ? link.Title.Substring(0, 116) : link.Title) + " " + link.Uri.ToString()
                             :
                             link.Uri.ToString();
                         TwitterModel.Instance.UpdateStatus(statusText, processStatus: false);
-                        return true;
                     }
-                }
-                else
-                {
-                    TwitterModel.Instance.Retweet(tweet.StatusID.ToString());
+                    else
+                        TwitterModel.Instance.Retweet(tweet.StatusID.ToString());
+
                     return true;
                 }
 
