@@ -9,6 +9,7 @@ using System.Configuration;
 using Postworthy.Models.Account;
 using Newtonsoft.Json;
 using System.IO;
+using System.IO.Compression;
 
 namespace Postworthy.Models.Repository.Providers
 {
@@ -38,17 +39,26 @@ namespace Postworthy.Models.Repository.Providers
         {
             using (var stream = new MemoryStream())
             {
-                using (var reader = new StreamReader(stream))
+                StreamReader reader;
+                try
                 {
-                    try
-                    {
-                        blob.DownloadToStream(stream);
-                        stream.Seek(0, 0);
-                    }
-                    catch (StorageException se)
-                    {
-                        return default(RET);
-                    }
+                    blob.DownloadToStream(stream);
+                }
+                catch (StorageException se)
+                {
+                    return default(RET);
+                }
+                try
+                {
+                    stream.Seek(0, 0);
+                    reader = new StreamReader(new GZipStream(stream, CompressionMode.Decompress));
+                    var json = reader.ReadToEnd();
+                    return Deserialize<RET>(json);
+                }
+                catch 
+                {
+                    stream.Seek(0, 0);
+                    reader = new StreamReader(stream);
                     return Deserialize<RET>(reader.ReadToEnd());
                 }
             }
@@ -56,14 +66,19 @@ namespace Postworthy.Models.Repository.Providers
 
         private void UploadBlob(CloudBlockBlob blob, RepositoryEntity obj)
         {
-            using(var stream = new MemoryStream())
+            using(var streamCompressed = new MemoryStream())
             {
-                using(var writer = new StreamWriter(stream))
+                using (var gzip = new GZipStream(streamCompressed, CompressionMode.Compress))
                 {
-                    writer.Write(Serialize(obj));
-                    writer.Flush();
-                    stream.Seek(0, 0);
-                    blob.UploadFromStream(stream);
+                    var data = Encoding.UTF8.GetBytes(Serialize(obj));
+                    gzip.Write(data, 0, data.Length);
+                    gzip.Flush();
+                    gzip.Close();
+
+                    using (var streamOut = new MemoryStream(streamCompressed.ToArray()))
+                    {
+                        blob.UploadFromStream(streamOut);
+                    }
                 }
             }   
         }
