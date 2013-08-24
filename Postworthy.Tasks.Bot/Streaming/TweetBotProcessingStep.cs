@@ -189,7 +189,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                     RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
                     if (potentialTweets.Length >= POTENTIAL_TWEET_BUFFER_MIN ||
                         //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                        (potentialTweets.Length > 0 && DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS)))
+                        (RuntimeSettings.LastTweetTime != DateTime.MaxValue && potentialTweets.Length > 0 && DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS)))
                     {
                         var tweet = potentialTweets.OrderByDescending(t => t.TweetRank).First();
                         var groups = tweeted

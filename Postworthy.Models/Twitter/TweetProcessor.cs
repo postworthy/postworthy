@@ -30,7 +30,7 @@ namespace Postworthy.Models.Twitter
 
             foreach (var t in tweets)
             {
-                if ((t.Status.RetweetCount > RetweetThreshold && t.Links.Count == 0) || force) 
+                if ((t.RetweetCount > RetweetThreshold && t.Links.Count == 0) || force) 
                     ExtractUriTasks(t);
             }
         }

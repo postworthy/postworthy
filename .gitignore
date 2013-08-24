@@ -40,3 +40,4 @@ Postworthy.Publish.xml
 *.pubxml
 *.pubxml.user
 PublishProfiles
+*.Test.cs

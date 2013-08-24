@@ -21,6 +21,7 @@ namespace Postworthy.Models.Communication
                     try
                     {
                         listener = new TcpListener(ip, port);
+                        listener.ExclusiveAddressUse = false;
                         listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
                         listener.Server.ReceiveTimeout = timeout;
                         listener.Start();
@@ -53,7 +54,11 @@ namespace Postworthy.Models.Communication
                     finally
                     {
                         if (listener != null)
+                        {
                             listener.Stop();
+                            if (listener.Server != null)
+                                listener.Server.Dispose();
+                        }
                     }
 
                     return null;

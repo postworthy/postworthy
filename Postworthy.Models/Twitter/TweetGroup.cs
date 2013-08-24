@@ -20,7 +20,7 @@ namespace Postworthy.Models.Twitter
         {
             CreatedOn = DateTime.Now;
         }
-        public TweetGroup(IGrouping<Tweet, Tweet> tg)
+        public TweetGroup(IGrouping<ITweet, ITweet> tg)
         {
             GroupStatusIDs = tg.Select(g => g.StatusID).ToList();
             CreatedOn = DateTime.Now;
@@ -31,7 +31,7 @@ namespace Postworthy.Models.Twitter
             RetweetCount = tg.Key.RetweetCount + tg.Where(t => t.User.Name != tg.Key.User.Name).Sum(t => t.RetweetCount);
             LinkRetweetCount = tg.SelectMany(x => x.Links).Sum(x => x.UrlTweetCount);
             LinkFacebookShareCount = tg.SelectMany(x => x.Links).Sum(x => x.UrlFacebookShareCount);
-            User = tg.Key.Status.User;
+            User = tg.Key.User;
             Links = tg.Where(t => t.User.Name != tg.Key.User.Name).SelectMany(x => x.Links).ToList();
             Links.AddRange(tg.Key.Links.Where(l => l.Image != null || l.Video != null));
         }

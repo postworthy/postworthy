@@ -45,7 +45,7 @@ namespace Postworthy.Models.Account
         {
             if (force) HttpRuntime.Cache.Remove("PostworthyUsers");
             var model = HttpRuntime.Cache["PostworthyUsers"] as List<PostworthyUser>;
-            if (model == null)
+            if (model == null || model.Count > 0)
             {
                 lock (locker)
                 {

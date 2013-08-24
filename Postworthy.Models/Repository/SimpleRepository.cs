@@ -41,7 +41,7 @@ namespace Postworthy.Models.Repository
                 if (where != null)
                     objects = objects.Where(where);
 
-                return (pageSize > 0 ? objects.Skip(pageIndex).Take((int)pageSize) : objects).ToList();
+                return (pageSize > 0 ? objects.Skip(pageIndex).Take((int)pageSize) : objects).AsParallel().Where(x => x != null).ToList();
             }
             else
                 return null;
