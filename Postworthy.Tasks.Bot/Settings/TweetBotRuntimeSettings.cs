@@ -106,7 +106,6 @@ namespace Postworthy.Tasks.Bot.Settings
 
             if (!retweets)
             {
-                GetPotentialTweets(retweets);
                 potentialTweets.AddRange(tweets);
                 tweetRepo.Save(POTENTIAL_TWEETS + SettingsGuid, tweets);
             }
@@ -121,21 +120,24 @@ namespace Postworthy.Tasks.Bot.Settings
         {
             GetPotentialTweets(retweet); //Loads them up if they are not already loaded up
 
-            if (!retweet)
+            if (tweet != null)
             {
-                var remove = potentialTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();
-                if (remove != null)
-                    potentialTweets.Remove(remove);
+                if (!retweet)
+                {
+                    var remove = potentialTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();
+                    if (remove != null)
+                        potentialTweets.Remove(remove);
 
-                tweetRepo.Delete(POTENTIAL_TWEETS + SettingsGuid, tweet);
-            }
-            else
-            {
-                var remove = potentialReTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();
-                if (remove != null)
-                    potentialReTweets.Remove(remove);
+                    tweetRepo.Delete(POTENTIAL_TWEETS + SettingsGuid, tweet);
+                }
+                else
+                {
+                    var remove = potentialReTweets.Where(x => x.UniqueKey == tweet.UniqueKey).FirstOrDefault();
+                    if (remove != null)
+                        potentialReTweets.Remove(remove);
 
-                tweetRepo.Delete(POTENTIAL_RETWEETS + SettingsGuid, tweet);
+                    tweetRepo.Delete(POTENTIAL_RETWEETS + SettingsGuid, tweet);
+                }
             }
         }
 

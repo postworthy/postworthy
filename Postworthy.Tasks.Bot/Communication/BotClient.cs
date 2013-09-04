@@ -26,12 +26,18 @@ namespace Postworthy.Tasks.Bot.Communication
             var listener = new CommandListener();
             while (!_stopBot)
             {
-                var task = listener.Listen(IPAddress.Any, TCP_PORT, 1000, true);
-                task.Wait();
-                if (task.Result.HasValue)
-                    handleCommands(task.Result.Value);
-                else if (task.IsFaulted)
-                    throw task.Exception;
+                try
+                {
+                    var task = listener.Listen(IPAddress.Any, TCP_PORT, 1000, true);
+                    task.Wait();
+                    if (task.Result.HasValue)
+                        handleCommands(task.Result.Value);
+                    else if (task.IsFaulted)
+                        throw task.Exception;
+                }
+                catch(Exception ex) {
+                    handleCommands(new KeyValuePair<string, string>("error", ex.ToString()));
+                }
             }
         }
 

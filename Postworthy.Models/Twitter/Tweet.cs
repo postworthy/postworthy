@@ -325,8 +325,11 @@ namespace Postworthy.Models.Twitter
 
         public void PopulateExtendedData()
         {
-            var tp = new TweetProcessor(new List<Tweet> { this }, true);
-            tp.Start();
+            if (Links == null || Links.Count == 0)
+            {
+                var tp = new TweetProcessor(new List<Tweet> { this }, true);
+                tp.Start();
+            }
         }
 
         public static IEqualityComparer<ITweet> GetITweetTextComparer()
