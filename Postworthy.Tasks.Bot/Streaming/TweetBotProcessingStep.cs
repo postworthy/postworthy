@@ -191,7 +191,12 @@ namespace Postworthy.Tasks.Bot.Streaming
                         //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
                         (RuntimeSettings.LastTweetTime != DateTime.MaxValue && potentialTweets.Length > 0 && DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS)))
                     {
-                        var tweet = potentialTweets.OrderByDescending(t => t.TweetRank).First();
+                        var tweet = potentialTweets
+                            .Where(t => DateTime.Now.AddMinutes(-20) >= t.CreatedAt) //Exclude recent tweets
+                            .OrderByDescending(t => t.TweetRank).First();
+
+                        tweet.PopulateExtendedData();
+
                         var groups = tweeted
                             .Reverse<Tweet>()
                             .Take(50)
@@ -228,9 +233,13 @@ namespace Postworthy.Tasks.Bot.Streaming
                     RuntimeSettings.TweetOrRetweet = !RuntimeSettings.TweetOrRetweet;
                     if (potentialReTweets.Length >= POTENTIAL_TWEET_BUFFER_MIN ||
                         //Because we default the LastTweetTime to the max value this will only be used after the tweet buffer initially loads up
-                        (potentialReTweets.Length > 0 && DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS)))
+                        (RuntimeSettings.LastTweetTime != DateTime.MaxValue && potentialReTweets.Length > 0 && DateTime.Now >= RuntimeSettings.LastTweetTime.AddHours(MAX_TIME_BETWEEN_TWEETS)))
                     {
-                        var tweet = potentialReTweets.OrderByDescending(t => t.TweetRank).First();
+                        var tweet = potentialReTweets
+                            .OrderByDescending(t => t.TweetRank).First();
+
+                        tweet.PopulateExtendedData();
+
                         var groups = tweeted
                             .Reverse<Tweet>()
                             .Take(50)
