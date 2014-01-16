@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using SignalR.Hubs;
 using Newtonsoft.Json;
 using System.Configuration;
 using Postworthy.Models.Streaming;
@@ -13,10 +12,11 @@ using System.IO;
 using System.Web.Routing;
 using Postworthy.Web.Controllers;
 using System.Threading.Tasks;
+using Microsoft.AspNet.SignalR;
 
 namespace Postworthy.Web.Models
 {
-    public class StreamingHub : Hub, IDisconnect, IConnected
+    public class StreamingHub : Hub
     {
         public ControllerContext HomeContext { get; set; }
         public ControllerContext MobileContext { get; set; }
@@ -30,29 +30,19 @@ namespace Postworthy.Web.Models
                 RouteData routeData = new RouteData();
                 routeData.Values.Add("controller", "Home");
                 HomeContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new HomeController());
-
-                routeData = new RouteData();
-                routeData.Values.Add("controller", "Mobile");
-                MobileContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new MobileController());
             }
         }
-        
+
         public Task Disconnect()
         {
             return Groups.Remove(Context.ConnectionId, "web")
-                .ContinueWith(new Action<Task>(x => { Groups.Remove(Context.ConnectionId, "mobile"); }))
                 .ContinueWith(new Action<Task>(x => { Groups.Remove(Context.ConnectionId, "other"); }));
         }
 
         public Task Connect()
         {
             if (HttpContext.Current != null && HttpContext.Current.Request.UrlReferrer != null)
-            {
-                if (HttpContext.Current.Request.UrlReferrer.ToString().ToLower().Contains("/mobile"))
-                    return Groups.Add(Context.ConnectionId, "mobile");
-                else
-                    return Groups.Add(Context.ConnectionId, "web");
-            }
+                return Groups.Add(Context.ConnectionId, "web");
             else
                 return Groups.Add(Context.ConnectionId, "other");
         }
@@ -60,26 +50,16 @@ namespace Postworthy.Web.Models
         public Task Reconnect(IEnumerable<string> groups)
         {
             if (HttpContext.Current != null && HttpContext.Current.Request.UrlReferrer != null)
-            {
-                if (HttpContext.Current.Request.UrlReferrer.ToString().ToLower().Contains("/mobile"))
-                    return Groups.Add(Context.ConnectionId, "mobile");
-                else
-                    return Groups.Add(Context.ConnectionId, "web");
-            }
+                return Groups.Add(Context.ConnectionId, "web");
             else
                 return Groups.Add(Context.ConnectionId, "other");
         }
 
-        private void UpdateMobile(List<string> data)
-        {
-            Clients["mobile"].update(data);
-        }
-        
         private void Update(List<string> data)
         {
-            Clients["web"].update(data);
+            Clients.Client("web").update(data);
         }
-        
+
         public void Send(StreamItem item)
         {
             if (item.Secret == ConfigurationManager.AppSettings["TwitterCustomerSecret"])
@@ -102,35 +82,34 @@ namespace Postworthy.Web.Models
 
                         foreach (var tweet in tweetsToSend)
                         {
-                            
-                                var ViewData = new ViewDataDictionary<ItemData>(new ItemData()
-                                {
-                                    Model = tweet,
-                                    index = index--,
-                                    isTop10 = false,
-                                    isTop20 = false,
-                                    isTop30 = false,
-                                    randomImage = tweet.Links.Where(l => l.Image != null).OrderBy(x => Guid.NewGuid()).FirstOrDefault(),
-                                    hasVideo = tweet.Links.Where(l => l.Video != null).Count() > 0,
-                                    topN = ""
-                                });
-                                using (StringWriter sw = new StringWriter())
-                                {
-                                    ViewContext viewContext = new ViewContext(HomeContext, viewResult.View, ViewData, new TempDataDictionary(), sw);
-                                    viewResult.View.Render(viewContext, sw);
 
-                                    returnValues.Add(sw.GetStringBuilder().ToString());
-                                }
-                                using (StringWriter sw = new StringWriter())
-                                {
-                                    ViewContext viewContextMobile = new ViewContext(MobileContext, viewResultMobile.View, ViewData, new TempDataDictionary(), sw);
-                                    viewResultMobile.View.Render(viewContextMobile, sw);
+                            var ViewData = new ViewDataDictionary<ItemData>(new ItemData()
+                            {
+                                Model = tweet,
+                                index = index--,
+                                isTop10 = false,
+                                isTop20 = false,
+                                isTop30 = false,
+                                randomImage = tweet.Links.Where(l => l.Image != null).OrderBy(x => Guid.NewGuid()).FirstOrDefault(),
+                                hasVideo = tweet.Links.Where(l => l.Video != null).Count() > 0,
+                                topN = ""
+                            });
+                            using (StringWriter sw = new StringWriter())
+                            {
+                                ViewContext viewContext = new ViewContext(HomeContext, viewResult.View, ViewData, new TempDataDictionary(), sw);
+                                viewResult.View.Render(viewContext, sw);
 
-                                    returnValuesMobile.Add(sw.GetStringBuilder().ToString());
-                                }
+                                returnValues.Add(sw.GetStringBuilder().ToString());
+                            }
+                            using (StringWriter sw = new StringWriter())
+                            {
+                                ViewContext viewContextMobile = new ViewContext(MobileContext, viewResultMobile.View, ViewData, new TempDataDictionary(), sw);
+                                viewResultMobile.View.Render(viewContextMobile, sw);
+
+                                returnValuesMobile.Add(sw.GetStringBuilder().ToString());
+                            }
                         }
                         Update(returnValues);
-                        UpdateMobile(returnValuesMobile);
                     }
                 }
             }

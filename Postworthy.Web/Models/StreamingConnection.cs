@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Threading.Tasks;
-using SignalR;
 using Newtonsoft.Json;
 using Postworthy.Models.Streaming;
 using System.Configuration;
@@ -14,6 +13,7 @@ using System.IO;
 using Postworthy.Web.Controllers;
 using Postworthy.Web.Models;
 using System.Web.Routing;
+using Microsoft.AspNet.SignalR;
 
 public class StreamingConnection : PersistentConnection
 {
@@ -30,7 +30,7 @@ public class StreamingConnection : PersistentConnection
             HomeContext = new ControllerContext(new RequestContext(httpContextBase, routeData), new HomeController());
         }
     }
-    protected override Task OnReceivedAsync(IRequest request, string connectionId, string data)
+    protected override Task OnReceived(IRequest request, string connectionId, string data)
     {
         var item = JsonConvert.DeserializeObject<StreamItem>(data);
         if (item.Secret == ConfigurationManager.AppSettings["TwitterCustomerSecret"])

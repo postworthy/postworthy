@@ -4,44 +4,43 @@
     ViewBag.Title = ViewBag.Brand ?? "Postworthy";
     ViewBag.Home = true;
     const int PAGE_SIZE = 50;
-    
+
     var page = 0;
     int.TryParse(Request.QueryString["page"], out page);
     page = page > -1 ? page : 0;
-    
-    var isPrimaryLoggedIn = Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.PrimaryUser().CanAuthorize;
+
+    var isPrimaryLoggedIn = Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name) != null && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.PrimaryUser().CanAuthorize;
 }
 <style type="text/css">
-    .profile-image-tiny
-    {
+    .profile-image-tiny {
         width: 20px;
         height: 20px;
         float: left;
         padding-right: 3px;
     }
-    .profile-image-small
-    {
+
+    .profile-image-small {
         width: 25px;
         height: 25px;
         float: left;
         padding-right: 3px;
         padding-bottom: 5px;
     }
-    .tweet-info
-    {
+
+    .tweet-info {
         height: 25px;
         float: left;
         font-size: 10px;
         padding-bottom: 5px;
         line-height: 12px;
     }
-    .btn-tweet
-    {
+
+    .btn-tweet {
         float: right;
         margin: 5px 0px 5px 0px;
     }
-    #characterCount
-    {
+
+    #characterCount {
         float: right;
         font-size: 16px;
         font-weight: bold;
@@ -50,59 +49,60 @@
         padding-right: 4px;
         margin: 5px 0px 5px 0px;
     }
-    .box
-    {
+
+    .box {
         border-top: 4px solid #DCB;
     }
-    .box a
-    {
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-    .box ul
-    {
-        margin: 0;
-        list-style: none;
-        padding-bottom: 5px;
-        padding-top: 3px;
-    }
-    .box li
-    {
-        line-height: 18px;
-        font-size: 11px;
-        font-family:"lucida grande",tahoma,verdana,arial,sans-serif;
-        color:#333;
-        padding-top: 2px;
-        cursor: pointer;
-        border-radius: 0 2px 2px 0;
-        -webkit-border-radius:0 2px 2px 0;
-    }
-    .selected
-    {
+
+        .box a {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .box ul {
+            margin: 0;
+            list-style: none;
+            padding-bottom: 5px;
+            padding-top: 3px;
+            padding-left: 0px;
+            padding-right:0px
+        }
+
+        .box li {
+            line-height: 18px;
+            font-size: 11px;
+            font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
+            color: #333;
+            padding-top: 2px;
+            cursor: pointer;
+            border-radius: 0 2px 2px 0;
+            -webkit-border-radius: 0 2px 2px 0;
+        }
+
+    .selected {
         background-color: #D8DFEA;
     }
-    .box li:hover
-    {
+
+    .box li:hover {
         background-color: #D8DFEA;
     }
-    .box li img
-    {
-        width:18px;
-        height:18px;
+
+    .box li img {
+        width: 18px;
+        height: 18px;
     }
-    .icon-ok
-    {
-        position:absolute;
-        float:left;
-        margin-left: -37px;
+
+    .icon-ok {
+        float: left;
+        margin-left: -32px;
         display: none;
     }
-    .icon-ok:hover
-    {
-        background-position: -312px 0;
-    }
-    .box li span
-    {
+
+        .icon-ok:hover {
+            background-position: -312px 0;
+        }
+
+    .box li span {
         height: 13px;
         padding-left: 5px;
         padding-right: 5px;
@@ -118,116 +118,122 @@
         position: absolute;
         right: 0px;
     }
-    
+
     @@media (max-width: 767px) {
-        .col1, .col2, .col3, .col4, .listViewOverride
-        {
+        .col1, .col2, .col3, .col4, .listViewOverride {
             width: 100%;
         }
     }
+
     @@media (min-width: 768px) and (max-width: 979px) {
-        .adbox
-        {
+        .adbox {
             margin-left: -2px;
             border: none;
         }
-        .col1
-        {
+
+        .col1 {
             width: 225px;
         }
-        .col2
-        {
+
+        .col2 {
             width: 460px;
         }
-        .col3
-        {
+
+        .col3 {
             width: 695px;
         }
-        .col4
-        {
+
+        .col4 {
             width: 695px;
         }
-       	.listViewOverride
-	    {
-		    width: 460px;
-	    }
+
+        .listViewOverride {
+            width: 460px;
+        }
     }
-    @@media (min-width: 980px) and (max-width:1199px){
-        .adbox
-        {
+
+    @@media (min-width: 980px) and (max-width:1199px) {
+        .adbox {
             margin-left: 101px;
             border: none;
         }
-        .col1
-        {
+
+        .col1 {
             width: 225px;
         }
-        .col2
-        {
+
+        .col2 {
             width: 460px;
         }
-        .col3
-        {
+
+        .col3 {
             width: 695px;
         }
-        .col4
-        {
+
+        .col4 {
             width: 930px;
         }
-       	.listViewOverride
-	    {
-		    width: 695px;
-	    }
+
+        .container {
+            
+            width: 940px;
+            max-width: 940px;
+            
+        }
+
+        .listViewOverride {
+            width: 695px;
+        }
     }
-    @@media (min-width:1200px){
-        .adbox
-        {
+
+    @@media (min-width:1200px) {
+        .adbox {
             margin-left: 218px;
             border: none;
         }
-        .col1
-        {
+
+        .col1 {
             width: 225px;
         }
-        .col2
-        {
+
+        .col2 {
             width: 460px;
         }
-        .col3
-        {
+
+        .col3 {
             width: 930px;
         }
-        .col4
-        {
+
+        .col4 {
             width: 1165px;
         }
-       	.listViewOverride
-	    {
-		    width: 930px;
-	    }
-        .container 
-        {
+
+        .listViewOverride {
+            width: 930px;
+        }
+
+        .container {
+            
             width: 1175px;
+            max-width: 1175px;
+            
         }
     }
-    .newest
-    {
+
+    .newest {
         background-color: #E6F0F5;
     }
-    .top10
-    {
-        
+
+    .top10 {
     }
-    .top20
-    {
-        
+
+    .top20 {
     }
-    .top30
-    {
-        
+
+    .top30 {
     }
-    .postIndex
-    {
+
+    .postIndex {
         float: right;
         font-size: 16px;
         font-weight: bold;
@@ -235,211 +241,39 @@
         line-height: 28px;
         padding-right: 4px;
     }
-	.pagination a 
-    { 
+
+    .pagination a {
         padding: 0 10px 0 10px;
     }
-    .update-notification
-    {
+
+    .update-notification {
         border-top: 0;
         width: 880px;
         padding-bottom: 5px;
         padding-top: 5px;
     }
 </style>
-<script src="@Url.Content("~/Scripts/jquery.masonry.min.js")" type="text/javascript"></script>
-<script src="@Url.Content("~/Scripts/jquery.signalR-0.5.3.min.js")" type="text/javascript"></script>
-<script src="@Url.Content("~/signalr/hubs")" type="text/javascript"></script>
-@if(page == 0) 
-{
-    //Only listen for live updates in you are on the front page
-    
-    <script type="text/javascript">
-        var availableUpdates = new Array();
-        var stream = null;
 
-        $(function () {
-            stream = $.connection.streamingHub;
-
-            if (stream) {
-                stream.update = function (data) {
-                    $(data).each(function (i, o) {
-                        availableUpdates.unshift(o);
-                    });
-                    updateNotification();
-                };
-                $.connection.hub.start();
-            }
-        });
-
-        function loadUpdates() {
-            $(".update-notification").remove();
-            $(".postIndex").each(function (i, o) {
-                $(o).html("#" + (parseInt($(o).html().replace("#", "")) + availableUpdates.length));
-            });
-            $(availableUpdates).each(function (i, o) {
-                var x = $(o);
-                $(".postIndex", x).html("#" + (availableUpdates.length - i))
-                $(".filters").after(x);
-            });
-            availableUpdates = new Array();
-            updateLayout();
-            afterImagesLoad();
-        }
-
-        function updateNotification() {
-            if ($(".update-notification").length > 0)
-                $(".update-notification").remove();
-
-            $(".filters").before($('<div class="update-notification box alert alert-info"><button type="button" class="close" data-dismiss="alert">×</button>There are ' + availableUpdates.length + ' new updates available! <a class="btn" href="#" onclick="loadUpdates();return false;">Load Updates</a></div>'));
-            
-            updateLayout();
-        }
-    </script>
-}
-<script type="text/javascript">
-	$(function () {
-		$('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
-
-		$(window).resize(function () {
-		    if ($(document).width() < 768) updateLayout('list-only');
-		    else updateLayout('grid');
-		    
-		});
-
-		afterImagesLoad();
-	});
-
-    function afterImagesLoad() {
-        $('#container').imagesLoaded(function () {
-            imageCount = $(".tweet-image-div img").size();
-            $(".tweet-image-div img").each(function(i,o) {
-                $("<img/>")
-                    .attr("src", $(o).attr("src"))
-                    .load(function() {
-                        var box = $(o).parent().closest(".box");
-                        var parent = $(o).parent();
-                        if(this.width >= 430 && (box.hasClass("top10") || box.hasClass("top10"))) 
-                        {    
-                            box.removeClass("col1");
-                            box.addClass("col2");
-                            parent.css("width","430px");
-                            parent.css('max-height', '200px').css('height', 'auto');
-                        }
-                        else if(this.width >= 215) 
-                            parent.css("width","215px");
-
-                        if(--imageCount == 0)
-			                    updateLayout();
-                        })
-                        .error(function()
-                        {
-                        var parent = $(o).parent();
-                        parent.remove();
-                        if(--imageCount == 0)
-			                updateLayout();
-                        });
-            });
-            $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
-		});
-    }
-
-	var currentLayout = "@(Request.QueryString["layout"])";
-    function updateLayout(layout) {
-		if (layout) {
-			currentLayout = layout;
-		}
-		switch (currentLayout) {
-			case "list":
-				$(".listview").addClass("active");
-				$(".gridview").removeClass("active");
-				$("#container .post").addClass("listViewOverride");
-				$("#container").masonry("reload");
-				@Html.Raw((Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser && Postworthy.Models.Account.UsersCollection.PrimaryUser().CanAuthorize) ?
-					"" : "$(\"#container .post\").css(\"left\", \"235px\");"
-				)
-				$(".pagination a").each(function(i,o) {
-					if($(o).attr("href") && $(o).attr("href").indexOf("&layout=list") == -1) {
-						$(o).attr("href", $(o).attr("href") + "&layout=list");
-					}
-				});
-				break;
-		    case "list-only":
-		        $(".listview").removeClass("active");
-		        $(".gridview").removeClass("active");
-		        $("#container .post").addClass("listViewOverride");
-		        $("#container").masonry("reload");
-				
-		        $(".pagination a").each(function (i, o) {
-		            if ($(o).attr("href"))
-		                $(o).attr("href", $(o).attr("href").replace("&layout=list", ""));
-		        });
-                break;
-			default:
-				$(".gridview").addClass("active");
-				$(".listview").removeClass("active");
-				$("#container .post").removeClass("listViewOverride");
-				$("#container").masonry("reload");
-				$(".pagination a").each(function(i,o){
-					if($(o).attr("href"))
-						$(o).attr("href", $(o).attr("href").replace("&layout=list",""));
-				});
-				break;
-		}
-	}
-</script>
-<div id="container" style="overflow:hidden;">
+<div id="container" style="top:5px;">
     <div>
         @if (isPrimaryLoggedIn)
         {
-            <script src="@Url.Content("~/Scripts/jquery.watermark.min.js")" type="text/javascript"></script>
-            <script type="text/javascript">
-                $(function () {
-                    var supportOnInput = 'oninput' in document.createElement('input');
-
-                    var btn = $("#btnTweet")
-                    var tweet = $("#Tweet");
-                    var maxLength = 140;
-
-                    var el = $("#characterCount");
-
-                    tweet.bind(supportOnInput ? 'input' : 'keyup', function () {
-                        var cc = tweet.val().length;
-
-                        if (cc > 0)
-                            btn.removeAttr("disabled");
-                        else
-                            btn.attr("disabled", "disabled");
-
-                        el.text(maxLength - cc);
-
-                        if (maxLength < cc) {
-                            el.css('color', 'red');
-                        } else {
-                            el.css('color', '#ccc');
-                        }
-                    });
-
-                    tweet.watermark('Start typing here to tweet something!');
-                });
-            </script>
             <style type="text/css">
-            .icon-ok
-            {
-                margin-left: 205px;
-            }
+                .icon-ok {
+                    margin-left: 205px;
+                }
             </style>
             using (Html.BeginForm("Tweet", "Home"))
             {
-            <div class="box col3">
-                <div style="padding: 5px 5px 5px 5px;">
-                    <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 100%; border: 0;"></textarea>
-                    <button id="btnTweet" type="submit" class="btn btn-primary btn-tweet" disabled>
-                        <i class="icon-comment icon-white"></i>Tweet
-                    </button>
-                    <span id="characterCount" class="characterCount">140</span>
+                <div class="box col3">
+                    <div style="padding: 5px 5px 5px 5px;">
+                        <textarea id="Tweet" name="Tweet" rows="4" cols="1" style="width: 100%; border: 0;"></textarea>
+                        <button id="btnTweet" type="submit" class="btn btn-primary btn-tweet" disabled>
+                            <i class="glyphicon glyphicon-comment icon-white"></i>Tweet
+                        </button>
+                        <span id="characterCount" class="characterCount">140</span>
+                    </div>
                 </div>
-            </div>
             }
         }
         else if (!string.IsNullOrEmpty(Postworthy.Models.Account.UsersCollection.PrimaryUser().AdScript))
@@ -450,11 +284,11 @@
         }
         @if (Model != null)
         {
-            
-			var ranked = Model
-				.Take(1000)
-				.Distinct(Tweet.GetITweetTextComparer());
-            
+
+            var ranked = Model
+                .Take(1000)
+                .Distinct(Tweet.GetITweetTextComparer());
+
             if (!isPrimaryLoggedIn)
             {
                 var featured = ranked
@@ -468,7 +302,7 @@
 
                 ranked = ranked.Except(featured);
             }
-            
+
             var top10 = ranked.Take(10);
             var top20 = ranked.Skip(10).Take(10);
             var top30 = ranked.Skip(20).Take(10);
@@ -485,84 +319,84 @@
                     Image = g.FirstOrDefault().User.ProfileImageUrl,
                     HotTweets = g.Count()
                 })
-                .OrderByDescending(x=>x.HotTweets)
-                .ThenBy(x=>x.UserName);
-            
+                .OrderByDescending(x => x.HotTweets)
+                .ThenBy(x => x.UserName);
+
             if (UserFilters.Count() > 1)
             {
-            <div class="box col1 filters hidden-phone">
-				<div style="border-bottom: 4px solid #DCB; padding-top: 5px; padding-bottom: 5px;height:32px;">
-					<div class="addthis_toolbox addthis_default_style addthis_32x32_style">
-                        <a class="addthis_button_preferred_1"></a>
-						<a class="addthis_button_preferred_2"></a>
-						<a class="addthis_button_preferred_3"></a>
-						<a class="addthis_button_compact"></a>
-						<a class="addthis_counter addthis_bubble_style"></a>
-					</div>
-					<script type="text/javascript">
-						var addthis_config = { "data_track_clickback": true, services_exclude: 'print,email' };
-					</script>
-					<script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=xa-50085ad87233641c"></script>
-				</div>
-				<div class="btn-group" style="border-bottom: 4px solid #DCB; padding-top: 5px; padding-bottom: 5px;">
-                    <a class="btn active gridview" style="width:90px;" onclick="updateLayout('grid')"><i class="icon-th"></i> Grid View</a>
-					<a class="btn listview" style="width:90px;" onclick="updateLayout('list')"><i class="icon-list"></i> List View</a>
-				</div>
-                <ul>
-                @if(index == 0)
-                {
-                    <li class="filter top10" onclick="filterBy('top10')">
-                        <i style="width:18px;height:18px;" class="icon-fire"></i>
-                        <i class="icon-ok"></i>
-                        Top 10
-                        <span>@top10.Count()</span>
-                    </li>
-                    <li class="filter top20" onclick="filterBy('top20')">
-                        <i style="width:18px;height:18px;" class="icon-fire"></i>
-                        <i class="icon-ok"></i>
-                        Top 11-20
-                        <span>@top20.Count()</span>
-                    </li>
-                    <li class="filter top30" onclick="filterBy('top30')" style="border-bottom: 4px solid #DCB">
-                        <i style="width:18px;height:18px;" class="icon-fire"></i>
-                        <i class="icon-ok"></i>
-                        Top 21-30
-                        <span>@top30.Count()</span>
-                    </li>
-                 }   
-                    @foreach (var user in UserFilters)
-                    {
-                        <li class="filter @user.UserID" onclick="filterBy('@user.UserID')">
-                            <img alt="@user.UserName" title="@user.UserName" src="@user.Image" class="profile-image-tiny" />
-                            <i class="icon-ok"></i>
-                            @user.UserName
-                            
-                            <span>@user.HotTweets</span>
-                        </li>
-                    }
-                </ul>
-            </div>
-            <script type="text/javascript">
-                function filterBy(userid) {
-                    if (!$(".filter." + userid).hasClass("selected")) {
-                        $(".filter").removeClass("selected");
-                        $(".filter." + userid).addClass("selected");
-                        $(".filter .icon-ok").hide();
-                        $(".filter." + userid + " .icon-ok").show();
+                <div class="box col1 filters hidden-xs">
+                    <div style="border-bottom: 4px solid #DCB; padding-top: 5px; padding-bottom: 5px;height:46px;">
+                        <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+                            <a class="addthis_button_preferred_1"></a>
+                            <a class="addthis_button_preferred_2"></a>
+                            <a class="addthis_button_preferred_3"></a>
+                            <a class="addthis_button_compact"></a>
+                            <a class="addthis_counter addthis_bubble_style"></a>
+                        </div>
+                        <script type="text/javascript">
+                            var addthis_config = { "data_track_clickback": true, services_exclude: 'print,email' };
+                        </script>
+                        <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=xa-50085ad87233641c"></script>
+                    </div>
+                    <div class="btn-group text-center" style="border-bottom: 4px solid #DCB; padding-top: 5px; padding-bottom: 5px;width:100%">
+                        <a class="btn active gridview" onclick="updateLayout('grid')"><i class="glyphicon glyphicon-th"></i> Grid View</a>
+                        <a class="btn listview" onclick="updateLayout('list')"><i class="glyphicon glyphicon-list"></i> List View</a>
+                    </div>
+                    <ul>
+                        @if (index == 0)
+                        {
+                            <li class="filter top10" onclick="filterBy('top10')">
+                                <i style="width:18px;height:18px;float:left;" class="glyphicon glyphicon-fire"></i>
+                                <i class="icon-ok glyphicon glyphicon-ok"></i>
+                                Top 10
+                                <span>@top10.Count()</span>
+                            </li>
+                            <li class="filter top20" onclick="filterBy('top20')">
+                                <i style="width: 18px; height: 18px; float: left;" class="glyphicon glyphicon-fire"></i>
+                                <i class="icon-ok glyphicon glyphicon-ok"></i>
+                                Top 11-20
+                                <span>@top20.Count()</span>
+                            </li>
+                            <li class="filter top30" onclick="filterBy('top30')" style="border-bottom: 4px solid #DCB">
+                                <i style="width: 18px; height: 18px; float: left;" class="glyphicon glyphicon-fire"></i>
+                                <i class="icon-ok glyphicon glyphicon-ok"></i>
+                                Top 21-30
+                                <span>@top30.Count()</span>
+                            </li>
+                        }
+                        @foreach (var user in UserFilters)
+                        {
+                            <li class="filter @user.UserID" onclick="filterBy('@user.UserID')">
+                                <img alt="@user.UserName" title="@user.UserName" src="@user.Image" class="profile-image-tiny" />
+                                <i class="icon-ok glyphicon glyphicon-ok"></i>
+                                @user.UserName
+
+                                <span>@user.HotTweets</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <script type="text/javascript">
+                    function filterBy(userid) {
+                        if (!$(".filter." + userid).hasClass("selected")) {
+                            $(".filter").removeClass("selected");
+                            $(".filter." + userid).addClass("selected");
+                            $(".filter .icon-ok").hide();
+                            $(".filter." + userid + " .icon-ok").show();
 
 
-                        $(".post:hidden").show();
-                        $(".post").not("." + userid).hide();
-                        updateLayout();
+                            $(".post:hidden").show();
+                            $(".post").not("." + userid).hide();
+                            updateLayout();
+                        }
+                        else {
+                            $(".filter").removeClass("selected");
+                            $(".filter .icon-ok").hide();
+                            $(".post:hidden").show();
+                            updateLayout();
+                        }
                     }
-                    else {
-                        $(".filter").removeClass("selected");
-                        $(".filter .icon-ok").hide();
-                        $(".post:hidden").show();
-                        updateLayout();
-                    }
-                }
-            </script>
+                </script>
             }
 
             foreach (Postworthy.Models.Twitter.ITweet tweet in HotTweets)
@@ -579,21 +413,21 @@
                     hasVideo = tweet.Links.Where(l => l.Video != null).Count() > 0,
                     topN = (top10.Contains(tweet)) ? " top10" : (top20.Contains(tweet) ? " top20" : (top30.Contains(tweet) ? " top30" : "")),
                 };
-                
+
                 Html.RenderPartial("_Item", itemData);
             }
             if (pageCount > 1)
             {
-            <div class="box col4 pagination pagination-centered">
-				<ul>
-				<li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/?page=" + Convert.ToInt32(Math.Max(page - 1, 0))) + "\"")">«</a></li>
-                @for (int i = 0; i < pageCount; i++)
-				{
-                    <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/?page=" + i)">@(i + 1)</a></li>
-				}
-				<li @Html.Raw(page >= pageCount-1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount-1 ? "" : "href=\"" + Url.Content("~/?page=" + (page + 1)) + "\"")">»</a></li>
-				</ul>
-            </div>
+                <div class="box col4 text-center">
+                    <ul class="pagination">
+                        <li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/?page=" + Convert.ToInt32(Math.Max(page - 1, 0))) + "\"") ">«</a></li>
+                        @for (int i = 0; i < pageCount; i++)
+                        {
+                            <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/?page=" + i)">@(i + 1)</a></li>
+                        }
+                        <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/?page=" + (page + 1)) + "\"") ">»</a></li>
+                    </ul>
+                </div>
             }
         }
         else
@@ -604,21 +438,202 @@
                     {
                         <h1>
                             Hello, @User.Identity.Name! Welcome to the world of <a href="http://postworthy.org">
-                                Postworthy</a>!</h1>
+                                Postworthy
+                            </a>!
+                        </h1>
                         <h2>
                             You should run the update tool so that you can have some tweets to view. But make
                             sure that you have all the configuration settings correct first. For more information
-                            on setting up your site visit the <a href="http://postworthy.org">Postworthy Project
-                                Page</a> for setup instructions.
+                            on setting up your site visit the <a href="http://postworthy.org">
+                                Postworthy Project
+                                Page
+                            </a> for setup instructions.
                         </h2>
                     }
                     else
                     {
                         <h1>
-                            Sorry no tweets to view at this time. Please try again later.</h1>
+                            Sorry no tweets to view at this time. Please try again later.
+                        </h1>
                     }
                 </div>
             </div>
         }
     </div>
 </div>
+@section scripts{
+    <script src="~/Scripts/jquery.masonry.min.js" type="text/javascript"></script>
+    <script src="~/Scripts/jquery.signalR-2.0.1.min.js"></script>
+    <script src="~/signalr/hubs" type="text/javascript"></script>
+    @if (page == 0)
+    {
+        //Only listen for live updates in you are on the front page
+
+        <script type="text/javascript">
+            var availableUpdates = new Array();
+            var stream = null;
+
+            $(function () {
+                stream = $.connection.streamingHub;
+
+                if (stream) {
+                    stream.update = function (data) {
+                        $(data).each(function (i, o) {
+                            availableUpdates.unshift(o);
+                        });
+                        updateNotification();
+                    };
+                    $.connection.hub.start();
+                }
+            });
+
+            function loadUpdates() {
+                $(".update-notification").remove();
+                $(".postIndex").each(function (i, o) {
+                    $(o).html("#" + (parseInt($(o).html().replace("#", "")) + availableUpdates.length));
+                });
+                $(availableUpdates).each(function (i, o) {
+                    var x = $(o);
+                    $(".postIndex", x).html("#" + (availableUpdates.length - i))
+                    $(".filters").after(x);
+                });
+                availableUpdates = new Array();
+                updateLayout();
+                afterImagesLoad();
+            }
+
+            function updateNotification() {
+                if ($(".update-notification").length > 0)
+                    $(".update-notification").remove();
+
+                $(".filters").before($('<div class="update-notification box alert alert-info"><button type="button" class="close" data-dismiss="alert">×</button>There are ' + availableUpdates.length + ' new updates available! <a class="btn" href="#" onclick="loadUpdates();return false;">Load Updates</a></div>'));
+
+                updateLayout();
+            }
+        </script>
+    }
+    <script type="text/javascript">
+        $(function () {
+            $('#container').masonry({ itemSelector: '.box:visible', columnWidth: 235 });
+
+            $(window).resize(function () {
+                if ($(document).width() < 768) updateLayout('list-only');
+                else updateLayout('grid');
+
+            });
+
+            afterImagesLoad();
+        });
+
+        function afterImagesLoad() {
+            $('#container').imagesLoaded(function () {
+                imageCount = $(".tweet-image-div img").size();
+                $(".tweet-image-div img").each(function (i, o) {
+                    $("<img/>")
+                        .attr("src", $(o).attr("src"))
+                        .load(function () {
+                            var box = $(o).parent().closest(".box");
+                            var parent = $(o).parent();
+                            if (this.width >= 430 && (box.hasClass("top10") || box.hasClass("top10"))) {
+                                box.removeClass("col1");
+                                box.addClass("col2");
+                                parent.css("width", "430px");
+                                parent.css('max-height', '200px').css('height', 'auto');
+                            }
+                            else if (this.width >= 215)
+                                parent.css("width", "215px");
+
+                            if (--imageCount == 0)
+                                updateLayout();
+                        })
+                            .error(function () {
+                                var parent = $(o).parent();
+                                parent.remove();
+                                if (--imageCount == 0)
+                                    updateLayout();
+                            });
+                });
+                $('.tweet-image-div').css('max-height', '100px').css('height', 'auto');
+            });
+        }
+
+        var currentLayout = "@(Request.QueryString["layout"])";
+        function updateLayout(layout) {
+            if (layout) {
+                currentLayout = layout;
+            }
+            switch (currentLayout) {
+                case "list":
+                    $(".listview").addClass("active");
+                    $(".gridview").removeClass("active");
+                    $("#container .post").addClass("listViewOverride");
+                    $("#container").masonry("reload");
+                    @Html.Raw((isPrimaryLoggedIn) ?
+					"" : "$(\"#container .post\").css(\"left\", \"235px\");"
+				)
+                    $(".pagination a").each(function (i, o) {
+                        if ($(o).attr("href") && $(o).attr("href").indexOf("&layout=list") == -1) {
+                            $(o).attr("href", $(o).attr("href") + "&layout=list");
+                        }
+                    });
+                    break;
+                case "list-only":
+                    $(".listview").removeClass("active");
+                    $(".gridview").removeClass("active");
+                    $("#container .post").addClass("listViewOverride");
+                    $("#container").masonry("reload");
+
+                    $(".pagination a").each(function (i, o) {
+                        if ($(o).attr("href"))
+                            $(o).attr("href", $(o).attr("href").replace("&layout=list", ""));
+                    });
+                    break;
+                default:
+                    $(".gridview").addClass("active");
+                    $(".listview").removeClass("active");
+                    $("#container .post").removeClass("listViewOverride");
+                    $("#container").masonry("reload");
+                    $(".pagination a").each(function (i, o) {
+                        if ($(o).attr("href"))
+                            $(o).attr("href", $(o).attr("href").replace("&layout=list", ""));
+                    });
+                    break;
+            }
+        }
+    </script>
+
+    @if (isPrimaryLoggedIn)
+    {
+        <script src="~/Scripts/jquery.watermark.min.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            $(function () {
+                var supportOnInput = 'oninput' in document.createElement('input');
+
+                var btn = $("#btnTweet")
+                var tweet = $("#Tweet");
+                var maxLength = 140;
+
+                var el = $("#characterCount");
+
+                tweet.bind(supportOnInput ? 'input' : 'keyup', function () {
+                    var cc = tweet.val().length;
+
+                    if (cc > 0)
+                        btn.removeAttr("disabled");
+                    else
+                        btn.attr("disabled", "disabled");
+
+                    el.text(maxLength - cc);
+
+                    if (maxLength < cc) {
+                        el.css('color', 'red');
+                    } else {
+                        el.css('color', '#ccc');
+                    }
+                });
+
+                tweet.watermark('Start typing here to tweet something!');
+            });
+        </script>
+    }
+}

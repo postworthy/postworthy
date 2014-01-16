@@ -22,7 +22,7 @@ namespace Postworthy.Web.Controllers
 
         public ActionResult Index()
         {
-            if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("index", "mobile");
+            //if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("index", "mobile");
 
             return View(TwitterModel.Instance.Tweets(UsersCollection.PrimaryUser().TwitterScreenName));
         }
@@ -31,7 +31,7 @@ namespace Postworthy.Web.Controllers
         [HttpPost]
         public ActionResult Tweet(string Tweet)
         {
-            if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("tweet", "mobile");
+            //if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("tweet", "mobile");
 
             if (!string.IsNullOrEmpty(Tweet))
                 TwitterModel.Instance.UpdateStatus(Tweet, User.Identity.Name);
@@ -42,7 +42,7 @@ namespace Postworthy.Web.Controllers
         [Authorize]
         public ActionResult Retweet(string id)
         {
-            if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("retweet", "mobile");
+            //if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("retweet", "mobile");
 
             if (!string.IsNullOrEmpty(id))
                 TwitterModel.Instance.Retweet(id, User.Identity.Name);
@@ -57,7 +57,7 @@ namespace Postworthy.Web.Controllers
 
         public ActionResult About()
         {
-            if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("about", "mobile");
+            //if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("about", "mobile");
 
             return View(UsersCollection.PrimaryUser());
         }

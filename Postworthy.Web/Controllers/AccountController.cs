@@ -9,7 +9,6 @@ using Postworthy.Models;
 using System.Configuration;
 using System.Xml.Serialization;
 using System.IO;
-using LinqToTwitter;
 using Postworthy.Models.Account;
 using Postworthy.Models.Twitter;
 using Postworthy.Web.Models;
@@ -18,6 +17,48 @@ namespace Postworthy.Web.Controllers
 {
     public class AccountController : Controller
     {
+        #region LinqToTwitter Workaround 1/16/2014 (http://linqtotwitter.codeplex.com/discussions/462676)
+        private class MvcAuthorizer : LinqToTwitter.WebAuthorizer
+        {
+            public ActionResult BeginAuthorization()
+            {
+                return new MvcOAuthActionResult(this);
+            }
+
+            public new ActionResult BeginAuthorization(Uri callback)
+            {
+                this.Callback = callback;
+                return new MvcOAuthActionResult(this);
+            }
+        }
+
+        private class MvcOAuthActionResult : ActionResult
+        {
+            private readonly LinqToTwitter.WebAuthorizer webAuth;
+
+            public MvcOAuthActionResult(LinqToTwitter.WebAuthorizer webAuth)
+            {
+                this.webAuth = webAuth;
+            }
+
+            public override void ExecuteResult(ControllerContext context)
+            {
+                webAuth.PerformRedirect = authUrl =>
+                {
+                    
+                    System.Web.HttpContext.Current.Response.Redirect(authUrl);
+                };
+
+                Uri callback =
+                    webAuth.Callback == null ?
+                        System.Web.HttpContext.Current.Request.Url :
+                        webAuth.Callback;
+
+                webAuth.BeginAuthorization(callback);
+            }
+        }
+        #endregion
+
         protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
             base.Initialize(requestContext);
@@ -34,7 +75,7 @@ namespace Postworthy.Web.Controllers
             //return View();
             if (!Request.IsAuthenticated)
             {
-                var credentials = new InMemoryCredentials();
+                var credentials = new LinqToTwitter.InMemoryCredentials();
                 credentials.ConsumerKey = ConfigurationManager.AppSettings["TwitterCustomerKey"];
                 credentials.ConsumerSecret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
                 var auth = new MvcAuthorizer { Credentials = credentials };
@@ -57,7 +98,7 @@ namespace Postworthy.Web.Controllers
             else
                 return RedirectToAction("Index", new { controller = "Home", action = "Index", id = UrlParameter.Optional });
         }
-
+        
         //
         // GET: /Account/LogOff
 
