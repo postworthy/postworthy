@@ -20,6 +20,8 @@ namespace Postworthy.Tasks.StreamMonitor
 {
     public class DualStreamMonitor
     {
+        private const int MAX_TRACK = 400;
+
         private TextWriter log;
 
         private object queue_lock = new object();
@@ -272,6 +274,11 @@ namespace Postworthy.Tasks.StreamMonitor
                         }
                         else
                         {
+                            if (trackList.Count > MAX_TRACK)
+                            {
+                                trackList = trackList.OrderByDescending(x => x.Length).Take(400).ToList();
+                                log.WriteLine("{0}: Tracking List Exceeds Max {1} Reducing List", DateTime.Now, MAX_TRACK);
+                            }
                             log.WriteLine("{0}: Attempting to Track: {1}", DateTime.Now, string.Join(",", trackList));
                             log.WriteLine("{0}: Ignoring : {1}", DateTime.Now, string.Join(",", ignore));
                         }

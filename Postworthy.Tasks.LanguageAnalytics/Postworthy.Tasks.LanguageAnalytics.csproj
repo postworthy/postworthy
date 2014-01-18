@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{46F305C4-923C-4B16-8958-BC207715C0B3}</ProjectGuid>
+    <ProjectGuid>{40473902-D599-40A2-8724-EA9B9FFA7047}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Postworthy.Tasks.Bot</RootNamespace>
-    <AssemblyName>Postworthy.Tasks.Bot</AssemblyName>
+    <RootNamespace>Postworthy.Tasks.LanguageAnalytics</RootNamespace>
+    <AssemblyName>Postworthy.Tasks.LanguageAnalytics</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
-    <WebGreaseLibPath>..\packages\WebGrease.1.5.2\lib</WebGreaseLibPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,61 +32,31 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>Postworthy.Tasks.Bot.Program</StartupObject>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr3.Runtime, Version=3.4.1.9004, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Enyim.Caching">
-      <HintPath>..\packages\EnyimMemcached.2.12\lib\net35\Enyim.Caching.dll</HintPath>
-    </Reference>
-    <Reference Include="LinqToTwitter, Version=2.1.11.0, Culture=neutral, PublicKeyToken=957107be965c25d9, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\linqtotwitter.2.1.11\lib\net45\LinqToTwitter.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="LinqToTwitter">
+      <HintPath>..\packages\LinqToTwitter.2.1.11\lib\net45\LinqToTwitter.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="WebGrease, Version=1.5.2.14234, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Communication\BotClient.cs" />
     <Compile Include="Models\CountableItem.cs" />
+    <Compile Include="Models\LanguageAnalyticsResults.cs" />
+    <Compile Include="Models\Phrase.cs" />
+    <Compile Include="Models\WordNode.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Communication\BotCommand.cs" />
-    <Compile Include="Settings\Filter.cs" />
-    <Compile Include="Settings\FilterCollection.cs" />
-    <Compile Include="Settings\Message.cs" />
-    <Compile Include="Settings\MessageCollection.cs" />
-    <Compile Include="Settings\Setting.cs" />
-    <Compile Include="Settings\SettingCollection.cs" />
-    <Compile Include="Settings\TweetBotRuntimeSettings.cs" />
-    <Compile Include="Settings\TweetBotSettings.cs" />
-    <Compile Include="Streaming\TweetBotProcessingStep.cs" />
+    <Compile Include="Streaming\LanguageAnalyticsProcessingStep.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="App.config" />
     <None Include="example.app.config" />
     <None Include="packages.config" />
-    <None Include="UsersCollection.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Postworthy.Models\Postworthy.Models.csproj">
@@ -98,11 +67,6 @@
       <Project>{8230cb3c-bc4a-46d5-9074-3020f9e47e19}</Project>
       <Name>Postworthy.Tasks.StreamMonitor</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\stopwords.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

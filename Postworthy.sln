@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.CloudServi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Web", "Postworthy.Web\Postworthy.Web.csproj", "{4AAD484F-4C8C-436B-9B6A-448997A77FE2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postworthy.Tasks.LanguageAnalytics", "Postworthy.Tasks.LanguageAnalytics\Postworthy.Tasks.LanguageAnalytics.csproj", "{40473902-D599-40A2-8724-EA9B9FFA7047}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +123,16 @@ Global
 		{4AAD484F-4C8C-436B-9B6A-448997A77FE2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{4AAD484F-4C8C-436B-9B6A-448997A77FE2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{4AAD484F-4C8C-436B-9B6A-448997A77FE2}.Release|x86.ActiveCfg = Release|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{40473902-D599-40A2-8724-EA9B9FFA7047}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
