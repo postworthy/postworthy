@@ -1,0 +1,40 @@
+﻿@model Postworthy.Models.Web.ArticleStub
+
+@{
+    ViewBag.Title = Model.Title;
+    var guid = Guid.NewGuid().ToString();
+    System.Web.HttpContext.Current.Cache[guid] = Model.Image ?? "";
+}
+
+@section meta{
+    <meta name="twitter:card" data-page-subject="true" content="player" />
+    <meta name="twitter:title" data-page-subject="true" content="@Model.Title" />
+    <meta name="twitter:description" data-page-subject="true" content="@Model.GetSummary(200)" />
+    <meta name="twitter:player" data-page-subject="true" content="@Model.Video.ToString().Replace("http://","https://")" />
+    <meta name="twitter:player:width" content="640">
+    <meta name="twitter:player:height" content="360">
+    <meta name="twitter:image" data-page-subject="true" content="@Url.RouteUrl("default", new RouteValueDictionary(new { action="image", id=guid }), Request.Url.Scheme, Request.Url.Authority)" />
+}
+
+<fieldset class="col-md-10 col-md-offset-1">
+    <legend class="postIndex">@Html.Raw(Model.Title)</legend>
+    <iframe id="videoFrame" style="width:100%;margin:20px 0px 20px 0px" src="@Model.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen></iframe>
+    <span class="postIndex pull-left">Video Description</span>
+    <hr style="clear: both;" />
+    <p>
+        @Html.Raw(Model.Summary.Trim())
+    </p>
+</fieldset>
+
+@section scripts{
+    <script type="text/javascript">
+        $(window).resize(function () {
+            $("#videoFrame").height($("#videoFrame").width() * (9 / 16));
+        });
+
+        $(document).ready(function () {
+            $("#videoFrame").height($("#videoFrame").width() * (9 / 16));
+        });
+    </script>
+}
+

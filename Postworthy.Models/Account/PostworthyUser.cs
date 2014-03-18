@@ -55,6 +55,8 @@ namespace Postworthy.Models.Account
         [Display(Name = "Track These Key Words (Comma Delimited)")]
         public string Track { get; set; }
 
+        public List<string> PrimaryDomains { get; set; }
+
         public bool CanAuthorize
         {
             get
@@ -69,7 +71,24 @@ namespace Postworthy.Models.Account
         {
             get
             {
-                return TwitterScreenName.ToLower() == ConfigurationManager.AppSettings["PrimaryUser"].ToLower();
+
+                var domain = System.Web.HttpContext.Current != null ? System.Web.HttpContext.Current.Request.Url.Authority.ToLower().Replace("www.","") : null;
+                if (!string.IsNullOrEmpty(domain) &&
+                    PrimaryDomains != null &&
+                    PrimaryDomains.Any(x => x.ToLower() == domain))
+                    return true;
+                else if (!string.IsNullOrEmpty(TwitterScreenName) &&
+                    !string.IsNullOrEmpty(ConfigurationManager.AppSettings["PrimaryUser"] ?? "") &&
+                    TwitterScreenName.ToLower() == (ConfigurationManager.AppSettings["PrimaryUser"] ?? "").ToLower())
+                    return true;
+#if (DEBUG)
+                else if (!string.IsNullOrEmpty(TwitterScreenName) &&
+                    !string.IsNullOrEmpty(ConfigurationManager.AppSettings["PrimaryDebugUser"] ?? "") &&
+                    TwitterScreenName.ToLower() == (ConfigurationManager.AppSettings["PrimaryDebugUser"] ?? "").ToLower())
+                    return true;
+#endif
+                else 
+                    return false;
             }
         }
 

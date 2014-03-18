@@ -47,7 +47,7 @@ namespace Postworthy.Tasks.Update
 
                 Console.WriteLine("{0}: Saving Tweets", DateTime.Now);
                 tweets
-                    .GroupBy(t => t.User.Identifier.ScreenName)
+                    .GroupBy(t => t.User.ScreenName)
                     .ToList()
                     .ForEach(g =>
                     {

@@ -7,14 +7,13 @@ using Postworthy.Models.Repository.Providers;
 
 namespace Postworthy.Models.Repository
 {
-    public class SimpleRepository<TYPE> : IRepository<TYPE> 
+    public class SimpleRepository<TYPE> : IRepository<TYPE>
         where TYPE : RepositoryEntity
     {
-        private static object instance_lock = new object();
         private RepositoryStorageProvider<TYPE> Storage;
-        public SimpleRepository() 
+        public SimpleRepository(string providerKey)
         {
-            Storage = GetStorageProvider("StorageProvider", () => { return new FileSystemCache<TYPE>(); });
+            Storage = GetStorageProvider("StorageProvider", providerKey, () => { return new FileSystemCache<TYPE>(providerKey); });
         }
         public RepositoryStorageProvider<TYPE> GetProvider()
         {
@@ -80,7 +79,7 @@ namespace Postworthy.Models.Repository
                 Storage.Remove(key, objects);
             }
         }
-        private RepositoryStorageProvider<TYPE> GetStorageProvider(string SettingKey, Func<RepositoryStorageProvider<TYPE>> defaultType)
+        private RepositoryStorageProvider<TYPE> GetStorageProvider(string SettingKey, string providerKey, Func<RepositoryStorageProvider<TYPE>> defaultType)
         {
             string overrideProvider = ConfigurationManager.AppSettings[SettingKey];
             if (!string.IsNullOrEmpty(overrideProvider))
@@ -91,7 +90,9 @@ namespace Postworthy.Models.Repository
                     var type = assembly.GetType(overrideProvider, false);
                     if (type != null)
                     {
-                        var provider = type.MakeGenericType(typeof(TYPE)).GetConstructor(System.Type.EmptyTypes).Invoke(null) as RepositoryStorageProvider<TYPE>;
+                        var provider = type.MakeGenericType(typeof(TYPE))
+                            .GetConstructor(new Type[] { typeof(string) })
+                            .Invoke(new object[] { providerKey }) as RepositoryStorageProvider<TYPE>;
                         if (provider != null)
                             return provider;
                     }

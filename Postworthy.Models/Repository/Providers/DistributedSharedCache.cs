@@ -17,8 +17,9 @@ namespace Postworthy.Models.Repository.Providers
         private MemcachedClient SharedCache;
         private RepositoryStorageProvider<TYPE> LongTermStorage;
         private TimeSpan ItemTTL;
-        
-        public DistributedSharedCache(RepositoryStorageProvider<TYPE> longTerm, TimeSpan? itemTTL = null)
+
+        public DistributedSharedCache(string providerKey, RepositoryStorageProvider<TYPE> longTerm, TimeSpan? itemTTL = null)
+            : base(providerKey)
         {
             SharedCache = new MemcachedClient();
             LongTermStorage = longTerm;
@@ -87,7 +88,7 @@ namespace Postworthy.Models.Repository.Providers
 
         private void StoreSingle(TYPE obj)
         {
-            int chunkSize = 512*1000;
+            int chunkSize = 512 * 1000;
             var serializedData = Serialize(obj);
             List<string> chunks = new List<string>();
             int chunkCount = (int)Math.Ceiling(serializedData.Length / ((chunkSize + ((SPLIT_BY.Length + "000".Length) * 2)) * 1.0));
@@ -98,9 +99,9 @@ namespace Postworthy.Models.Repository.Providers
                 for (int i = 0; i < chunkCount; i++)
                 {
                     var next = i + 1 < chunkCount ? i + 1 : 0;
-                    SharedCache.Store(StoreMode.Set, 
-                        obj.UniqueKey.ToString() + "_" + i, 
-                        next + SPLIT_BY + string.Join("", serializedDataCharacters.Skip(i * chunkSize).Take(chunkSize)), 
+                    SharedCache.Store(StoreMode.Set,
+                        obj.UniqueKey.ToString() + "_" + i,
+                        next + SPLIT_BY + string.Join("", serializedDataCharacters.Skip(i * chunkSize).Take(chunkSize)),
                         ItemTTL);
                 }
             }
@@ -130,7 +131,7 @@ namespace Postworthy.Models.Repository.Providers
                 objects.Remove(obj.UniqueKey);
             }
 
-            if(objects.Count > 0) 
+            if (objects.Count > 0)
                 SharedCache.Store(StoreMode.Set, key, Serialize(objects), ItemTTL);
         }
 

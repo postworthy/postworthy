@@ -1,0 +1,73 @@
+﻿@model Postworthy.Web.Models.ItemData
+@{
+    Postworthy.Models.Twitter.ITweet tweet = Model.Model;
+    int index = Model.index;
+    bool isTop10 = Model.isTop10;
+    bool isTop20 = Model.isTop20;
+    bool isTop30 = Model.isTop30;
+    Postworthy.Models.Core.UriEx randomImage = Model.randomImage;
+    bool hasVideo = Model.hasVideo;
+    string topN = Model.topN;
+    int RetweetThreshold = Postworthy.Models.Account.UsersCollection.PrimaryUser().RetweetThreshold;
+}
+<!--STATUS_ID: @tweet.StatusID -->
+<div class="@tweet.User.UserID post box col-md-9 col-sm-8">
+    <div style="padding: 5px;@(index % 2 == 0 ? "background-color:#eeeeee;" : "")@(tweet.RetweetCount > RetweetThreshold && tweet.RetweetCount < 15 ? " newest" : "")@(topN)">
+        <a href="@tweet.User.Url" title="@tweet.User.ScreenName" target="_blank">
+            <img alt="@tweet.User.ScreenName" title="@tweet.User.ScreenName" src="@tweet.User.ProfileImageUrl" class="profile-image-small" />
+        </a>
+        <div class="tweet-info">
+            Created @tweet.TweetTime
+            <br />
+            <i class="glyphicon glyphicon-retweet" title="Shares"></i>@Html.Raw((tweet.RetweetCount > 0) ? "&nbsp;<strong>" + tweet.RetweetCount + "</strong>" : "Not yet shared")
+            [<a title="Retweet This" href="@(Url.Content("~/home/retweet/" + tweet.StatusID))"><b>Retweet</b></a>]
+        </div>
+        <span class="postIndex">#@index</span>
+        <hr style="clear: both;margin: 0;@(index % 2 == 0 ? "border-color:#dddddd;" : "")" />
+        @*
+            @if (randomImage != null)
+            {
+                <div class="tweet-image-div">
+                    <img src="@randomImage.Image.ToString()" />
+                </div>
+            }
+        *@
+        @if (isTop10)
+        {
+            <h3>@Html.Raw(tweet.TweetText)</h3>
+        }
+        else if (isTop20)
+        {
+            <h4>@Html.Raw(tweet.TweetText)</h4>
+        }
+        else if (isTop30)
+        {
+            <h5>@Html.Raw(tweet.TweetText)</h5>
+        }
+        else
+        {
+            @Html.Raw(tweet.TweetText)
+        }
+
+        @if (hasVideo)
+        {
+            var link = tweet.Links.Where(l => l.Video != null).FirstOrDefault();
+            if(link != null)
+            {
+                <br />
+                if (link.Video.Authority.ToLower().Contains("youtube"))
+                {
+                    <iframe style="max-width:320px;width:100%;height:215px" src="@link.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen></iframe>
+                }
+                else
+                {
+                    <a target="_blank" href="@link.Video">
+                        <h3>
+                            WATCH VIDEO
+                        </h3>
+                    </a>
+                }
+            }
+        }
+    </div>
+</div>

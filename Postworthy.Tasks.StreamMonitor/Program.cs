@@ -9,7 +9,6 @@ using System.Configuration;
 using System.Timers;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Streaming;
-using SignalR.Client.Hubs;
 using System.Net;
 using System.Threading.Tasks;
 using System.Runtime.ConstrainedExecution;
@@ -26,19 +25,30 @@ namespace Postworthy.Tasks.StreamMonitor
                 return;
             }
 
-            var streamMonitor = new DualStreamMonitor(Console.Out);
-            streamMonitor.Start();
+            var streamMonitors = new List<DualStreamMonitor>();
+
+            UsersCollection.PrimaryUsers().AsParallel().ForAll(u =>
+            {
+                var streamMonitor = new DualStreamMonitor(u, Console.Out);
+                streamMonitor.Start();
+
+                lock (streamMonitors)
+                {
+                    streamMonitors.Add(streamMonitor);
+                }
+            });
 
             while (Console.ReadLine() != "exit") ;
-            streamMonitor.Stop();
+
+            streamMonitors.ForEach(s => s.Stop());
         }
 
-        
-        
+
+
         private static bool EnsureSingleLoad()
         {
             bool result;
-            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.StreamMonitor." + UsersCollection.PrimaryUser().TwitterScreenName, out result);
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.StreamMonitor", out result);
 
             return result;
         }

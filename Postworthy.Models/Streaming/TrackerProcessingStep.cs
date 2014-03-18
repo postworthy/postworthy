@@ -9,10 +9,12 @@ namespace Postworthy.Models.Streaming
 {
     public class TrackerProcessingStep : StandardProcessingStep, IProcessingStep
     {
+        
         protected override void StoreInRepository(IEnumerable<Tweet> tweets)
         {
-            CachedRepository<Tweet>.Instance.Save(TwitterModel.TRACKER + TwitterModel.TWEETS, tweets.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
-            log.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, tweets.Count(), TwitterModel.TRACKER);
+            var tracker = TwitterModel.Instance(screenName).TRACKER;
+            CachedRepository<Tweet>.Instance(screenName).Save(tracker, tweets.OrderBy(t => t.CreatedAt).Select(t => t).ToList());
+            log.WriteLine("{0}: {1} Tweets Saved for {2}", DateTime.Now, tweets.Count(), tracker);
 
             //CachedRepository<Tweet>.Instance.FlushChanges();
         }

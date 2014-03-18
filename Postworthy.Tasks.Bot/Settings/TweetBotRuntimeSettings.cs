@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Twitter;
 using Postworthy.Tasks.Bot.Communication;
+using System.Configuration;
 
 namespace Postworthy.Tasks.Bot.Settings
 {
@@ -14,7 +15,7 @@ namespace Postworthy.Tasks.Bot.Settings
         private const string PAST_TWEETS = "PAST_TWEETS_";
         private const string POTENTIAL_TWEETS = "POTENTIAL_TWEETS_";
         private const string POTENTIAL_RETWEETS = "POTENTIAL_RETWEETS_";
-        private SimpleRepository<Tweet> tweetRepo = new SimpleRepository<Tweet>();
+        private SimpleRepository<Tweet> tweetRepo = new SimpleRepository<Tweet>(ConfigurationManager.AppSettings["PrimaryUser"]);
 
         private List<Tweet> pastTweets = null;
         private List<Tweet> potentialTweets = null;

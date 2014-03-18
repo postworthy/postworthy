@@ -6,40 +6,44 @@ using Postworthy.Models.Repository.Providers;
 
 namespace Postworthy.Models.Repository
 {
-    public class CachedRepository<TYPE> : IRepository<TYPE> 
+    public class CachedRepository<TYPE> : IRepository<TYPE>
         where TYPE : RepositoryEntity
     {
+        [ThreadStatic]
         private static volatile CachedRepository<TYPE> instance;
         private static object instance_lock = new object();
         private SimpleRepository<TYPE> Storage;
         private SimpleRepository<TYPE> Cache;
 
-        protected CachedRepository() 
+        protected CachedRepository(string providerKey)
         {
-            Storage = new SimpleRepository<TYPE>();
-            Cache = new SimpleRepository<TYPE>()
-                .SetProvider(new DistributedSharedCache<TYPE>(Storage.GetProvider(), new TimeSpan(0, 20, 0)));
+            Storage = new SimpleRepository<TYPE>(providerKey);
+            Cache = new SimpleRepository<TYPE>(providerKey)
+                .SetProvider(new DistributedSharedCache<TYPE>(providerKey, Storage.GetProvider(), new TimeSpan(0, 20, 0)));
         }
 
-        public static CachedRepository<TYPE> Instance
+        public static CachedRepository<TYPE> Instance(string providerKey)
         {
-            get
+            if (instance == null)
             {
-                if (instance == null)
+                lock (instance_lock)
                 {
-                    lock (instance_lock)
-                    {
-                        if (instance == null)
-                            instance = new CachedRepository<TYPE>();
-                    }
+                    if (instance == null)
+                        instance = new CachedRepository<TYPE>(providerKey);
                 }
-                return instance;
             }
+            else if (instance.Storage.GetProvider().ProviderKey.ToLower() != providerKey.ToLower())
+            {
+                instance = null;
+                return Instance(providerKey);
+            }
+                
+            return instance;
         }
 
         public void SetCacheTTL(TimeSpan itemTTL)
         {
-            Cache.SetProvider(new DistributedSharedCache<TYPE>(Storage.GetProvider(), itemTTL));
+            Cache.SetProvider(new DistributedSharedCache<TYPE>(Storage.GetProvider().ProviderKey, Storage.GetProvider(), itemTTL));
         }
 
         public bool ContainsKey(string key)
@@ -67,11 +71,13 @@ namespace Postworthy.Models.Repository
         public void Save(string key, TYPE obj)
         {
             Storage.Save(key, obj);
+            Cache.Delete(key + "_0_100"); //Remove the first page
         }
 
         public void Save(string key, IEnumerable<TYPE> objects)
         {
             Storage.Save(key, objects);
+            Cache.Delete(key + "_0_100"); //Remove the first page
         }
 
         public void Delete(string key)

@@ -36,5 +36,7 @@ namespace Postworthy.Models.Repository.Providers
         {
             
         }
+
+        public PassThroughCache(string providerKey) : base(providerKey) { }
     }
 }

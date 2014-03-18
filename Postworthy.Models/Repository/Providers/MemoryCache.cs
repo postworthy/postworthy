@@ -11,23 +11,20 @@ namespace Postworthy.Models.Repository.Providers
     {
         private Cache LocalCache;
 
-        private Action<string, TYPE> ChangeHandler;
-
-        public IEnumerable<string> Keys 
-        { 
-            get 
+        public IEnumerable<string> Keys
+        {
+            get
             {
                 return LocalCache.OfType<System.Collections.DictionaryEntry>()
                             .Where(d => d.Value is List<TYPE>)
                             .Select(d => d.Key.ToString());
-            } 
+            }
         }
 
-        public MemoryCache(Action<string, TYPE> ChangeHandler)
+        public MemoryCache(string providerKey, Action<string, TYPE> ChangeHandler)
+            : base(providerKey)
         {
             LocalCache = HttpRuntime.Cache;
-            this.ChangeHandler = ChangeHandler;
-            if (this.ChangeHandler == null) throw new ArgumentNullException("ChangeHandler");
         }
 
         public override IEnumerable<TYPE> Get(string key)
@@ -64,11 +61,6 @@ namespace Postworthy.Models.Repository.Providers
         public override void Store(string key, TYPE obj)
         {
             key = key.ToLower();
-            obj.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler((x, y) =>
-            {
-                var entity = x as RepositoryEntity;
-                ChangeHandler(entity.RepositoryKey, (TYPE)entity);
-            });
 
             var objects = LocalCache[key] as List<TYPE>;
 

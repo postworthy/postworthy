@@ -22,7 +22,7 @@ namespace Postworthy.Models.Repository
     }
 
     [Serializable]
-    public abstract class RepositoryEntity : INotifyPropertyChanged, IEquatable<RepositoryEntity>
+    public abstract class RepositoryEntity : IEquatable<RepositoryEntity>
     {
         public abstract string UniqueKey { get; }
         public string RepositoryKey { get; set; }
@@ -50,28 +50,5 @@ namespace Postworthy.Models.Repository
             else
                 return false;
         }
-
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged(this, e);
-        }
-
-        protected void SetNotifyingProperty<T>(string propertyName, ref T field, T value)
-        {
-            if (field == null && value == null)
-                return;
-            if (value != null && value.Equals(field))
-                return;
-
-            field = value;
-            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-        }
-
-        #endregion
     }
 }

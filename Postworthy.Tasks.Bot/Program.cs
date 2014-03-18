@@ -25,6 +25,7 @@ namespace Postworthy.Tasks.Bot
                 return;
             }
 
+            /*
             var botClient = new BotClient(HandleBotManagerCommunication);
             botClient.Start();
 
@@ -40,15 +41,26 @@ namespace Postworthy.Tasks.Bot
                 Console.WriteLine("");
                 Console.WriteLine("{0}: BotManager Set PrimaryUser to be {1}", DateTime.Now, UsersCollection.PrimaryUser().TwitterScreenName);
             }
+            */
 
-            var streamMonitor = new DualStreamMonitor(Console.Out);
-            streamMonitor.Start();
+            var streamMonitors = new List<DualStreamMonitor>();
+
+            UsersCollection.PrimaryUsers().AsParallel().ForAll(u =>
+            {
+                var streamMonitor = new DualStreamMonitor(u, Console.Out);
+                streamMonitor.Start();
+
+                lock (streamMonitors)
+                {
+                    streamMonitors.Add(streamMonitor);
+                }
+            });
 
             while (Console.ReadLine() != "exit") ;
-            botClient.Stop();
-            streamMonitor.Stop();
+            //botClient.Stop();
+            streamMonitors.ForEach(s => s.Stop());
         }
-
+        /*
         private static void HandleBotManagerCommunication(KeyValuePair<string,string> command)
         {
             switch (command.Key.ToLower())
@@ -65,7 +77,7 @@ namespace Postworthy.Tasks.Bot
                     break;
             }
         }
-
+        */
         private static bool EnsureSingleLoad()
         {
             bool result;

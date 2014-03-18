@@ -9,7 +9,7 @@ namespace Postworthy.Models.Twitter
     {
         public static IEnumerable<ITweet> OrderByTweetRank(this IEnumerable<ITweet> tweets)
         {
-            return tweets.GroupBy(t => t.User.Identifier.ScreenName)
+            return tweets.GroupBy(t => t.User.ScreenName)
                 .SelectMany(tg => tg.OrderByDescending(t => t.TweetText).Select((t, i) => new { WeightedTweetRank = Math.Exp(-i / 25) * t.TweetRank, Tweet = t }))
                 .OrderByDescending(x => x.WeightedTweetRank)
                 .Select(x => x.Tweet);

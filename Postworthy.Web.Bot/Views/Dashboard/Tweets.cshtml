@@ -26,7 +26,7 @@
                                         <td>
                                             <img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
                                         <td style="padding-left: 10px;">
-                                            <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
+                                            <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.ScreenName</a>
                                             @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
                                             <span>@Html.Raw(item.TweetText)</span>
                                             <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
@@ -64,7 +64,7 @@
                                         <td>
                                             <img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
                                         <td style="padding-left: 10px;">
-                                            <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
+                                            <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.ScreenName</a>
                                             @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
                                             <span>@Html.Raw(item.TweetText)</span>
                                             <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>
@@ -102,7 +102,7 @@
                                         <td>
                                             <img src="@item.User.ProfileImageUrl" height="75" width="75" /></td>
                                         <td style="padding-left: 10px;">
-                                            <a class='twitterUser' href="http://twitter.com/@item.User.Identifier.ScreenName">@item.User.Identifier.ScreenName</a>
+                                            <a class='twitterUser' href="http://twitter.com/@item.User.ScreenName">@item.User.ScreenName</a>
                                             @* <a class='twitterUser' data-bind='attr: { href: "http://twitter.com/" + from_user }, text: from_user' href='http://twitter.com/${ from_user }' > </a>*@
                                             <span>@Html.Raw(item.TweetText)</span>
                                             <div class='tweetInfo'>Created: @item.CreatedAt <span>Retweets: @item.RetweetCount</span></div>

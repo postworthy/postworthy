@@ -18,23 +18,23 @@ namespace Postworthy.Tasks.LanguageAnalytics
                 return;
             }
 
-            if (UsersCollection.PrimaryUser() == null)
-                Console.WriteLine("{0}: No Primary User Found", DateTime.Now);
-            else
+            var users = UsersCollection.PrimaryUsers() ?? new List<PostworthyUser>();
+
+            users.AsParallel().ForAll(u =>
             {
-                var streamMonitor = new DualStreamMonitor(Console.Out);
+                var streamMonitor = new DualStreamMonitor(u, Console.Out);
                 streamMonitor.Start();
 
                 while (Console.ReadLine() != "exit") ;
 
                 streamMonitor.Stop();
-            }
+            });
         }
 
         private static bool EnsureSingleLoad()
         {
             bool result;
-            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.Bot", out result);
+            var mutex = new System.Threading.Mutex(true, "Postworthy.Tasks.LanguageAnalytics", out result);
 
             return result;
         }

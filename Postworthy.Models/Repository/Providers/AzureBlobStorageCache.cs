@@ -15,13 +15,12 @@ namespace Postworthy.Models.Repository.Providers
 {
     public class AzureBlobStorageCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
-
         private CloudStorageAccount storageAccount = null;
         private CloudBlobClient blobClient = null;
         private CloudBlobContainer container = null;
 
-        public AzureBlobStorageCache()
-            : base()
+        public AzureBlobStorageCache(string providerKey)
+            : base(providerKey)
         {
             var connectionString = ConfigurationManager.AppSettings["AzureStorageConnectionString"];
             if (string.IsNullOrEmpty(connectionString))
@@ -29,7 +28,7 @@ namespace Postworthy.Models.Repository.Providers
 
             storageAccount = CloudStorageAccount.Parse(connectionString);
             blobClient = storageAccount.CreateCloudBlobClient();
-            container = blobClient.GetContainerReference(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
+            container = blobClient.GetContainerReference(providerKey.ToLower());
 
             if (!container.Exists()) 
                 container.Create();

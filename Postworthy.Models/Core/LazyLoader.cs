@@ -7,9 +7,10 @@ namespace Postworthy.Models.Core
 {
     public class LazyLoader<T> : Lazy<T> where T:class, new()
     {
-        public string ID { get; set; }
+        public ulong ID { get; set; }
 
-        public LazyLoader(string id, Func<T> factory) : base(factory, true)
+        public LazyLoader(ulong id, Func<T> factory)
+            : base(factory, true)
         {
             this.ID = id;
         }

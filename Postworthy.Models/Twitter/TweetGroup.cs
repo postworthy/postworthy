@@ -28,11 +28,11 @@ namespace Postworthy.Models.Twitter
             TweetText = tg.Key.TweetText;
             CreatedAt = tg.Key.CreatedAt;
             TweetTime = tg.Key.TweetTime;
-            RetweetCount = tg.Key.RetweetCount + tg.Where(t => t.User.Name != tg.Key.User.Name).Sum(t => t.RetweetCount);
+            RetweetCount = tg.Key.RetweetCount + tg.Where(t => t.User.ScreenName != tg.Key.User.ScreenName).Sum(t => t.RetweetCount);
             LinkRetweetCount = tg.SelectMany(x => x.Links).Sum(x => x.UrlTweetCount);
             LinkFacebookShareCount = tg.SelectMany(x => x.Links).Sum(x => x.UrlFacebookShareCount);
             User = tg.Key.User;
-            Links = tg.Where(t => t.User.Name != tg.Key.User.Name).SelectMany(x => x.Links).ToList();
+            Links = tg.Where(t => t.User.ScreenName != tg.Key.User.ScreenName).SelectMany(x => x.Links).ToList();
             Links.AddRange(tg.Key.Links.Where(l => l.Image != null || l.Video != null));
         }
 

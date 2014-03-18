@@ -8,6 +8,7 @@ namespace Postworthy.Models.Repository
 {
     public abstract class RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
+        public readonly string ProviderKey;
         public abstract IEnumerable<TYPE> Get(string key);
         public abstract TYPE Single(string collectionkey, string itemKey);
         public abstract void Store(string key, TYPE obj);
@@ -40,6 +41,11 @@ namespace Postworthy.Models.Repository
             }
             
             return default(RET);
+        }
+
+        public RepositoryStorageProvider(string ProviderKey)
+        {
+            this.ProviderKey = ProviderKey;
         }
     }
 }

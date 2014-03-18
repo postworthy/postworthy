@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>linqtotwitter</id>
+    <version>3.0.2</version>
+    <title>linqtotwitter</title>
+    <authors>Joe Mayo</authors>
+    <owners>Joe Mayo</owners>
+    <licenseUrl>http://linqtotwitter.codeplex.com/license</licenseUrl>
+    <projectUrl>http://linqtotwitter.codeplex.com/</projectUrl>
+    <iconUrl>http://download.codeplex.com/Project/Download/FileDownload.aspx?ProjectName=linqtotwitter&amp;DownloadId=68381&amp;Build=17672</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Supporting Twitter API v1.1, async, and PCL! It uses standard LINQ syntax for queries and includes method calls for changes via the Twitter API. Supported platforms include .NET 4.5, Windows Phone 8, Window 8, Windows Azure, Xamarin.iOS, and Xamarin.Android.</description>
+    <summary>LINQ to Twitter is a 3rd party LINQ Provider for the Twitter micro-blogging service.</summary>
+    <releaseNotes />
+    <copyright />
+    <language />
+    <tags>twitter twitterapi tweet linq social api rest linqtotwitter linq2twitter micro-blog windows8 wpdev wp8 azure xamarin xamarin.android xamarin.ios glass</tags>
+    <dependencies>
+      <dependency id="Microsoft.Net.Http" version="2.2.18" />
+    </dependencies>
+  </metadata>
+</package>

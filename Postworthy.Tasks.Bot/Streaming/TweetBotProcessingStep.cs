@@ -39,10 +39,10 @@ namespace Postworthy.Tasks.Bot.Streaming
         private string[] Messages = null;
         private bool OnlyWithMentions = false;
         private TextWriter log = null;
-        private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
+        private Tweep PrimaryTweep = null;
         private TweetBotRuntimeSettings RuntimeSettings = null;
-        private CachedRepository<TweetBotRuntimeSettings> settingsRepo = CachedRepository<TweetBotRuntimeSettings>.Instance;
-        private SimpleRepository<BotCommand> commandRepo = new SimpleRepository<BotCommand>();
+        private CachedRepository<TweetBotRuntimeSettings> settingsRepo;
+        private SimpleRepository<BotCommand> commandRepo;
         private bool ForceSimulationMode = false;
         private bool hasNewKeywordSuggestions = false;
         private IEnumerable<string> StopWords = null;
@@ -75,15 +75,20 @@ namespace Postworthy.Tasks.Bot.Streaming
             }
         }
 
-        public void Init(TextWriter log)
+        public void Init(string screenName, TextWriter log)
         {
             this.log = log;
+
+            PrimaryTweep = new Tweep(UsersCollection.Single(screenName), Tweep.TweepType.None);
+
+            settingsRepo = CachedRepository<TweetBotRuntimeSettings>.Instance(screenName);
+            commandRepo = new SimpleRepository<BotCommand>(screenName);
 
             RuntimeSettings = (settingsRepo.Query(RuntimeRepoKey)
                 ?? new List<TweetBotRuntimeSettings> { new TweetBotRuntimeSettings() }).FirstOrDefault()
                 ?? new TweetBotRuntimeSettings();
 
-            NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
+            NoTweetList.Add(screenName.ToLower());
             Messages = TweetBotSettings.Get.Messages.Count == 0 ?
                 null :
                 Enumerable.Range(0, TweetBotSettings.Get.Messages.Count - 1)
@@ -282,7 +287,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 var link = tweet.Links.OrderByDescending(x => x.ShareCount).FirstOrDefault();
                 if (link != null &&
                     ignore.Where(x => link.Title.ToLower().Contains(x)).Count() == 0 && //Cant Contain an Ignore Word
-                    (tweet.User.Url == null || !link.Uri.ToString().Contains(tweet.User.Url) || friendsAndFollows.Contains(tweet.User.Identifier.ID)) //Can not be from same url as user tweeting this, unless you are a friend
+                    (tweet.User.Url == null || !link.Uri.ToString().Contains(tweet.User.Url) || friendsAndFollows.Contains(tweet.User.UserID)) //Can not be from same url as user tweeting this, unless you are a friend
                     )
                 {
                     if (!isRetweet)
@@ -291,10 +296,10 @@ namespace Postworthy.Tasks.Bot.Streaming
                             (link.Title.Length > 116 ? link.Title.Substring(0, 116) : link.Title) + " " + link.Uri.ToString()
                             :
                             link.Uri.ToString();
-                        TwitterModel.Instance.UpdateStatus(statusText, processStatus: false);
+                        TwitterModel.Instance(PrimaryTweep.ScreenName).UpdateStatus(statusText, processStatus: false);
                     }
                     else
-                        TwitterModel.Instance.Retweet(tweet.StatusID.ToString());
+                        TwitterModel.Instance(PrimaryTweep.ScreenName).Retweet(tweet.StatusID);
 
                     return true;
                 }
@@ -316,7 +321,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 var potential = RuntimeSettings.PotentialFriendRequests
                     .Where(x => x.Count > MIN_TWEEP_NOTICED)
                     .Where(x => x.Key.Type == Tweep.TweepType.None || x.Key.Type == Tweep.TweepType.Target)
-                    .Where(x => !primaryFollowers.Contains(x.Key.User.Identifier.UserID))
+                    .Where(x => !primaryFollowers.Contains(x.Key.User.UserID))
                     .Select(x => new
                     {
                         Key = x.Key,
@@ -327,7 +332,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                     .OrderByDescending(x => x.Count);
 
                 var suggested = RuntimeSettings.TwitterFollowSuggestions
-                    .Where(x => !primaryFollowers.Contains(x.User.Identifier.UserID))
+                    .Where(x => !primaryFollowers.Contains(x.User.UserID))
                     .Where(x => RuntimeSettings.Keywords.Any(y => (x.User.Description ?? "").ToLower().Contains(y.Key)))
                     .Select(x => new
                     {
@@ -355,7 +360,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
                         if (!SimulationMode)
                         {
-                            var follow = TwitterModel.Instance.CreateFriendship(x.Key);
+                            var follow = TwitterModel.Instance(PrimaryTweep.ScreenName).CreateFriendship(x.Key);
 
                             if (follow.Type == Tweep.TweepType.Following)
                             {
@@ -456,7 +461,7 @@ namespace Postworthy.Tasks.Bot.Streaming
 
             var tweet_tweep_pairs = tweets
                 .Select(x =>
-                    //x.Status.Retweeted && !friendsAndFollows.Contains(x.Status.User.Identifier.ID) ?
+                    //x.Status.Retweeted && !friendsAndFollows.Contains(x.Status.User.ID) ?
                     //new
                     //{
                     //    tweet = new Tweet(x.Status.RetweetedStatus),
@@ -477,7 +482,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             if (tweet_tweep_pairs.Count() > 0)
             {
                 var newPotentialRetweets = tweet_tweep_pairs
-                    .Where(x => friendsAndFollows.Contains(x.tweep.User.Identifier.ID))
+                    .Where(x => friendsAndFollows.Contains(x.tweep.User.UserID))
                     .Select(x => x.tweet)
                     .OrderByDescending(x => x.TweetRank)
                     .Take(POTENTIAL_TWEET_BUFFER_MAX)
@@ -486,7 +491,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                 RuntimeSettings.AddPotentialTweets(newPotentialRetweets, true);
 
                 var newPotentialTweets = tweet_tweep_pairs
-                    .Where(x => !friendsAndFollows.Contains(x.tweep.User.Identifier.ID) &&
+                    .Where(x => !friendsAndFollows.Contains(x.tweep.User.UserID) &&
                         //x.tweet.Status.Entities.UserMentions.Count() == 0 &&
                         (x.tweet.Status.Entities.UrlEntities.Count() > 0 || x.tweet.Status.Entities.MediaEntities.Count() > 0))
                     .Select(x => x.tweet)
@@ -505,7 +510,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             var friendsAndFollows = PrimaryTweep.Followers().Select(x => x.ID);
             var tweet_tweep_pairs = tweets
                 .Select(x =>
-                    x.Status.Retweeted && !friendsAndFollows.Contains(x.Status.User.Identifier.ID) ?
+                    x.Status.Retweeted && !friendsAndFollows.Contains(x.Status.User.UserID) ?
                     new
                     {
                         tweet = new Tweet(x.Status.RetweetedStatus),
@@ -519,7 +524,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                         tweep = x.Tweep(),
                         weight = x.RetweetCount / (1.0 + x.Tweep().Clout())
                     })
-                .Where(x => !friendsAndFollows.Contains(x.tweep.User.Identifier.UserID))
+                .Where(x => !friendsAndFollows.Contains(x.tweep.User.UserID))
                 .Where(x => x.tweep.User.LangResponse == PrimaryTweep.User.LangResponse)
                 .Where(x => x.tweep.Clout() > minClout)
                 .Where(x => x.weight >= minWeight);
@@ -552,7 +557,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             //Limit
             RuntimeSettings.PotentialFriendRequests = RuntimeSettings.PotentialFriendRequests
                 .Where(x => x.Key.Type == Tweep.TweepType.Target || x.LastModifiedTime.AddHours(FRIEND_FALLOUT_MINUTES) > DateTime.Now) //Only watch them for a limited time
-                .Where(x => !friendsAndFollows.Contains(x.Key.User.Identifier.UserID))
+                .Where(x => !friendsAndFollows.Contains(x.Key.User.UserID))
                 .OrderByDescending(x => x.Key.Clout())
                 .Take(POTENTIAL_TWEEP_BUFFER_MAX)
                 .ToList();
@@ -567,9 +572,9 @@ namespace Postworthy.Tasks.Bot.Streaming
                     var friendsAndFollows = PrimaryTweep.Followers().Select(x => x.ID);
                     var keywords = RuntimeSettings.Keywords.Select(x => x.Key).Union(GetKeywordSuggestions());
                     //Func<Tweep, bool> where = (x => x.User.Description != null && keywords.Where(w => x.User.Description.ToLower().Contains(w)).Count() >= 2);
-                    Func<Tweep, bool> where = (x => !friendsAndFollows.Contains(x.User.Identifier.ID));
+                    Func<Tweep, bool> where = (x => !friendsAndFollows.Contains(x.User.UserID));
 
-                    var results = TwitterModel.Instance.GetSuggestedFollowsForPrimaryUser()
+                    var results = TwitterModel.Instance(PrimaryTweep.ScreenName).GetSuggestedFollowsForPrimaryUser()
                         .Where(where)
                         .ToList();
 
@@ -620,7 +625,7 @@ namespace Postworthy.Tasks.Bot.Streaming
             {
                 foreach (var t in tweets)
                 {
-                    string tweetedBy = t.User.Identifier.ScreenName.ToLower();
+                    string tweetedBy = t.User.ScreenName.ToLower();
                     if (!NoTweetList.Any(x => x == tweetedBy) && //Don't bug people with constant retweets
                         !t.TweetText.ToLower().Contains(NoTweetList[0]) && //Don't bug them even if they are mentioned in the tweet
                         (!OnlyWithMentions || t.Status.Entities.UserMentionEntities.Count > 0) //OPTIONAL: Only respond to tweets that mention someone
@@ -643,7 +648,7 @@ namespace Postworthy.Tasks.Bot.Streaming
                         //Tweet it
                         try
                         {
-                            TwitterModel.Instance.UpdateStatus(message + " RT @" + t.User.Identifier.ScreenName + " " + t.TweetText, processStatus: false);
+                            TwitterModel.Instance(PrimaryTweep.ScreenName).UpdateStatus(message + " RT @" + t.User.ScreenName + " " + t.TweetText, processStatus: false);
                         }
                         catch (Exception ex) { log.WriteLine("{0}: TweetBot Error: {1}", DateTime.Now, ex.ToString()); }
 

@@ -9,8 +9,8 @@ using System.Configuration;
 using System.Timers;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Streaming;
-using SignalR.Client.Hubs;
 using System.Net;
+using Microsoft.AspNet.SignalR.Client;
 
 
 namespace Postworthy.Tasks.Streaming
@@ -54,10 +54,10 @@ namespace Postworthy.Tasks.Streaming
                 {
                     try
                     {
-                        streamingHub = hubConnection.CreateProxy("streamingHub");
-                        hubConnection.StateChanged += new Action<SignalR.Client.StateChange>(sc =>
+                        streamingHub = hubConnection.CreateHubProxy("streamingHub");
+                        hubConnection.StateChanged += new Action<Microsoft.AspNet.SignalR.Client.StateChange>(sc =>
                         {
-                            if (sc.NewState == SignalR.Client.ConnectionState.Connected)
+                            if (sc.NewState == Microsoft.AspNet.SignalR.Client.ConnectionState.Connected)
                             {
                                 Console.WriteLine("{0}: Push Connection Established", DateTime.Now);
                                 lock (queue_push_lock)
@@ -70,11 +70,11 @@ namespace Postworthy.Tasks.Streaming
                                     }
                                 }
                             }
-                            else if (sc.NewState == SignalR.Client.ConnectionState.Disconnected)
+                            else if (sc.NewState == Microsoft.AspNet.SignalR.Client.ConnectionState.Disconnected)
                                 Console.WriteLine("{0}: Push Connection Lost", DateTime.Now);
-                            else if (sc.NewState == SignalR.Client.ConnectionState.Reconnecting)
+                            else if (sc.NewState == Microsoft.AspNet.SignalR.Client.ConnectionState.Reconnecting)
                                 Console.WriteLine("{0}: Reestablishing Push Connection", DateTime.Now);
-                            else if (sc.NewState == SignalR.Client.ConnectionState.Connecting)
+                            else if (sc.NewState == Microsoft.AspNet.SignalR.Client.ConnectionState.Connecting)
                                 Console.WriteLine("{0}: Establishing Push Connection", DateTime.Now);
 
                         });
@@ -140,7 +140,7 @@ namespace Postworthy.Tasks.Streaming
 
                             int retweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
                             tweets = tweets.Where(t => t.RetweetCount >= retweetThreshold).ToArray();
-                            if (hubConnection.State == SignalR.Client.ConnectionState.Connected)
+                            if (hubConnection.State == Microsoft.AspNet.SignalR.Client.ConnectionState.Connected)
                             {
                                 if (tweets.Length > 0)
                                 {

@@ -9,7 +9,7 @@ namespace Postworthy.Models.Streaming
 {
     public class PassThroughProcessingStep : IProcessingStep
     {
-        public void Init(System.IO.TextWriter LogStream)
+        public void Init(string screenname, System.IO.TextWriter LogStream)
         {
             
         }

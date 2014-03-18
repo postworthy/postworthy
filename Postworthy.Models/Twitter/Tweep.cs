@@ -23,15 +23,21 @@ namespace Postworthy.Models.Twitter
             IgnoreAlways
         }
 
-        private User _User;
-        private TweepType _Type;
+        public User User { get; set; }
+        public TweepType Type { get; set; }
 
-        public User User { get { return _User; } set { SetNotifyingProperty("User", ref _User, value); } }
-        public TweepType Type { get { return _Type; } set { SetNotifyingProperty("Type", ref _Type, value); } }
-
-        public string ScreenName { get { return User.Identifier.ScreenName; } }
+        public string ScreenName { get { return User.ScreenName; } }
 
         public Tweep() { }
+
+        public Tweep(LinqToTwitter.User user, TweepType type)
+        {
+            User = new User(user);
+            if (type == TweepType.Follower && user.Following)
+                Type = TweepType.Mutual;
+            else
+                Type = type;
+        }
 
         public Tweep(User user, TweepType type)
         {
@@ -44,9 +50,14 @@ namespace Postworthy.Models.Twitter
 
         public Tweep(PostworthyUser postworthyUser, TweepType type)
         {
-            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
-            User = context.User.Where(x => x.ScreenName == postworthyUser.TwitterScreenName && x.Type == UserType.Lookup).ToList().FirstOrDefault();
-            if (User == null) throw new Exception("Could not Find Twitter User!");
+            var model = TwitterModel.Instance(null);
+            var context = model.GetAuthorizedTwitterContext(model.PrimaryUser.TwitterScreenName);
+            var tempUser = context.User.Where(x => x.ScreenName == postworthyUser.TwitterScreenName && x.Type == UserType.Lookup).ToList().FirstOrDefault();
+            if (tempUser != null)
+                User = new User(tempUser);
+            else 
+                throw new Exception("Could not Find Twitter User!");
+            
             if (type == TweepType.Follower && User.Following)
                 Type = TweepType.Mutual;
             else
@@ -59,7 +70,7 @@ namespace Postworthy.Models.Twitter
             if (other is Tweep)
             {
                 var otherTweep = other as Tweep;
-                return this.User.Identifier.UserID == otherTweep.User.Identifier.UserID;
+                return this.User.UserID == otherTweep.User.UserID;
             }
             else
                 return false;
@@ -74,7 +85,7 @@ namespace Postworthy.Models.Twitter
         {
             get
             {
-                return "tweep_" + this.User.Identifier.UserID;
+                return "tweep_" + this.User.UserID;
             }
         }
         #endregion
@@ -83,7 +94,7 @@ namespace Postworthy.Models.Twitter
         public List<LazyLoader<Tweep>> Followers(bool forceRefresh = false)
         {
             if (_Followers == null || forceRefresh)
-                _Followers = TwitterModel.Instance.GetFollowersWithLazyLoading(User.Identifier.ScreenName) ?? new List<LazyLoader<Tweep>>();
+                _Followers = TwitterModel.Instance(null).GetFollowersWithLazyLoading(User.ScreenName) ?? new List<LazyLoader<Tweep>>();
 
             return _Followers;
         }
@@ -110,7 +121,7 @@ namespace Postworthy.Models.Twitter
 
         public override string ToString()
         {
-            return this.User.Identifier.ScreenName.PadRight(15) +  "\t" + Enum.GetName(typeof(TweepType), this.Type).PadRight(10) + "\t" + this.User.FollowersCount.ToString().PadLeft(10,'0');
+            return this.User.ScreenName.PadRight(15) + "\t" + Enum.GetName(typeof(TweepType), this.Type).PadRight(10) + "\t" + this.User.FollowersCount.ToString().PadLeft(10, '0');
         }
     }
 }

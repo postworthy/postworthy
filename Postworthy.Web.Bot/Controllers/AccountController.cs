@@ -11,57 +11,17 @@ using System.Xml.Serialization;
 using System.IO;
 using Postworthy.Models.Account;
 using Postworthy.Models.Twitter;
+using LinqToTwitter;
+using System.Threading.Tasks;
 
 namespace Postworthy.Web.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : AsyncController
     {
-        #region LinqToTwitter Workaround 1/16/2014 (http://linqtotwitter.codeplex.com/discussions/462676)
-        private class MvcAuthorizer : LinqToTwitter.WebAuthorizer
-        {
-            public ActionResult BeginAuthorization()
-            {
-                return new MvcOAuthActionResult(this);
-            }
-
-            public new ActionResult BeginAuthorization(Uri callback)
-            {
-                this.Callback = callback;
-                return new MvcOAuthActionResult(this);
-            }
-        }
-
-        private class MvcOAuthActionResult : ActionResult
-        {
-            private readonly LinqToTwitter.WebAuthorizer webAuth;
-
-            public MvcOAuthActionResult(LinqToTwitter.WebAuthorizer webAuth)
-            {
-                this.webAuth = webAuth;
-            }
-
-            public override void ExecuteResult(ControllerContext context)
-            {
-                webAuth.PerformRedirect = authUrl =>
-                {
-
-                    System.Web.HttpContext.Current.Response.Redirect(authUrl);
-                };
-
-                Uri callback =
-                    webAuth.Callback == null ?
-                        System.Web.HttpContext.Current.Request.Url :
-                        webAuth.Callback;
-
-                webAuth.BeginAuthorization(callback);
-            }
-        }
-        #endregion
-
         protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
             base.Initialize(requestContext);
-            var user = UsersCollection.PrimaryUser();
+            var user = UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
             if (user != null)
                 ViewBag.Brand = user.SiteName;
         }
@@ -69,29 +29,44 @@ namespace Postworthy.Web.Controllers
         //
         // GET: /Account/LogOn
 
-        public ActionResult LogOn()
+        public async Task<ActionResult> LogOn(bool complete = false)
         {
             //return View();
             if (!Request.IsAuthenticated)
             {
-                var credentials = new LinqToTwitter.InMemoryCredentials();
-                credentials.ConsumerKey = ConfigurationManager.AppSettings["TwitterCustomerKey"];
-                credentials.ConsumerSecret = ConfigurationManager.AppSettings["TwitterCustomerSecret"];
-                var auth = new MvcAuthorizer { Credentials = credentials };
-                auth.CompleteAuthorization(Request.Url);
-                if (!auth.IsAuthorized)
-                    return auth.BeginAuthorization(Request.Url);
-                else
+                if (complete)
                 {
-                    FormsAuthentication.SetAuthCookie(auth.ScreenName, true);
-                    PostworthyUser pm = UsersCollection.Single(auth.ScreenName, addIfNotFound: true);
+                    var auth = new MvcAuthorizer
+                    {
+                        CredentialStore = new SessionStateCredentialStore()
+                    };
+
+                    await auth.CompleteAuthorizeAsync(Request.Url);
+
+                    FormsAuthentication.SetAuthCookie(auth.CredentialStore.ScreenName, true);
+                    PostworthyUser pm = UsersCollection.Single(auth.CredentialStore.ScreenName, addIfNotFound: true);
                     if (string.IsNullOrEmpty(pm.AccessToken) && string.IsNullOrEmpty(pm.OAuthToken))
                     {
-                        pm.AccessToken = auth.Credentials.AccessToken;
-                        pm.OAuthToken = auth.Credentials.OAuthToken;
+                        pm.AccessToken = auth.CredentialStore.OAuthTokenSecret;
+                        pm.OAuthToken = auth.CredentialStore.OAuthToken;
                         UsersCollection.Save();
                     }
+
                     return RedirectToAction("Index", new { controller = "Dashboard", action = "Index", id = UrlParameter.Optional });
+                }
+                else
+                {
+                    //var auth = new MvcSignInAuthorizer
+                    var auth = new MvcAuthorizer
+                    {
+                        CredentialStore = new SessionStateCredentialStore
+                        {
+                            ConsumerKey = ConfigurationManager.AppSettings["TwitterCustomerKey"],
+                            ConsumerSecret = ConfigurationManager.AppSettings["TwitterCustomerSecret"]
+                        }
+                    };
+                    string twitterCallbackUrl = Request.Url.ToString() + "?complete=true";
+                    return await auth.BeginAuthorizationAsync(new Uri(twitterCallbackUrl));
                 }
             }
             else
@@ -115,7 +90,7 @@ namespace Postworthy.Web.Controllers
         {
             FormsAuthentication.SignOut();
 
-            return RedirectToAction("LogOn");
+            return RedirectToAction("BeginAsync");
         }
     }
 }

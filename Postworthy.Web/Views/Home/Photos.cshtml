@@ -1,0 +1,34 @@
+﻿@model IEnumerable<Postworthy.Models.Web.ArticleStub>
+
+@{
+    DateTime date = ViewBag.Date;
+    ViewBag.Title = "Photos for " + date.ToShortDateString();
+    var guid = Guid.NewGuid().ToString();
+    System.Web.HttpContext.Current.Cache[guid] = Model.First().Image ?? "";
+    int i = 0;
+}
+
+@section meta{
+    <meta name="twitter:card" data-page-subject="true" content="summary" />
+    <meta name="twitter:title" data-page-subject="true" content="@ViewBag.Title" />
+    <meta name="twitter:description" data-page-subject="true" content="@ViewBag.Title" />
+    <meta name="twitter:image" data-page-subject="true" content="@Url.RouteUrl("default", new RouteValueDictionary(new { action="image", id=guid }), Request.Url.Scheme, Request.Url.Authority)" />
+}
+
+<fieldset class="col-md-10 col-md-offset-1">
+    <legend class="postIndex">Photos for @date.ToShortDateString()</legend>
+
+    @foreach (var stub in Model)
+{
+    <a href="@stub.Link.ToString()">
+        <div class="col-md-2 col-sm-2 col-xs-2" data-squared="height" style="@(i++ % 6 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/png;base64,@stub.Image');">
+        </div>
+    </a>
+}
+</fieldset>
+
+@section scripts{
+    <script src="~/Scripts/smartResize.js"></script>
+    <script src="~/Scripts/squaredUp.js"></script>
+}
+

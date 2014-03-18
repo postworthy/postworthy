@@ -16,13 +16,14 @@ namespace Postworthy.Models.Twitter
 {
     public class TweetProcessor
     {
+        private const string YOUTUBE_EMBED = "https://www.youtube.com/embed/";
         private List<KeyValuePair<string, Action>> UriActions { get; set; }
 
         private TaskFactory TaskFactory { get; set; }
 
-        public TweetProcessor(IEnumerable<Tweet> tweets, bool force = false)
+        public TweetProcessor(IEnumerable<Tweet> tweets, int RetweetThreshold = 0, bool force = false)
         {
-            int RetweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
+            //int RetweetThreshold = UsersCollection.Single(screenname).RetweetThreshold;
 
             UriActions = new List<KeyValuePair<string, Action>>();
 
@@ -208,6 +209,43 @@ namespace Postworthy.Models.Twitter
                             uriex.Video = ogMeta.Where(x => x.Property == "og:video" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(uriex.Uri, x.Content)).FirstOrDefault();
                             uriex.Video = CleanYouTube(uriex.Video);
                         }
+
+                        var twitterMeta = nodes
+                            .Where(m => m.Attributes.SingleOrDefault(a => a.Name.ToLower() == "property" && a.Value.ToLower().StartsWith("twitter:")) != null)
+                            .Select(m =>
+                            new
+                            {
+                                Property = m.Attributes["property"].Value.ToLower(),
+                                Content = m.Attributes["content"] != null ? m.Attributes["content"].Value : (m.Attributes["value"] != null ? m.Attributes["value"].Value : "")
+                            });
+                        if (twitterMeta != null && twitterMeta.Count() > 0)
+                        {
+                            if(string.IsNullOrEmpty(uriex.Title))
+                                uriex.Title = (twitterMeta.Where(x => x.Property == "twitter:title" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content).FirstOrDefault() ?? "").Trim();
+                            if (string.IsNullOrEmpty(uriex.Description))
+                                uriex.Description = twitterMeta.Where(x => x.Property == "twitter:description" && !string.IsNullOrEmpty(x.Content)).Select(x => x.Content).FirstOrDefault() ?? "";
+                            if (uriex.Image == null)
+                                uriex.Image = twitterMeta.Where(x => x.Property == "twitter:image" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(uriex.Uri, x.Content)).FirstOrDefault();
+                            if (uriex.Video == null)
+                            {
+                                uriex.Video = twitterMeta.Where(x => x.Property == "twitter:player" && !string.IsNullOrEmpty(x.Content)).Select(x => CreateUriSafely(uriex.Uri, x.Content)).FirstOrDefault();
+                                uriex.Video = CleanYouTube(uriex.Video);
+                            }
+                        }
+                    }
+
+                    if(uriex.Video == null)
+                    {
+                        nodes = doc.DocumentNode.SelectNodes("//iframe");
+                        if (nodes != null && nodes.Count > 0)
+                        {
+                            var iframes = nodes
+                            .Where(i => i.Attributes["src"] != null && i.Attributes["src"].Value.ToLower().StartsWith(YOUTUBE_EMBED))
+                            .Select(i => i.Attributes["src"].Value);
+
+                            if (iframes.Count() > 0)
+                                uriex.Video = new Uri(iframes.FirstOrDefault());
+                        }
                     }
                 }
             }
@@ -240,10 +278,10 @@ namespace Postworthy.Models.Twitter
             if (Video != null)
             {
                 string uri = Video.ToString().ToLower();
-                if (uri.Contains("youtube.com"))
+                if (uri.Contains("youtube.com") && !uri.Contains(YOUTUBE_EMBED))
                 {
                     string code = Video.ToString().Split(new string[] { "/v/" }, StringSplitOptions.RemoveEmptyEntries)[1].Split('?')[0];
-                    return new Uri("http://www.youtube.com/embed/" + code);
+                    return new Uri(YOUTUBE_EMBED + code);
                 }
             }
             return Video;

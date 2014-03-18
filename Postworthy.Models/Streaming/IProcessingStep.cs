@@ -10,7 +10,7 @@ namespace Postworthy.Models.Streaming
 {
     public interface IProcessingStep
     {
-        void Init(TextWriter LogStream);
+        void Init(string screenname, TextWriter LogStream);
         Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets);
         void Shutdown();
     }

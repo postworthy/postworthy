@@ -15,7 +15,10 @@ namespace Postworthy.Web.Models
         {
             base.OnAuthorization(filterContext);
 
-            if (filterContext.HttpContext.User.Identity.Name.ToLower() != UsersCollection.PrimaryUser().TwitterScreenName.ToLower())
+            if (UsersCollection.PrimaryUsers()
+                .Where(u => u.TwitterScreenName.ToLower() == filterContext.HttpContext.User.Identity.Name.ToLower())
+                .Where(u => u.IsPrimaryUser)
+                .Count() == 0)
             {
                 FormsAuthentication.SignOut();
                 filterContext.Result = new HttpUnauthorizedResult("Not Primary User");

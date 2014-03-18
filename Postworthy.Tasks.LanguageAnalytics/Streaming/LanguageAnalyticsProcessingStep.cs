@@ -28,13 +28,13 @@ namespace Postworthy.Tasks.LanguageAnalytics.Streaming
         private int saveCount = 0;
         private List<string> NoTweetList = new List<string>();
         private TextWriter log = null;
-        private Tweep PrimaryTweep = new Tweep(UsersCollection.PrimaryUser(), Tweep.TweepType.None);
+        private Tweep PrimaryTweep;
         private IEnumerable<string> StopWords = null;
         private Regex PunctuationRegex = new Regex(@"(\p{P})|\t|\n|\r", RegexOptions.Compiled);
         private Regex WhiteSpaceRegex = new Regex(@"\s{2,}", RegexOptions.Compiled);
         private DateTime LastUpdatedTwitterSuggestedFollows = DateTime.MinValue;
         private LanguageAnalyticsResults LanguageAnalyticsResults = null;
-        private CachedRepository<LanguageAnalyticsResults> settingsRepo = CachedRepository<LanguageAnalyticsResults>.Instance;
+        private CachedRepository<LanguageAnalyticsResults> settingsRepo;
         private List<WordNode> WordNodes = new List<WordNode>();
         private List<Phrase> Phrases = new List<Phrase>();
 
@@ -46,15 +46,19 @@ namespace Postworthy.Tasks.LanguageAnalytics.Streaming
             }
         }
 
-        public void Init(TextWriter log)
+        public void Init(string screenname, TextWriter log)
         {
             this.log = log;
+
+            PrimaryTweep = new Tweep(UsersCollection.Single(screenname), Tweep.TweepType.None);
+
+            settingsRepo = CachedRepository<LanguageAnalyticsResults>.Instance(screenname);
 
             LanguageAnalyticsResults = (settingsRepo.Query(RuntimeRepoKey)
                 ?? new List<LanguageAnalyticsResults> { new LanguageAnalyticsResults() }).FirstOrDefault()
                 ?? new LanguageAnalyticsResults();
 
-            NoTweetList.Add(UsersCollection.PrimaryUser().TwitterScreenName.ToLower());
+            NoTweetList.Add(screenname);
         }
 
         public Task<IEnumerable<Tweet>> ProcessItems(IEnumerable<Tweet> tweets)
@@ -193,11 +197,11 @@ namespace Postworthy.Tasks.LanguageAnalytics.Streaming
         private void CreatePhrases()
         {
             var totalWords = WordNodes.Count;
-            if(totalWords > 100 && Phrases.Count == 0)
+            if (totalWords > 100 && Phrases.Count == 0)
             {
                 int depth = MAX_PHRASE_WORD_COUNT - 1;
                 var wordNodes = WordNodes.OrderByDescending(x => x.Count).Take(5); //Get Top 10%
-                foreach(var wordNode in wordNodes)
+                foreach (var wordNode in wordNodes)
                 {
                     Phrases.AddRange(wordNode.Phrases(depth).Select(x => new Phrase() { Words = x }));
                 }

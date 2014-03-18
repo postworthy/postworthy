@@ -17,10 +17,11 @@ using System.Configuration;
 using System.Reflection;
 
 namespace Postworthy.Models.Repository
-{  
-    public sealed class __Repository<TYPE> where TYPE : RepositoryEntity
+{
+    [Obsolete("This class is obsolete.", true)]
+    public sealed class Repository<TYPE> where TYPE : RepositoryEntity
     {
-        private static volatile __Repository<TYPE> instance;
+        private static volatile Repository<TYPE> instance;
         private static object instance_lock = new object();
         private static object keynotfound_lock = new object();
         private Timer SaveTimer;
@@ -31,7 +32,7 @@ namespace Postworthy.Models.Repository
         private Dictionary<string, List<TYPE>> ChangeQueue;
         public event Func<string, List<TYPE>> KeyNotFound;
         public event Func<string, List<TYPE>> RefreshData;
-        private __Repository() 
+        private Repository()
         {
             MemoryCache = GetStorageProvider("OverrideLocalStorageProvider", () => { return new MemoryCache<TYPE>(QueueChange); });
             LongTermStorageCache = GetStorageProvider("OverrideLongTermStorageProvider", () => { return new FileSystemCache<TYPE>(); });
@@ -77,16 +78,16 @@ namespace Postworthy.Models.Repository
                 RefreshTimer.Start();
             }
         }
-        public static __Repository<TYPE> Instance
+        public static Repository<TYPE> Instance
         {
-            get 
+            get
             {
                 if (instance == null)
                 {
                     lock (instance_lock)
                     {
                         if (instance == null)
-                            instance = new __Repository<TYPE>();
+                            instance = new Repository<TYPE>();
                     }
                 }
                 return instance;
@@ -145,7 +146,7 @@ namespace Postworthy.Models.Repository
         {
             key = key.ToLower();
             Delete(key, Find(key, false));
-            
+
         }
         public void Delete(string key, TYPE obj)
         {
@@ -183,7 +184,7 @@ namespace Postworthy.Models.Repository
 
                 if (objects != null)
                 {
-                    foreach(var o in objects)
+                    foreach (var o in objects)
                     {
                         InsertIntoLocalCache(key, o);
                     }
@@ -285,9 +286,9 @@ namespace Postworthy.Models.Repository
         }
         private void SaveQueue()
         {
-            lock(ChangeQueue)
+            lock (ChangeQueue)
             {
-                foreach(var key in ChangeQueue.Keys)
+                foreach (var key in ChangeQueue.Keys)
                 {
                     Save(key, ChangeQueue[key].Distinct().ToList());
                 }
@@ -297,13 +298,13 @@ namespace Postworthy.Models.Repository
         private void QueueChange(string key, TYPE obj)
         {
             key = key.ToLower();
-            lock(ChangeQueue)
+            lock (ChangeQueue)
             {
                 List<TYPE> items = ChangeQueue.ContainsKey(key) ? ChangeQueue[key] : null;
-                if(items != null)
+                if (items != null)
                     items.Add(obj);
                 else
-                    ChangeQueue.Add(key, new List<TYPE>{ obj});
+                    ChangeQueue.Add(key, new List<TYPE> { obj });
             }
         }
         private RepositoryStorageProvider<TYPE> GetStorageProvider(string SettingKey, Func<RepositoryStorageProvider<TYPE>> defaultType)
@@ -311,7 +312,7 @@ namespace Postworthy.Models.Repository
             string overrideProvider = ConfigurationManager.AppSettings[SettingKey];
             if (!string.IsNullOrEmpty(overrideProvider))
             {
-                var assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x=>x.GetType(overrideProvider, false) != null).FirstOrDefault();
+                var assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetType(overrideProvider, false) != null).FirstOrDefault();
                 if (assembly != null)
                 {
                     var type = assembly.GetType(overrideProvider, false);

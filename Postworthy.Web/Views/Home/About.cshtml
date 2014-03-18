@@ -4,7 +4,7 @@
     ViewBag.About = true;
 }
 
-<fieldset>
+<fieldset class="col-md-10 col-md-offset-1">
     <legend>About @( "@" + Model.TwitterScreenName)</legend>
     @if (Model.About == null && Request.IsAuthenticated && Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).IsPrimaryUser &&Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name).CanAuthorize)
     {

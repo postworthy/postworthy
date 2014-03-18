@@ -36,5 +36,7 @@ namespace Postworthy.Models.Repository.Providers
         {
             throw new NotImplementedException();
         }
+
+        public S3StorageCache(string providerKey) : base(providerKey) { }
     }
 }

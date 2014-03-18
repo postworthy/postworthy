@@ -15,49 +15,25 @@ namespace Postworthy.Models.Twitter
 {
     public class Tweet : RepositoryEntity, ISimilarText, ISimilarImage, ISimilarLinks, ITweet, IEquatable<Tweet>
     {
-        private Status _Status;
 
-        public Status Status { get { return _Status; } set { SetNotifyingProperty("Status", ref _Status, value); } }
+        public Status Status { get; set; }
 
         public Tweet()
         {
             Links = new List<UriEx>();
-            //WordLetterPairHash = Enumerable.Range(0, 9).Select(x => Guid.NewGuid().ToString().GetHashCode()).ToArray();
-            /*
-            Links.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((x, y) =>
-                {
-                    if (y.NewItems != null)
-                    {
-                        foreach (var item in y.NewItems)
-                        {
-                            (item as UriEx).PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler((x2, y2) => { base.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Links")); });
-                        }
-                    }
-                    base.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Links"));
-                });
-             */
         }
 
-        public Tweet(Status status)
+        public Tweet(LinqToTwitter.Status status)
+            : this(new Status(status))
+        {
+        }
+
+        public Tweet(Status status) : this()
         {
             if (status == null) throw new ArgumentException("ctor Tweet(Status status) can not be passed a null value!");
-            Links = new List<UriEx>();
-            /*
-            Links.CollectionChanged += new System.Collections.Specialized.NotifyCollectionChangedEventHandler((x,y) => 
-                {
-                    if (y.NewItems != null)
-                    {
-                        foreach (var item in y.NewItems)
-                        {
-                            (item as UriEx).PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler((x2, y2) => { base.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Links")); });
-                        }
-                    }
-                    base.OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Links"));
-                });
-            */
             Status = status;
             InitializeWordLetterPairHash(status.Text);
-            StatusID = ulong.Parse(this.Status.StatusID);
+            StatusID = this.Status.StatusID;
         }
 
         public ulong StatusID { get; set; }
@@ -116,18 +92,7 @@ namespace Postworthy.Models.Twitter
             }
         }
 
-        private int[] _WordLetterPairHash;
-        public int[] WordLetterPairHash
-        {
-            get
-            {
-                if (_WordLetterPairHash == null && Status != null)
-                    InitializeWordLetterPairHash(Status.Text);
-
-                return _WordLetterPairHash;
-            }
-            set { SetNotifyingProperty("WordLetterPairHash", ref _WordLetterPairHash, value); }
-        }
+        public int[] WordLetterPairHash { get; set; }
 
         #endregion
 
@@ -135,22 +100,13 @@ namespace Postworthy.Models.Twitter
 
         private void EncodeImage(Bitmap bmp)
         {
-            Bitmap result = new Bitmap(16, 16);
-            using (Graphics g = Graphics.FromImage((Image)result))
-            {
-                g.DrawImage(bmp, 0, 0, 16, 16);
-            }
-            bmp.Dispose();
-
-            var stream = new MemoryStream();
-            result.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
-            ImageBase64Encoded = Convert.ToBase64String(stream.ToArray());
+            ImageBase64Encoded = ImageManipulation.EncodeImage(bmp, 16, 16);
         }
 
         private Bitmap DecodeImage(string ImageBase64Encoded)
         {
-            if(_Image == null && !string.IsNullOrEmpty(ImageBase64Encoded))
-                _Image = (Bitmap)Bitmap.FromStream(new MemoryStream(Convert.FromBase64String(ImageBase64Encoded)));
+            if (_Image == null && !string.IsNullOrEmpty(ImageBase64Encoded))
+                _Image = ImageManipulation.DecodeImage(ImageBase64Encoded);
 
             return _Image;
         }
@@ -172,10 +128,9 @@ namespace Postworthy.Models.Twitter
 
         #region ITweet Members
 
-        private List<UriEx> _Links;
         private string _TweetText;
 
-        public List<UriEx> Links { get { return _Links; } set { SetNotifyingProperty("Links", ref _Links, value); } }
+        public List<UriEx> Links { get; set; }
         public string TweetText
         {
             get
@@ -186,7 +141,7 @@ namespace Postworthy.Models.Twitter
                     return Status.Text;
                 else return "";
             }
-            set { SetNotifyingProperty("TweetText", ref _TweetText, value); }
+            set { _TweetText = value; }
         }
 
         public int RetweetCount
@@ -327,7 +282,7 @@ namespace Postworthy.Models.Twitter
         {
             if (Links == null || Links.Count == 0)
             {
-                var tp = new TweetProcessor(new List<Tweet> { this }, true);
+                var tp = new TweetProcessor(new List<Tweet> { this }, 0, true);
                 tp.Start();
             }
         }

@@ -19,7 +19,6 @@ namespace Postworthy.Web.Models
     public class StreamingHub : Hub
     {
         public ControllerContext HomeContext { get; set; }
-        public ControllerContext MobileContext { get; set; }
 
         public StreamingHub()
             : base()
@@ -75,7 +74,6 @@ namespace Postworthy.Web.Models
                         List<string> returnValues = new List<string>();
                         List<string> returnValuesMobile = new List<string>();
                         ViewEngineResult viewResult = ViewEngines.Engines.FindPartialView(HomeContext, "_Item");
-                        ViewEngineResult viewResultMobile = ViewEngines.Engines.FindPartialView(MobileContext, "_Item");
 
                         var tweetCache = TwitterModel.Instance.PrimaryUserTweetCache;
                         if (tweetCache != null) tweetCache.AddRange(tweetsToSend);
@@ -100,13 +98,6 @@ namespace Postworthy.Web.Models
                                 viewResult.View.Render(viewContext, sw);
 
                                 returnValues.Add(sw.GetStringBuilder().ToString());
-                            }
-                            using (StringWriter sw = new StringWriter())
-                            {
-                                ViewContext viewContextMobile = new ViewContext(MobileContext, viewResultMobile.View, ViewData, new TempDataDictionary(), sw);
-                                viewResultMobile.View.Render(viewContextMobile, sw);
-
-                                returnValuesMobile.Add(sw.GetStringBuilder().ToString());
                             }
                         }
                         Update(returnValues);

@@ -17,70 +17,100 @@ using Postworthy.Models.Account;
 using Postworthy.Models.Core;
 using Postworthy.Models.Repository.Providers;
 using HtmlAgilityPack;
+using System.Reflection;
 
 namespace Postworthy.Models.Twitter
 {
     public sealed class TwitterModel
     {
+        [ThreadStatic]
         private static volatile TwitterModel instance;
         private static object instance_lock = new object();
         private static object tweets_lock = new object();
 
-        public const string CACHED_TWEETS = "CachedTweets";
-        public const string TRACKER = "PostworthyTracker";
-        public const string TWEETS = "_tweets";
-        public const string FRIENDS = "_friends";
-        private const string GROUPING_RESULTS = "_GROUPING_RESULTS";
+        private const string _CACHED_TWEETS = "CachedTweets";
+        private const string _TRACKER = "PostworthyTracker";
+        private const string _TWEETS = "_tweets";
+        private const string _FRIENDS = "_friends";
+        private const string _GROUPING_RESULTS = "_GROUPING_RESULTS";
+        private const string _CONTENT_RESULTS = "_CONTENT_RESULTS";
+        private const string _CONTENT_INDEX = "_CONTENT_INDEX";
 
-        public static string GROUPING 
+        public readonly PostworthyUser PrimaryUser = null;
+
+        private string VERSION
         {
-            get { return UsersCollection.PrimaryUser().TwitterScreenName + GROUPING_RESULTS; }
+            get { return "_v" + Assembly.GetCallingAssembly().GetName().Version.ToString(); }
+        }
+        public string TRACKER
+        {
+            get { return PrimaryUser.TwitterScreenName + _TRACKER + _TWEETS + VERSION; }
+        }
+        public string TWEETS
+        {
+            get { return _TWEETS + VERSION; }
+        }
+        public string FRIENDS
+        {
+            get { return _FRIENDS + VERSION; }
         }
 
-        private TwitterModel()
+        public string GROUPING
         {
-            /*
-            #region Tweets
-            
-            CachedRepository<Tweet>.Instance.RefreshData += new Func<string,List<Tweet>>(key => 
-                {
-                    CachedRepository<Tweet>.Instance.RefreshLocalCache(key);
-                    return null;
-                });
-             
-            #endregion
-
-            #region Friends
-            CachedRepository<Tweep>.Instance.RefreshData += new Func<string, List<Tweep>>(key =>
-            {
-                CachedRepository<Tweep>.Instance.RefreshLocalCache(key);
-                return null;
-            });
-            #endregion
-             */
+            get { return PrimaryUser.TwitterScreenName + _GROUPING_RESULTS + VERSION; }
         }
 
-        public static TwitterModel Instance
+        public string CONTENT
         {
-            get
+            get { return PrimaryUser.TwitterScreenName + _CONTENT_RESULTS + VERSION; }
+        }
+
+        public string CONTENT_INDEX
+        {
+            get { return PrimaryUser.TwitterScreenName + _CONTENT_INDEX + VERSION; }
+        }
+
+        private TwitterModel(string screenname)
+        {
+            PrimaryUser = UsersCollection.Single(screenname);
+            if (PrimaryUser == null)
+                throw new Exception(screenname + " user not found!");
+        }
+
+        public static TwitterModel Instance(string screenname)
+        {
+            if (instance == null)
             {
-                if (instance == null)
+                lock (instance_lock)
                 {
-                    lock (instance_lock)
+                    if (instance == null)
                     {
-                        if (instance == null)
-                            instance = new TwitterModel();
+                        if (screenname != null)
+                            instance = new TwitterModel(screenname);
+                        else
+                            throw new Exception("ScreenName cannot be null on first call to TwitterModel.Instance");
                     }
                 }
-                return instance;
             }
+            else if (screenname != null && instance.PrimaryUser.TwitterScreenName.ToLower() != screenname.ToLower())
+            {
+                instance = null;
+                return Instance(screenname);
+            }
+
+            return instance;
         }
 
-        public List<ITweet> PrimaryUserTweetCache 
-        { 
+        public void SetPrimaryUser(string screenname)
+        {
+            
+        }
+
+        public List<ITweet> PrimaryUserTweetCache
+        {
             get
             {
-                return HttpRuntime.Cache[UsersCollection.PrimaryUser().TwitterScreenName + "_" + CACHED_TWEETS] as List<ITweet>;
+                return HttpRuntime.Cache[PrimaryUser.TwitterScreenName + "_" + _CACHED_TWEETS] as List<ITweet>;
             }
         }
 
@@ -88,12 +118,12 @@ namespace Postworthy.Models.Twitter
         {
             List<ITweet> returnTweets;
             //Since the grouping can be a somewhat expensive task we will cache the results to gain a speed up.
-            var cachedResponse = HttpRuntime.Cache[screenname + "_" + CACHED_TWEETS] as List<ITweet>;
+            var cachedResponse = HttpRuntime.Cache[screenname + "_" + _CACHED_TWEETS] as List<ITweet>;
             if (cachedResponse != null && cachedResponse.Count > 0)
                 returnTweets = cachedResponse;
             else
             {
-                var sharedResult = CachedRepository<TweetGroup>.Instance.Query(GROUPING, pageSize: 1000);
+                var sharedResult = CachedRepository<TweetGroup>.Instance(PrimaryUser.TwitterScreenName).Query(GROUPING, pageSize: 1000);
                 //Check to see if we have a recent grouping available (by recent it must be within the last 30 minutes)
                 //This is what the Grouping task does for us in the background
                 var useShared = sharedResult != null && sharedResult.Count() > 0 && sharedResult.First().CreatedOn.AddMinutes(30) > DateTime.Now;
@@ -101,14 +131,14 @@ namespace Postworthy.Models.Twitter
                 {
                     lock (tweets_lock)
                     {
-                        cachedResponse = HttpRuntime.Cache[screenname + "_" + CACHED_TWEETS] as List<ITweet>;
+                        cachedResponse = HttpRuntime.Cache[screenname + "_" + _CACHED_TWEETS] as List<ITweet>;
                         if (cachedResponse != null && cachedResponse.Count > 0)
                             returnTweets = cachedResponse;
                         else
                         {
                             var results = sharedResult.Cast<ITweet>().ToList();
                             results.AddRange(GetTweets(screenname, includeRelevantScreenNames, sharedResult.SelectMany(g => g.GroupStatusIDs).ToList()));
-                            HttpRuntime.Cache.Add(screenname + "_" + CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(15), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
+                            HttpRuntime.Cache.Add(screenname + "_" + _CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(15), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
                             returnTweets = results;
                         }
                     }
@@ -119,7 +149,7 @@ namespace Postworthy.Models.Twitter
                 {
                     lock (tweets_lock)
                     {
-                        cachedResponse = HttpRuntime.Cache[screenname + "_" + CACHED_TWEETS] as List<ITweet>;
+                        cachedResponse = HttpRuntime.Cache[screenname + "_" + _CACHED_TWEETS] as List<ITweet>;
                         if (cachedResponse != null && cachedResponse.Count > 0)
                             returnTweets = cachedResponse;
                         else
@@ -127,7 +157,7 @@ namespace Postworthy.Models.Twitter
                             var results = GetTweets(screenname, includeRelevantScreenNames);
 
                             if (results != null && results.Count > 0)
-                                HttpRuntime.Cache.Add(screenname + "_" + CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(5), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
+                                HttpRuntime.Cache.Add(screenname + "_" + _CACHED_TWEETS, results, null, DateTime.Now.AddMinutes(5), Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
 
                             returnTweets = results;
                         }
@@ -150,26 +180,26 @@ namespace Postworthy.Models.Twitter
             else
                 screenNames = new List<string> { screenname.ToLower() };
 
-            int RetweetThreshold = UsersCollection.PrimaryUser().RetweetThreshold;
+            int RetweetThreshold = PrimaryUser.RetweetThreshold;
 
             Func<Tweet, bool> where = t =>
                 //If there are any IDs we want to filter out
                 (excludeStatusIDs == null || !excludeStatusIDs.Contains(t.StatusID)) &&
-                //Should everything be displayed or do you only want content
+                    //Should everything be displayed or do you only want content
                 (user.OnlyTweetsWithLinks == false || (t.Links != null && t.Links.Count > 0)) &&
-                //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
-                ((t.RetweetCount >= RetweetThreshold /*&& t.CreatedAt > DateTime.Now.AddHours(-48)*/) || t.User.Identifier.ScreenName.ToLower() == screenname.ToLower());
+                    //Minumum threshold applied so we get results worth seeing (if it is your own tweet it gets a pass on this step)
+                ((t.RetweetCount >= RetweetThreshold /*&& t.CreatedAt > DateTime.Now.AddHours(-48)*/) || t.User.ScreenName.ToLower() == screenname.ToLower());
 
             var tweets = screenNames
                 //For each screen name (i.e. - you and your friends if included) select the most recent tweets
-                .SelectMany(x => CachedRepository<Tweet>.Instance.Query(x + TWEETS, where: where) ?? new List<Tweet>())
+                .SelectMany(x => CachedRepository<Tweet>.Instance(PrimaryUser.TwitterScreenName).Query(x + TWEETS, where: where) ?? new List<Tweet>())
                 //Order all tweets based on rank
                 .OrderByDescending(t => t.TweetRank)
                 .Distinct(Tweet.GetTweetTextComparer())
                 .ToList();
 
-            if(!string.IsNullOrEmpty(UsersCollection.PrimaryUser().Track))
-                tweets.AddRange(CachedRepository<Tweet>.Instance.Query(TRACKER + TWEETS, pageSize: 1000, where: where) ?? new List<Tweet>());
+            if (!string.IsNullOrEmpty(PrimaryUser.Track))
+                tweets.AddRange(CachedRepository<Tweet>.Instance(PrimaryUser.TwitterScreenName).Query(TRACKER, pageSize: 1000, where: where) ?? new List<Tweet>());
 
             return tweets.Cast<ITweet>().ToList();
         }
@@ -179,14 +209,14 @@ namespace Postworthy.Models.Twitter
             var screenNames = new List<string> { screenname.ToLower() };
 
             if (UsersCollection.Single(screenname) != null && UsersCollection.Single(screenname).IncludeFriends)
-                screenNames.AddRange((Friends(screenname) ?? new List<Tweep>()).Where(f => f.Type != Tweep.TweepType.Follower).Select(f => f.User.Identifier.ScreenName.ToLower()));
+                screenNames.AddRange((Friends(screenname) ?? new List<Tweep>()).Where(f => f.Type != Tweep.TweepType.Follower).Select(f => f.User.ScreenName).Where(f => f != null).Select(f => f.ToLower()));
 
             return screenNames;
         }
 
         public List<Tweep> Friends(string screenname)
         {
-            var friends = CachedRepository<Tweep>.Instance.Query(screenname + FRIENDS).ToList();
+            var friends = CachedRepository<Tweep>.Instance(PrimaryUser.TwitterScreenName).Query(screenname + FRIENDS, pageSize: 1000).ToList();
             /*
             if (friends == null)
             {
@@ -199,22 +229,30 @@ namespace Postworthy.Models.Twitter
 
         public Tweep CreateFriendship(Tweep follow, string screenname = null)
         {
-            if (string.IsNullOrEmpty(screenname)) screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+            if (string.IsNullOrEmpty(screenname)) screenname = PrimaryUser.TwitterScreenName;
 
-            var user = GetAuthorizedTwitterContext(screenname).CreateFriendship(follow.User.Identifier.UserID, null, true);
+            var createFriendshipTask = GetAuthorizedTwitterContext(screenname).CreateFriendshipAsync(follow.User.UserID, true);
+
+            createFriendshipTask.Wait();
+
+            var user = createFriendshipTask.Result;
 
             return new Tweep(user, user.Following ? Tweep.TweepType.Following : Tweep.TweepType.None);
         }
 
         public void UpdateStatus(string statusText, string screenname = null, bool processStatus = true)
         {
-            if (string.IsNullOrEmpty(screenname)) screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+            if (string.IsNullOrEmpty(screenname)) screenname = PrimaryUser.TwitterScreenName;
 
-            var status = GetAuthorizedTwitterContext(screenname).UpdateStatus(statusText);
+            var tweetTask = GetAuthorizedTwitterContext(screenname).TweetAsync(statusText);
+
+            tweetTask.Wait();
+
+            var status = tweetTask.Result;
 
             if (processStatus)
             {
-                status = TwitterModel.Instance.GetAuthorizedTwitterContext(screenname)
+                status = TwitterModel.Instance(PrimaryUser.TwitterScreenName).GetAuthorizedTwitterContext(screenname)
                                 .Status
                                 .Where(s => s.StatusID == status.StatusID && s.ScreenName == screenname && s.IncludeEntities == true && s.Type == StatusType.User && s.Count == 1)
                                 .ToList().FirstOrDefault();
@@ -223,42 +261,46 @@ namespace Postworthy.Models.Twitter
                 {
                     var tweet = new Tweet(status);
                     tweet.PopulateExtendedData();
-                    CachedRepository<Tweet>.Instance.Save(screenname + TWEETS, tweet);
+                    CachedRepository<Tweet>.Instance(PrimaryUser.TwitterScreenName).Save(screenname + TWEETS, tweet);
                 }
             }
         }
 
-        public void Retweet(string statusId, string screenname = null)
+        public void Retweet(ulong statusId, string screenname = null)
         {
-            if (string.IsNullOrEmpty(screenname)) screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+            if (string.IsNullOrEmpty(screenname)) screenname = PrimaryUser.TwitterScreenName;
 
-            var status = GetAuthorizedTwitterContext(screenname).Retweet(statusId);
+            var retweetTask = GetAuthorizedTwitterContext(screenname).RetweetAsync(statusId);
+
+            retweetTask.Wait();
+
+            var status = retweetTask.Result;
         }
 
         public void UpdateFriendsForPrimaryUser()
         {
-            string screenname = UsersCollection.PrimaryUser().TwitterScreenName;
+            string screenname = PrimaryUser.TwitterScreenName;
 
             var user = UsersCollection.Single(screenname);
             if (user != null && user.CanAuthorize)
             {
-                try
+                //try
+                //{
+                var friends = GetFollowers(screenname);
+
+                if (friends != null && CachedRepository<Tweep>.Instance(PrimaryUser.TwitterScreenName).ContainsKey(screenname + FRIENDS))
                 {
-                    var friends = GetFollowers(screenname);
-
-                    if (friends != null && CachedRepository<Tweep>.Instance.ContainsKey(screenname + FRIENDS))
-                    {
-                        var repoFriends = CachedRepository<Tweep>.Instance.Query(screenname + FRIENDS);
-                        friends = friends.Except(repoFriends).ToList();
-                    }
-
-                    if (friends != null)
-                    {
-                        CachedRepository<Tweep>.Instance.Save(screenname + FRIENDS, friends);
-                        //CachedRepository<Tweep>.Instance.FlushChanges();
-                    }
+                    //var repoFriends = CachedRepository<Tweep>.Instance.Query(screenname + FRIENDS);
+                    //friends = friends.Except(repoFriends).ToList();
                 }
-                catch { }
+
+                if (friends != null)
+                {
+                    CachedRepository<Tweep>.Instance(PrimaryUser.TwitterScreenName).Save(screenname + FRIENDS, friends);
+                    //CachedRepository<Tweep>.Instance.FlushChanges();
+                }
+                //}
+                //catch { }
             }
         }
 
@@ -301,43 +343,44 @@ namespace Postworthy.Models.Twitter
             doc.LoadHtml(resultObject.user_recommendations_html);
             var tweeps = doc.DocumentNode
                 .SelectNodes("//div[@data-user-id]")
-                .Select(x=>x.GetAttributeValue("data-user-id",""))
+                .Select(x => x.GetAttributeValue("data-user-id", ""))
                 .Distinct()
-                .Select(x => GetLazyLoadedTweep(x, Tweep.TweepType.Suggested));
+                .Select(x => GetLazyLoadedTweep(ulong.Parse(x), Tweep.TweepType.Suggested));
 
-            return tweeps.Take(50).Select(x => x.Value).OrderByDescending(x=>x.Clout()).ToList();
+            return tweeps.Take(50).Select(x => x.Value).OrderByDescending(x => x.Clout()).ToList();
         }
 
         public List<LazyLoader<Tweep>> GetFollowersWithLazyLoading(string screenname)
         {
-            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
+            var context = TwitterModel.Instance(PrimaryUser.TwitterScreenName).GetAuthorizedTwitterContext(PrimaryUser.TwitterScreenName);
 
-            try
-            {
-                var friends = context
-                    .SocialGraph
-                    .Where(g => g.ScreenName == screenname && g.Type == SocialGraphType.Followers && g.Cursor == "-1")
-                    .SelectMany(g => g.IDs)
-                    .Select(s => new LazyLoader<Tweep>(s,
-                        (() => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == s).First(), Tweep.TweepType.Follower))))
-                    .ToList();
+            //try
+            //{
+            var friends = context
+                .Friendship
+                .Where(g => g.ScreenName == screenname && g.Type == FriendshipType.FollowersList && g.Cursor == -1)
+                .SelectMany(g => g.Users)
+                .Select(s => new LazyLoader<Tweep>(ulong.Parse(s.UserIDResponse),
+                    (() => new Tweep(s, Tweep.TweepType.Follower))))
+                .ToList();
 
-                friends.AddRange(context
-                    .SocialGraph
-                    .Where(g => g.ScreenName == screenname && g.Type == SocialGraphType.Friends && g.Cursor == "-1")
-                    .SelectMany(g => g.IDs)
-                    .Except(friends.Select(x => x.ID))
-                    .Select(s => new LazyLoader<Tweep>(s,
-                        (() => new Tweep(context.User.Where(u => u.Type == UserType.Show && u.UserID == s).First(), Tweep.TweepType.Following)))));
+            friends.AddRange(context
+                .Friendship
+                .Where(g => g.ScreenName == screenname && g.Type == FriendshipType.FriendsList && g.Cursor == -1)
+                .SelectMany(g => g.Users)
+                .Select(s => new LazyLoader<Tweep>(ulong.Parse(s.UserIDResponse),
+                    (() => new Tweep(s, Tweep.TweepType.Following))))
+                .Where(x => !friends.Select(y => y.ID).Contains(x.ID)));
 
-                return friends;
-            }
-            catch { return null; }
+
+            return friends;
+            //}
+            //catch { return null; }
         }
 
-        public LazyLoader<Tweep> GetLazyLoadedTweep(string userID, Tweep.TweepType tweepType = Tweep.TweepType.None)
+        public LazyLoader<Tweep> GetLazyLoadedTweep(ulong userID, Tweep.TweepType tweepType = Tweep.TweepType.None)
         {
-            var context = TwitterModel.Instance.GetAuthorizedTwitterContext(UsersCollection.PrimaryUser().TwitterScreenName);
+            var context = TwitterModel.Instance(PrimaryUser.TwitterScreenName).GetAuthorizedTwitterContext(PrimaryUser.TwitterScreenName);
 
             return new LazyLoader<Tweep>(
                 userID,
@@ -351,9 +394,9 @@ namespace Postworthy.Models.Twitter
             {
                 return new TwitterContext(new MvcAuthorizer()
                 {
-                    Credentials = new LinqToTwitter.InMemoryCredentials()
+                    CredentialStore = new LinqToTwitter.InMemoryCredentialStore()
                     {
-                        AccessToken = pm.AccessToken,
+                        OAuthTokenSecret = pm.AccessToken,
                         ConsumerKey = ConfigurationManager.AppSettings["TwitterCustomerKey"],
                         ConsumerSecret = ConfigurationManager.AppSettings["TwitterCustomerSecret"],
                         OAuthToken = pm.OAuthToken

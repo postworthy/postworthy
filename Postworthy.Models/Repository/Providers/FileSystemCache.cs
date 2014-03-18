@@ -10,6 +10,7 @@ namespace Postworthy.Models.Repository.Providers
 {
     public class FileSystemCache<TYPE> : RepositoryStorageProvider<TYPE> where TYPE : RepositoryEntity
     {
+        public FileSystemCache(string providerKey) : base(providerKey) { }
         private string GetPath(string key)
         {
             return FileUtility.GetPath(key + ".json");

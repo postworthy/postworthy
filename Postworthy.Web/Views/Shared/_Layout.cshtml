@@ -4,6 +4,8 @@
     { 
         Brand = "Postworthy";
     }
+
+    var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
 }
 
 <!DOCTYPE html>
@@ -11,38 +13,42 @@
 <head>
     <meta charset="utf-8" />
     <title>@ViewBag.Title</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="" />
+    <meta name="author" content="@("@" + PrimaryUser.TwitterScreenName)" />
+    <meta content="@("@" + PrimaryUser.TwitterScreenName)" data-page-subject="true" name="twitter:site"/>
+    <meta content="@("@" + PrimaryUser.TwitterScreenName)" data-page-subject="true" name="twitter:creator"/>
+    @RenderSection("meta", required:false)
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 
 </head>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
+    <div class="navbar navbar-inverse navbar-static-top">
+        <div class="col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-1">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                
-                @Html.ActionLink(Brand, "Index", "Home", null, new { @class = "navbar-brand" })
+
+                <a class="navbar-brand" href="~/">@Brand</a>
             </div>
-            <div class="navbar-collapse collapse">
+            <div class="navbar-collapse collapse pull-right">
                 <ul class="nav navbar-nav">
                     <li class="@((ViewBag.Home == true) ? "active" : "")"><a href="@Url.Content("~/")"><i class="glyphicon glyphicon-home @((ViewBag.Home == true) ? "icon-white" : "")"></i><span class="hidden-xs" style="display: inline !important"> Home</span></a></li>
-                    <li class="@((ViewBag.About == true)? "active" : "")"><a href="@(Url.Content("~/home/about"))"><i class="glyphicon glyphicon-info-sign @((ViewBag.About == true) ? "icon-white" : "")"></i><span class="hidden-xs" style="display: inline !important"> About</span></a></li>
+                    <li class="@((ViewBag.About == true)? "active" : "")"><a href="@(Url.Content("~/home/about/" + PrimaryUser.TwitterScreenName))"><i class="glyphicon glyphicon-info-sign @((ViewBag.About == true) ? "icon-white" : "")"></i><span class="hidden-xs" style="display: inline !important"> About</span></a></li>
+                    @Html.Partial("_LoginPartial")
                 </ul>
-                @Html.Partial("_LoginPartial")
             </div>
         </div>
     </div>
     <div class="container body-content">
         @RenderBody()
-        <hr />
-        <footer>
+        
+        <footer class="col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-1">
+            <hr />
             <p>
                 &copy; @Brand @DateTime.Now.Year powered by <a target="_blank" href="http://postworthy.org" title="Postworthy - The Open Source Content Curation Tool">Postworthy</a>
             </p>
@@ -52,6 +58,6 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
-    @Html.Raw(Postworthy.Models.Account.UsersCollection.PrimaryUser().AnalyticsScript ?? "")
+    @Html.Raw(PrimaryUser.AnalyticsScript ?? "")
 </body>
 </html>

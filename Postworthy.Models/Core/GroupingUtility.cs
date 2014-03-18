@@ -124,12 +124,12 @@ namespace Postworthy.Models.Core
                                 #region Compare Links and Assign Similarity (Pass 3)
                                 if (so[i].Object.Links != null && so[j].Object.Links != null)
                                 {
-                                    var iLinks = so[i].Object.Links.Select(x => x.Uri);
-                                    var jLinks = so[j].Object.Links.Select(x => x.Uri);
+                                    var iLinks = so[i].Object.Links.Select(x => x);
+                                    var jLinks = so[j].Object.Links.Select(x => x);
                                     var linkCount = iLinks.Count() + jLinks.Count();
                                     if (linkCount > 0)
                                     {
-                                        var matchPercentage = (2.0M * iLinks.Count(x => jLinks == x)) / linkCount;
+                                        var matchPercentage = (2.0M * iLinks.Count(x => jLinks.Any(y=>y.Equals(x)))) / linkCount;
                                         if (matchPercentage != 0)
                                         {
                                             so[j].ParentObject = so[i].Object;
