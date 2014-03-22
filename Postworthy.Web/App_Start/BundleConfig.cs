@@ -26,6 +26,9 @@ namespace Postworthy.Web
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
                       "~/Content/site.css"));
+
+            bundles.Add(new ScriptBundle("~/bundles/tinymce/tinymce").Include(
+                      "~/Scripts/tinymce/tinymce.js"));
         }
     }
 }

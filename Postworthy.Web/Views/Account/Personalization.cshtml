@@ -4,31 +4,27 @@
     ViewBag.Account = true;
 }
 <style type="text/css">
-#About
-{
-    width:550px;
-    height:150px;
-}
-#AnalyticsScript
-{
-    width:550px;
-    height:150px;
-}
-#AdScript
-{
-    width:550px;
-    height:150px;
-}
-#MobileAdScript
-{
-    width:550px;
-    height:150px;
-}
+    #About {
+        width: 100%;
+        height: 150px;
+    }
+    #AnalyticsScript {
+        width: 100%;
+        height: 150px;
+    }
+    #AdScript {
+        width: 100%;
+        height: 150px;
+    }
+    #MobileAdScript {
+        width: 100%;
+        height: 150px;
+    }
 </style>
 @using (Html.BeginForm())
 {
     @Html.ValidationSummary(true)
-    <fieldset>
+    <fieldset class="col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-1">
         <legend>Site Personalization</legend>
         <div class="control-group">
             <div class="control-label">

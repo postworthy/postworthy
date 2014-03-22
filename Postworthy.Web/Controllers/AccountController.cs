@@ -45,7 +45,7 @@ namespace Postworthy.Web.Controllers
                     await auth.CompleteAuthorizeAsync(Request.Url);
 
                     FormsAuthentication.SetAuthCookie(auth.CredentialStore.ScreenName, true);
-                    PostworthyUser pm = UsersCollection.Single(auth.CredentialStore.ScreenName, addIfNotFound: true);
+                    PostworthyUser pm = UsersCollection.Single(auth.CredentialStore.ScreenName, force: true, addIfNotFound: true);
                     if (string.IsNullOrEmpty(pm.AccessToken) && string.IsNullOrEmpty(pm.OAuthToken))
                     {
                         pm.AccessToken = auth.CredentialStore.OAuthTokenSecret;
@@ -99,7 +99,7 @@ namespace Postworthy.Web.Controllers
 
         [AuthorizePrimaryUser]
         public ActionResult Personalization()
-        {  
+        {
             PostworthyUser model = UsersCollection.Single(User.Identity.Name);
             return View(model);
         }
@@ -110,7 +110,7 @@ namespace Postworthy.Web.Controllers
         public ActionResult Personalization(FormCollection form)
         {
 
-            var prevModel = UsersCollection.Single(User.Identity.Name);
+            var prevModel = UsersCollection.Single(User.Identity.Name, force: true);
 
             prevModel.SiteName = form["SiteName"];
             prevModel.About = form["About"];

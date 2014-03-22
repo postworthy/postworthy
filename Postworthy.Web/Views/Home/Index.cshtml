@@ -1,6 +1,7 @@
 ﻿@model Postworthy.Models.Web.ArticleStubPage
 @using Postworthy.Models.Twitter
 @{
+    DateTime date = ViewBag.Date;
     ViewBag.Title = ViewBag.Brand ?? "Postworthy";
     ViewBag.Home = true;
     var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
@@ -40,6 +41,12 @@
                     <div class=" post box col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-1" style="font-size:large;line-height:1em;clear:both">
                         <!--<span class="postIndex">Top Story</span>
                         <hr style="clear: both;" />-->
+                        @if (isPrimaryLoggedIn)
+                        {
+                            <button type="submit" class="btn btn-danger btn-xs removeButton" value="@featuredStub1.GetSlug()" name="slug">
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </button>
+                        }
                         @if (!string.IsNullOrEmpty(featuredStub1.Image))
                         {
                             <div class="imageDiv" style="height:200px;background-image: url('data:image/png;base64,@featuredStub1.Image');">
@@ -48,12 +55,6 @@
                         <a class="articleTitle" href="@featuredStub1.Link.ToString()">
                             @Html.Raw(featuredStub1.Title)
                         </a>
-                        @if (isPrimaryLoggedIn)
-                        {
-                            <button type="submit" class="btn btn-danger btn-xs" value="@featuredStub1.GetSlug()" name="slug">
-                                <span class="glyphicon glyphicon-remove"></span>
-                            </button>
-                        }
                         <p>
                             @Html.Raw(featuredStub1.GetSummary())
                         </p>
@@ -69,6 +70,12 @@
                                     <hr style="clear: both;" />
                                 }
                                 <span class="postIndex2">@(++index)</span>
+                                @if (isPrimaryLoggedIn)
+                                {
+                                    <button type="submit" class="btn btn-danger btn-xs removeButton" value="@stub.GetSlug()" name="slug">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
+                                }
                                 @if (!string.IsNullOrEmpty(stub.Image))
                                 {
                                     <div class="imageDiv" style="background-image: url('data:image/png;base64,@stub.Image');">
@@ -77,12 +84,6 @@
                                 <a class="articleTitle" href="@stub.Link.ToString()">
                                     @Html.Raw(stub.Title)
                                 </a>
-                                @if (isPrimaryLoggedIn)
-                                {
-                                    <button type="submit" class="btn btn-danger btn-xs" value="@stub.GetSlug()" name="slug">
-                                        <span class="glyphicon glyphicon-remove"></span>
-                                    </button>
-                                }
                                 <p>
                                     @Html.Raw(stub.GetSummary())
                                 </p>
@@ -93,15 +94,15 @@
                         {
                             <div class="post box" style="padding-top:5px;">
                                 <span class="postIndex2">@(++index)</span>
-                                <a class="articleTitle" href="@stub.Link.ToString()">
-                                    @Html.Raw(stub.Title)
-                                </a>
                                 @if (isPrimaryLoggedIn)
                                 {
-                                    <button type="submit" class="btn btn-danger btn-xs" value="@stub.GetSlug()" name="slug">
+                                    <button type="submit" class="btn btn-danger btn-xs removeButton" value="@stub.GetSlug()" name="slug">
                                         <span class="glyphicon glyphicon-remove"></span>
                                     </button>
                                 }
+                                <a class="articleTitle" href="@stub.Link.ToString()">
+                                    @Html.Raw(stub.Title)
+                                </a>
                                 <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
                             </div>
                         }
@@ -118,13 +119,12 @@
                         @if (photoStubs.Count > 0)
                         {
                             int i = 0;
-                            DateTime date = ViewBag.Date;
                             <div class="post box clearfix">
                                 <span class="postIndex pull-left">Photos</span>
                                 <hr style="clear: both;" />
                                 @foreach (var stub in photoStubs)
                                 {
-                                    <a href="@stub.Link.ToString()">
+                                    <a href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")">
                                         <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/png;base64,@stub.Image');">
                                         </div>
                                     </a>
@@ -134,11 +134,11 @@
                                     }
                                 }
                             </div>
-                            <a class="articleTitle" style="display: block; margin-bottom: 10px" href="~/@date.ToShortDateString().Replace('/','-')/photos">View All Photos</a>
+                            <a style="display: block; margin-bottom: 10px" href="~/@date.ToShortDateString().Replace('/','-')/photos">[View All Photos]</a>
                         }
                         @if (Model.ArticleStubs.Any(s => s.Video != null))
                         {
-                            <div class="post box">
+                            <div class="post box clearfix">
                                 <span class="postIndex pull-left">Videos</span>
                                 <hr style="clear: both;" />
                                 @{
@@ -148,17 +148,17 @@
                                 {
                                     if (vs.Video.Authority.ToLower().Contains("youtube"))
                                     {
-                                        DateTime date = ViewBag.Date;
-                                        <a class="articleTitle" style="display:block;margin-bottom:10px" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + vs.GetSlug())">
+                                        <a style="display:block;margin-bottom:10px" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + vs.GetSlug())">
                                             @Html.Raw(@vs.Title)
                                         </a>
                                     }
                                     else
                                     {
-                                        <a class="articleTitle" style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()">@Html.Raw(@vs.Title)</a>
+                                        <a style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()">@Html.Raw(@vs.Title)</a>
                                     }
                                 }
                             </div>
+                            <a style="display: block; margin-bottom: 10px" href="~/@date.ToShortDateString().Replace('/','-')/videos">[View All Videos]</a>
                         }
                         <div class="post box">
                             <span class="postIndex pull-left">Archives</span>
@@ -169,7 +169,7 @@
                             }
                             @foreach (var kvp in archivedPages)
                             {
-                                <a class="articleTitle" style="display: block; margin-bottom: 10px" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
+                                <a style="display: block; margin-bottom: 10px" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
                             }
                         </div>
                     </div>

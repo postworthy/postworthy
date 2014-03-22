@@ -79,7 +79,9 @@ namespace Postworthy.Tasks.WebContent
                 var existing = repoPage.Query(TwitterModel.Instance(u.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
 
                 if (existing != null && existing.ExcludedArticleStubs.Count > 0)
-                    articleStubPage.ExcludedArticleStubs = existing.ExcludedArticleStubs;
+                {
+                    articleStubPage.ExcludedArticleStubs = existing.ExcludedArticleStubs.Where(e=> articleStubPage.ArticleStubs.Contains(e)).ToList();
+                }
 
                 Console.WriteLine("{0}: Deleting old data from files from storage", DateTime.Now);
                 repoPage.Delete(TwitterModel.Instance(u.TwitterScreenName).CONTENT + dayTag);

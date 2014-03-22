@@ -1,7 +1,8 @@
-﻿@{
+﻿@using Postworthy.Web.Models;
+@{
     string Brand = ViewBag.Brand;
     if (string.IsNullOrEmpty(Brand))
-    { 
+    {
         Brand = "Postworthy";
     }
 
@@ -16,12 +17,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="" />
     <meta name="author" content="@("@" + PrimaryUser.TwitterScreenName)" />
-    <meta content="@("@" + PrimaryUser.TwitterScreenName)" data-page-subject="true" name="twitter:site"/>
-    <meta content="@("@" + PrimaryUser.TwitterScreenName)" data-page-subject="true" name="twitter:creator"/>
-    @RenderSection("meta", required:false)
+    <meta content="@("@" + PrimaryUser.TwitterScreenName)" data-page-subject="true" name="twitter:site" />
+    <meta content="@("@" + PrimaryUser.TwitterScreenName)" data-page-subject="true" name="twitter:creator" />
+    @RenderSection("meta", required: false)
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
-
+    @Html.CanonicalUrl()
 </head>
 <body>
     <div class="navbar navbar-inverse navbar-static-top">
@@ -46,7 +47,7 @@
     </div>
     <div class="container body-content">
         @RenderBody()
-        
+
         <footer class="col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-1">
             <hr />
             <p>
@@ -59,5 +60,24 @@
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
     @Html.Raw(PrimaryUser.AnalyticsScript ?? "")
+    <script type="text/javascript">
+        if (typeof ga != 'undefined' && typeof jQuery != 'undefined') {
+            jQuery('body').on('click', 'a', function (event) {
+                var el = jQuery(this);
+                var track = true;
+                var href = (typeof (el.attr('href')) != 'undefined') ? el.attr('href') : '';
+                var isThisDomain = href.match(document.domain.split('.').reverse()[1] + '.' + document.domain.split('.').reverse()[0]);
+                var label = href.replace(/^https?\:\/\//i, '')
+                if (href.match(/^https?\:/i) && !isThisDomain) {
+                    ga('send', 'event', 'outbound', 'click', label, {
+                        'hitCallback':
+                            function () {
+                                document.location = href;
+                            }
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>

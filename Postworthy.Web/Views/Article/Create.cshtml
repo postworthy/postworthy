@@ -1,0 +1,157 @@
+﻿@model Postworthy.Models.Web.Article
+
+@{
+    var isNew = Model.PublishedBy == null;
+    if (isNew)
+    {
+        ViewBag.Title = "Create New Article";
+    }
+    else
+    {
+        ViewBag.Title = "Edit Article";
+    }
+    var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+}
+<style type="text/css">
+    article header aside {
+        margin-bottom: 20px;
+        font-style: italic;
+    }
+
+    article header .img {
+        float: left;
+        padding: 3px;
+        max-width: 100%;
+        max-height: 150px;
+    }
+
+    article section .img {
+        float: left;
+        padding: 3px;
+        max-width: 150px;
+        max-height: 150px;
+    }
+
+    article section {
+        margin-bottom: 20px;
+    }
+
+    article footer {
+        clear: both;
+        border-top: solid 1px #ccc;
+        border-bottom: solid 1px #ccc;
+        margin-bottom: 20px;
+    }
+</style>
+<article class="form-horizontal col-sm-7 col-sm-offset-1">
+    <header>
+        <h1 id="Title" contenteditable="true">@Html.Raw(isNew ? "Lorem ipsum dolor sit amet, saperet adolescens vim ex qui." : Model.Title)</h1>
+        <aside id="SubTitle" contenteditable="true">@Html.Raw(isNew ? "Lorem ipsum dolor sit amet, aliquid scripserit sed te, dicam appareat duo ad. Sit et vero oportere honestatis. Sit quodsi phaedrum petentium id, persius platonem expetendis ne vim. Mea amet." : Model.SubTitle)</aside>
+    </header>
+    <section id="Content" contenteditable="true">
+        @if (isNew)
+        {
+            <img id="Images" class="img" src="holder.js/637x637/text:IMG" />
+            @Html.Raw(@"Lorem ipsum dolor sit amet, pri simul graeci ei, iudicabit posidonium disputando ei vel, mea ad etiam blandit salutandi. Putent graeco putant eu vim, unum detracto vix at, ne nam persius splendide. Ex harum impetus laboramus qui, no graeci invenire contentiones vis. Nam cu eleifend adversarium, has mazim explicari sadipscing no. In vix solet affert principes, his sale vidit admodum ex. An ridens accumsan partiendo nec, ei detracto accusata philosophia duo, at vis harum sententiae. Delicata inciderint eam ad. Sit ut laudem tacimates complectitur, ad nihil deleniti quaestio pri, debet lobortis ei qui. Vim ei mundi iisque copiosae. Eos ex veniam accusamus aliquando, equidem reprimique vel ad, nec ut malorum corpora. Vis aeque oratio te, diceret iudicabit inciderint nec ut.");
+        }
+        else
+        {
+            @Html.Raw(Model.Content);
+        }
+    </section>
+    <footer>
+        <div id="Tags" contenteditable="true">
+            @if (isNew)
+            {
+                @Html.Raw(@"Tag1, Tag2, Tag3");
+            }
+            else
+            {
+                @Html.Raw(string.Join(", ", Model.Tags));
+            }
+        </div>
+    </footer>
+</article>
+<div class="col-sm-3 hidden-xs" style="margin-top:20px;">
+    <ul>
+        <li>The form to the left is editable</li>
+        <li>To edit any element simply click inside of it</li>
+        <li>To add an image drag it from your computer onto the placeholder</li>
+        <li>If you paste embedable content it will be placed at the bottom of the form</li>
+        <li>Once you have everything as you like it you can submit the changes</li>
+    </ul>
+</div>
+<div class="col-sm-7 col-sm-offset-1">
+    <div class="col-md-5">
+        <input type="Button" style="width:100%" value="@(Model.PublishedBy == null ? "Create" : "Update")" class="btn btn-default" onclick="submitData()" />
+    </div>
+    <div class="col-md-5">
+        <input type="button" style="width:100%" value="Cancel" class="btn btn-default" onclick="javascript:document.location='@Url.RouteUrl(new{ controller="Article", action = "index", id = PrimaryUser.TwitterScreenName})';" />
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/Scripts/holder.js"></script>
+    <script src="~/Scripts/dropzone/dropzone.js"></script>
+    <script type="text/javascript">
+        var dropzoneSettings = function () {
+            return {
+                url: "@Url.RouteUrl(new { controller = "Article", action = (isNew ? "Create" : "Edit"), id = "File" })",
+                createImageThumbnails: true,
+                thumbnailWidth: Math.max(150, $("#Images").width()),
+                thumbnailHeight: Math.max(150, $("#Images").height()),
+                thumbnail: function (file, data) {
+                    $("#Images")[0].src = data;
+                },
+                error: function (error) {
+                    if (console) console.log(error);
+                }
+            };
+        }
+
+        function submitData() {
+            var img = $("#Images")[0];
+            $.post("@Url.RouteUrl(new { controller = "Article", action = (isNew ? "Create" : "Edit"), id = Model.UniqueKey })",
+            {
+                ArticleID: '@Model.ArticleID',
+                PublishedBy: '@Model.PublishedBy',
+                PublishedOn: '@Model.PublishedDate.ToString()',
+                Title: $("#Title").html(),
+                SubTitle: $("#SubTitle").html(),
+                Images: img ? img.src : '',
+                Content: $("#Content").html(),
+                Tags: $("#Tags").html()
+            },
+            function (data) {
+                if (data.result == "success")
+                    document.location = '@Url.RouteUrl(new{ controller="Article", action = "index", id = PrimaryUser.TwitterScreenName})';
+            })
+        }
+
+        $('body').on('focus', '[contenteditable]', function () {
+            var $this = $(this);
+            $this.data('before', $this.html());
+            return $this;
+        }).on('blur paste', '[contenteditable]', function () {
+            var $this = $(this);
+            if ($this.data('before') !== $this.html()) {
+                $this.data('before', $this.html());
+                $this.trigger('change');
+                try {
+                    $("#Images").dropzone(dropzoneSettings());
+                } catch (e) {
+
+                }
+            }
+            return $this;
+        });
+
+        $("[contenteditable]").on('change', function () {
+            var $this = $(this);
+            var newHtml = $this.html().replace(new RegExp('&gt;', 'g'), '>').replace(new RegExp('&lt;', 'g'), '<').replace(new RegExp('allowfullscreen>', 'g'), 'allowfullscreen="">');
+            $this.html(newHtml)
+        })
+
+        $("#Images").dropzone(dropzoneSettings());
+    </script>
+}

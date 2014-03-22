@@ -1,30 +1,104 @@
 ﻿@model Postworthy.Models.Web.ArticleStub
 
 @{
-    ViewBag.Title = Model.Title;
+    DateTime date = ViewBag.Date;
+    ViewBag.Title = Model == null ? "Videos for " + date.ToShortDateString() : Model.Title;
+
+    IEnumerable<Postworthy.Models.Web.ArticleStub> videoStubs = ViewBag.Videos;
+    videoStubs = videoStubs == null ? null : videoStubs.Where(vs => Model == null || vs.GetSlug() != Model.GetSlug());
+
     var guid = Guid.NewGuid().ToString();
-    System.Web.HttpContext.Current.Cache[guid] = Model.Image ?? "";
+
+    if (Model != null)
+    {
+        System.Web.HttpContext.Current.Cache[guid] = Model.Image ?? "";
+    }
+    else if (videoStubs != null && videoStubs.Count() > 0)
+    {
+        System.Web.HttpContext.Current.Cache[guid] = videoStubs.First().Image ?? "";
+    }
+    else
+    {
+        System.Web.HttpContext.Current.Cache[guid] = "";
+    }
+
+
+    int i = 0;
 }
 
 @section meta{
-    <meta name="twitter:card" data-page-subject="true" content="player" />
-    <meta name="twitter:title" data-page-subject="true" content="@Model.Title" />
-    <meta name="twitter:description" data-page-subject="true" content="@Model.GetSummary(200)" />
-    <meta name="twitter:player" data-page-subject="true" content="@Model.Video.ToString().Replace("http://","https://")" />
-    <meta name="twitter:player:width" content="640">
-    <meta name="twitter:player:height" content="360">
-    <meta name="twitter:image" data-page-subject="true" content="@Url.RouteUrl("default", new RouteValueDictionary(new { action="image", id=guid }), Request.Url.Scheme, Request.Url.Authority)" />
+    @if (Model != null)
+    {
+        <meta name="twitter:card" data-page-subject="true" content="player" />
+        <meta name="twitter:title" data-page-subject="true" content="@Model.Title" />
+        <meta name="twitter:description" data-page-subject="true" content="@Model.GetSummary(200)" />
+        <meta name="twitter:player" data-page-subject="true" content="@Model.Video.ToString().Replace("http://","https://")" />
+        <meta name="twitter:player:width" content="640">
+        <meta name="twitter:player:height" content="360">
+        <meta name="twitter:image" data-page-subject="true" content="@Url.RouteUrl("default", new RouteValueDictionary(new { action="image", id=guid }), Request.Url.Scheme, Request.Url.Authority)" />
+    }
+    else
+    {
+        <meta name="twitter:card" data-page-subject="true" content="summary" />
+        <meta name="twitter:title" data-page-subject="true" content="@ViewBag.Title" />
+        <meta name="twitter:description" data-page-subject="true" content="@ViewBag.Title" />
+        <meta name="twitter:image" data-page-subject="true" content="@Url.RouteUrl("default", new RouteValueDictionary(new { action="image", id=guid }), Request.Url.Scheme, Request.Url.Authority)" />
+    }
 }
 
-<fieldset class="col-md-10 col-md-offset-1">
-    <legend class="postIndex">@Html.Raw(Model.Title)</legend>
-    <iframe id="videoFrame" style="width:100%;margin:20px 0px 20px 0px" src="@Model.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen></iframe>
-    <span class="postIndex pull-left">Video Description</span>
-    <hr style="clear: both;" />
-    <p>
-        @Html.Raw(Model.Summary.Trim())
-    </p>
-</fieldset>
+@if (Model != null)
+{
+    <fieldset class="col-md-10 col-md-offset-1">
+        <legend class="postIndex">@Html.Raw(Model.Title)</legend>
+        <iframe id="videoFrame" style="width:100%;margin:20px 0px 20px 0px" src="@Model.Video.ToString()?wmode=transparent" frameborder="0" allowfullscreen></iframe>
+        <span class="postIndex pull-left">Video Description</span>
+        <hr style="clear: both;" />
+        <p>
+            @Html.Raw(Model.Summary.Trim())
+        </p>
+    </fieldset>
+}
+
+@if (videoStubs != null)
+{
+    <fieldset class="col-md-10 col-md-offset-1">
+        <legend class="postIndex">Videos for @date.ToShortDateString()</legend>
+        @foreach (var stub in videoStubs)
+        {
+            <div class="col-sm-4" style="padding-bottom:20px;@(i++ % 3 == 0 ? "clear:left;" : "")">
+                @if (!string.IsNullOrEmpty(stub.Image))
+                {
+                    if (stub.Video.Authority.ToLower().Contains("youtube"))
+                    {
+                        <a class="articleTitle" style="display:block;margin-bottom:10px" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + stub.GetSlug())">
+                            @if (!string.IsNullOrEmpty(stub.Image))
+                            {
+                                <div class="imageDiv" style="width:100%;max-width:250px;background-image: url('data:image/png;base64,@stub.Image');">
+                                </div>
+                            }
+                            <div style="clear:left;">
+                                @Html.Raw(@stub.Title)
+                            </div>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="articleTitle" style="display: block; margin-bottom: 10px" href="@stub.Video.ToString()">
+                            @if (!string.IsNullOrEmpty(stub.Image))
+                            {
+                                <div class="imageDiv" style="width:100%;max-width:250px;background-image: url('data:image/png;base64,@stub.Image');">
+                                </div>
+                            }
+                            <div style="clear:left;">
+                                @Html.Raw(@stub.Title)
+                            </div>
+                        </a>
+                    }
+                }
+            </div>
+        }
+    </fieldset>
+}
 
 @section scripts{
     <script type="text/javascript">

@@ -13,7 +13,7 @@
 input,
 select,
 textarea {
-    max-width: 280px;
+    /*max-width: 280px;*/
 }
 
 /* styles for validation helpers */
@@ -321,6 +321,17 @@ input[type="checkbox"].input-validation-error {
     text-align:right;
     width:100px;
     margin-left:-100px;
+    clear:left;
+}
+removeButton {
+    float: left;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ccc;
+    line-height: 28px;
+    padding-right: 4px;
+    text-align:right;
+    clear:left;
 }
 .pagination a {
     padding: 0 10px 0 10px;

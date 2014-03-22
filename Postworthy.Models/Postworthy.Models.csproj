@@ -163,6 +163,8 @@
     <Compile Include="Twitter\UrlFaceBookShareCount.cs" />
     <Compile Include="Twitter\UrlTweetCount.cs" />
     <Compile Include="Twitter\User.cs" />
+    <Compile Include="Web\Article.cs" />
+    <Compile Include="Web\ArticleIndex.cs" />
     <Compile Include="Web\ArticleStub.cs" />
     <Compile Include="Web\ArticleStubIndex.cs" />
     <Compile Include="Web\ArticleStubPage.cs" />

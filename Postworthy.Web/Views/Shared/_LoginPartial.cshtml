@@ -14,8 +14,13 @@
                             @Html.ActionLink("Personalize", "Personalization", new { controller = "Account", action = "Personalization", id = user.TwitterScreenName })
                         </li>
                         <li>
+                            @Html.ActionLink("Articles", "Index", new { controller = "Article", action = "Index", id = user.TwitterScreenName })
+                        </li>
+                        @*
+                        <li>
                             @Html.ActionLink("Friends", "Friends", new { controller = "Account", action = "Friends", id = user.TwitterScreenName })
                         </li>
+                        *@
                     }
                     <li>
                         @Html.ActionLink("Log Off", "LogOff", new { controller = "Account", action = "LogOff", id = "0" })

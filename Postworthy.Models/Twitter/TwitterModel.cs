@@ -35,6 +35,8 @@ namespace Postworthy.Models.Twitter
         private const string _GROUPING_RESULTS = "_GROUPING_RESULTS";
         private const string _CONTENT_RESULTS = "_CONTENT_RESULTS";
         private const string _CONTENT_INDEX = "_CONTENT_INDEX";
+        private const string _ARTICLE_RESULTS = "_ARTICLE_RESULTS";
+        private const string _ARTICLE_INDEX = "_ARTICLE_INDEX";
 
         public readonly PostworthyUser PrimaryUser = null;
 
@@ -68,6 +70,16 @@ namespace Postworthy.Models.Twitter
         public string CONTENT_INDEX
         {
             get { return PrimaryUser.TwitterScreenName + _CONTENT_INDEX + VERSION; }
+        }
+
+        public string ARTICLE
+        {
+            get { return PrimaryUser.TwitterScreenName + _ARTICLE_RESULTS + VERSION; }
+        }
+
+        public string ARTICLE_INDEX
+        {
+            get { return PrimaryUser.TwitterScreenName + _ARTICLE_INDEX + VERSION; }
         }
 
         private TwitterModel(string screenname)

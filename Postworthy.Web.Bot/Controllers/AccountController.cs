@@ -44,7 +44,7 @@ namespace Postworthy.Web.Controllers
                     await auth.CompleteAuthorizeAsync(Request.Url);
 
                     FormsAuthentication.SetAuthCookie(auth.CredentialStore.ScreenName, true);
-                    PostworthyUser pm = UsersCollection.Single(auth.CredentialStore.ScreenName, addIfNotFound: true);
+                    PostworthyUser pm = UsersCollection.Single(auth.CredentialStore.ScreenName, force: true, addIfNotFound: true);
                     if (string.IsNullOrEmpty(pm.AccessToken) && string.IsNullOrEmpty(pm.OAuthToken))
                     {
                         pm.AccessToken = auth.CredentialStore.OAuthTokenSecret;

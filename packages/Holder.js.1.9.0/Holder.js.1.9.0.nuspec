@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Holder.js</id>
+    <version>1.9.0</version>
+    <title>Holder.js</title>
+    <authors>Ivan Malopinsky</authors>
+    <owners>Ivan Malopinsky</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://imsky.github.com/holder/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Holder uses the canvas element and the data URI scheme to render image placeholders entirely in browser.</description>
+    <releaseNotes />
+    <copyright />
+    <language />
+    <tags>Images Placeholders Client-Side Canvas Generation Development</tags>
+  </metadata>
+</package>

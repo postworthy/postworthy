@@ -16,6 +16,7 @@ namespace Postworthy.Web.Controllers
     public class HomeController : Controller
     {
         private const string PHOTOS_SLUG = "photos";
+        private const string VIDEOS_SLUG = "videos";
         protected PostworthyUser PrimaryUser { get; set; }
         protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
@@ -42,6 +43,8 @@ namespace Postworthy.Web.Controllers
                     {
                         case PHOTOS_SLUG:
                             return Photos(DateTime.Now.ToShortDateString() != date.ToShortDateString() ? (DateTime?)date : null);
+                        case VIDEOS_SLUG:
+                            return Videos(DateTime.Now.ToShortDateString() != date.ToShortDateString() ? (DateTime?)date : null);
                         default:
                             return Video(DateTime.Now.ToShortDateString() != date.ToShortDateString() ? (DateTime?)date : null, slug);
                     }
@@ -55,7 +58,7 @@ namespace Postworthy.Web.Controllers
 
             var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
 
-            return View(page);
+            return View(page ?? new ArticleStubPage());
         }
 
         [HttpPost]
@@ -86,13 +89,44 @@ namespace Postworthy.Web.Controllers
             return RedirectToAction("Index", new { id = !id.HasValue ? null : (id.Value.ToShortDateString().Replace('/', '-')) });
         }
 
-        public ActionResult Video(DateTime? id, string slug)
+        public ActionResult Videos(DateTime? id)
         {
+            DateTime date = DateTime.Now;
+            if (id.HasValue)
+                date = id.Value;
+
+            ViewBag.Date = date;
+
             var dayTag = id.HasValue ? "_" + id.Value.ToShortDateString() : "";
 
             var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
 
-            var stub = page.ArticleStubs.Where(s => s.GetSlug() == slug).FirstOrDefault();
+            var videos = page.ArticleStubs.Where(s => s.Video != null).ToList();
+
+            ViewBag.Videos = videos;
+
+            if (videos != null && videos.Count > 0)
+                return View("Video", null);
+            else
+                return RedirectPermanent("~/");
+        }
+
+        public ActionResult Video(DateTime? id, string slug)
+        {
+            DateTime date = DateTime.Now;
+            if (id.HasValue)
+                date = id.Value;
+
+            ViewBag.Date = date;
+
+            var dayTag = id.HasValue ? "_" + id.Value.ToShortDateString() : "";
+
+            var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
+
+            var videos = page.ArticleStubs.Where(s => s.Video != null).ToList();
+            var stub = videos.Where(s => s.GetSlug() == slug).FirstOrDefault();
+
+            ViewBag.Videos = videos;
 
             if (stub != null)
                 return View("Video", stub);
