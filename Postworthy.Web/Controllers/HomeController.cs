@@ -55,6 +55,7 @@ namespace Postworthy.Web.Controllers
 
             ViewBag.Date = date;
             ViewBag.ArticleStubIndex = CachedRepository<ArticleStubIndex>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT_INDEX).FirstOrDefault();
+            ViewBag.ArticlesIndex = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX).FirstOrDefault() ?? new ArticleIndex();
 
             var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
 

@@ -1,0 +1,47 @@
+﻿@model Postworthy.Models.Web.ArticleIndex
+
+@{
+    ViewBag.Title = "Admin";
+
+    var regex = new System.Text.RegularExpressions.Regex(@"</?\w+((\s+\w+(\s*=\s*(?:"".*?""|'.*?'|[^'"">\s]+))?)+\s*|\s*)/?>", System.Text.RegularExpressions.RegexOptions.Singleline);
+}
+<div class="col-sm-10 col-sm-offset-1">
+    <h2>Articles</h2>
+
+    <p>
+        @Html.ActionLink("Create New", "Create", new { id = "new" })
+    </p>
+    <table class="table">
+        <tr>
+            <th>
+                Published
+            </th>
+            <th>
+                Title
+            </th>
+            <th>
+                Tags
+            </th>
+            <th></th>
+        </tr>
+        @foreach (var item in Model.Articles.OrderByDescending(a => a.Published))
+        {
+            <tr>
+                <td>
+                    @DateTime.FromFileTimeUtc(item.Published).ToLocalTime().ToShortDateString()
+                </td>
+                <td>
+                    @regex.Replace(item.Title,"")
+                </td>
+                <td>
+                    @string.Join(", ", item.Tags)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.Key }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.Key })
+                </td>
+            </tr>
+        }
+
+    </table>
+</div>

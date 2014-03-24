@@ -37,10 +37,28 @@ namespace Postworthy.Models.Web
             PublishedDate = DateTime.Now;
         }
 
+        public string TaglessTitle()
+        {
+            string str = WebUtility.HtmlDecode(Title);
+
+            var tags = new System.Text.RegularExpressions.Regex(@"</?\w+((\s+\w+(\s*=\s*(?:"".*?""|'.*?'|[^'"">\s]+))?)+\s*|\s*)/?>", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+            return  tags.Replace(str, "");
+        }
+
+        public string TaglessSubTitle()
+        {
+            string str = WebUtility.HtmlDecode(SubTitle);
+
+            var tags = new System.Text.RegularExpressions.Regex(@"</?\w+((\s+\w+(\s*=\s*(?:"".*?""|'.*?'|[^'"">\s]+))?)+\s*|\s*)/?>", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+            return tags.Replace(str, "");
+        }
+
         public string GetSlug(int maxLength = 100)
         {
-            string str = WebUtility.HtmlDecode(Title.ToLower());
-
+            string str = TaglessTitle().ToLower();
+            
             // invalid chars, make into spaces
             str = Regex.Replace(str, @"[^a-z0-9\s-]", "");
             // convert multiple spaces/hyphens into one space       

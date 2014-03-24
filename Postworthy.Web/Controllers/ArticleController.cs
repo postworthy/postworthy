@@ -12,9 +12,10 @@ using Postworthy.Models.Core;
 
 namespace Postworthy.Web.Controllers
 {
-    [AuthorizePrimaryUser]
+
     public class ArticleController : Controller
     {
+        private const int PAGE_SIZE = 10;
         protected PostworthyUser PrimaryUser { get; set; }
         protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
@@ -24,18 +25,70 @@ namespace Postworthy.Web.Controllers
                 ViewBag.Brand = PrimaryUser.SiteName;
         }
 
-        public ActionResult Index()
+        [OutputCache(VaryByParam = "id", Duration = 300)]
+        public ActionResult Index(int id = 0)
+        {
+            ViewBag.Page = id;
+            ViewBag.PageSize = PAGE_SIZE;
+
+            var index = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
+                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX).FirstOrDefault() ?? new ArticleIndex();
+
+            ViewBag.PageCount = (int)Math.Ceiling(index.Articles.Count / (PAGE_SIZE * 1.0));
+
+            var items = index.Articles.OrderByDescending(i => i.Published).Skip(PAGE_SIZE * id).Take(PAGE_SIZE);
+
+            var viewModel = new List<Article>();
+
+            foreach (var item in items)
+            {
+                var articles = CachedRepository<Article>.Instance(PrimaryUser.TwitterScreenName)
+                    .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE + item.DayTag).ToList();
+
+                var article = articles.Where(x => x.UniqueKey == item.Key).FirstOrDefault();
+                if (article != null)
+                    viewModel.Add(article);
+            }
+
+            return View(viewModel);
+        }
+
+        [OutputCache(VaryByParam = "id", Duration = 86400)]
+        public ActionResult Details(int id, string slug)
+        {
+            var index = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
+                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX).FirstOrDefault() ?? new ArticleIndex();
+
+            var articleIndex = index.Articles.Where(x => x.Key.GetHashCode() == id).FirstOrDefault();
+
+            if (articleIndex != null)
+            {
+                var articles = CachedRepository<Article>.Instance(PrimaryUser.TwitterScreenName)
+                    .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE + articleIndex.DayTag).ToList();
+
+                var article = articles.Where(x => x.UniqueKey == articleIndex.Key).FirstOrDefault();
+
+                return View(article);
+            }
+            else
+                return RedirectToAction("Index", new { id = 0 });
+        }
+
+        public ActionResult Admin()
         {
             var index = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
                 .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX).FirstOrDefault() ?? new ArticleIndex();
             return View(index);
         }
 
+
+        [AuthorizePrimaryUser]
         public ActionResult Create()
         {
             return View(new Article());
         }
 
+        [AuthorizePrimaryUser]
         [HttpPost]
         [ValidateInput(false)]
         public ActionResult Create(Article article)
@@ -69,6 +122,7 @@ namespace Postworthy.Web.Controllers
             }
         }
 
+        [AuthorizePrimaryUser]
         public ActionResult Edit(string id)
         {
             var index = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
@@ -86,9 +140,10 @@ namespace Postworthy.Web.Controllers
                 return View("Create", article);
             }
             else
-                return RedirectToAction("Index", new { id = PrimaryUser.TwitterScreenName });
+                return RedirectToAction("Admin", new { id = PrimaryUser.TwitterScreenName });
         }
 
+        [AuthorizePrimaryUser]
         [HttpPost]
         [ValidateInput(false)]
         public ActionResult Edit(string id, Article article)
@@ -115,6 +170,10 @@ namespace Postworthy.Web.Controllers
                 CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
                     .Save(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX, index);
 
+                var route = @Url.RouteUrl("Article", new { controller = "article", action = "details", id = article.UniqueKey.GetHashCode().ToString(), slug = article.GetSlug() });
+
+                Response.RemoveOutputCacheItem(route);
+
                 return Json(new { result = "success" }, JsonRequestBehavior.AllowGet);
             }
             catch
@@ -123,6 +182,7 @@ namespace Postworthy.Web.Controllers
             }
         }
 
+        [AuthorizePrimaryUser]
         public ActionResult Delete(string id)
         {
             var index = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
@@ -147,7 +207,7 @@ namespace Postworthy.Web.Controllers
                 }
             }
 
-            return RedirectToAction("Index", new { id = PrimaryUser.TwitterScreenName });
+            return RedirectToAction("Admin", new { id = PrimaryUser.TwitterScreenName });
         }
 
         private void SplitTags(Article article)

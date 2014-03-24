@@ -1,0 +1,47 @@
+﻿@model Postworthy.Models.Web.Article
+
+<style type="text/css">
+    article header aside {
+        margin-bottom: 20px;
+        font-style: italic;
+    }
+
+    article header .img {
+        float: left;
+        padding: 3px;
+        max-width: 100%;
+        max-height: 150px;
+    }
+
+    article section .img {
+        float: left;
+        padding: 3px;
+        max-width: 150px;
+        max-height: 150px;
+    }
+
+    article section {
+        margin-bottom: 20px;
+    }
+
+    article footer {
+        clear: both;
+        border-top: solid 1px #ccc;
+        border-bottom: solid 1px #ccc;
+        margin-bottom: 20px;
+    }
+</style>
+<article class="form-horizontal col-sm-7 col-sm-offset-1">
+    <header>
+        <h1 id="Title">@Html.Raw(Model.Title)</h1>
+        <aside id="SubTitle">@Html.Raw(Model.SubTitle)</aside>
+    </header>
+    <section id="Content">
+        @Html.Raw(Model.Content)
+    </section>
+    <footer>
+        <div id="Tags">
+            @Html.Raw(string.Join(", ", Model.Tags))
+        </div>
+    </footer>
+</article>

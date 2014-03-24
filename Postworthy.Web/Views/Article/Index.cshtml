@@ -1,47 +1,56 @@
-﻿@model Postworthy.Models.Web.ArticleIndex
+﻿@model IEnumerable<Postworthy.Models.Web.Article>
 
 @{
-    ViewBag.Title = "Index";
-
-    var regex = new System.Text.RegularExpressions.Regex(@"</?\w+((\s+\w+(\s*=\s*(?:"".*?""|'.*?'|[^'"">\s]+))?)+\s*|\s*)/?>", System.Text.RegularExpressions.RegexOptions.Singleline);
+    var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+    int page = ViewBag.Page;
+    int pageSize = ViewBag.PageSize;
+    int pageCount = ViewBag.PageCount;
+    ViewBag.Title = "Articles - Page " + (page + 1);
+    int index = page * pageSize;
 }
-<div class="col-sm-10 col-sm-offset-1">
-    <h2>Articles</h2>
 
-    <p>
-        @Html.ActionLink("Create New", "Create", new { id = "new" })
-    </p>
-    <table class="table">
-        <tr>
-            <th>
-                Published
-            </th>
-            <th>
-                Title
-            </th>
-            <th>
-                Tags
-            </th>
-            <th></th>
-        </tr>
-        @foreach (var item in Model.Articles.OrderByDescending(a => a.Published))
-        {
-            <tr>
-                <td>
-                    @DateTime.FromFileTimeUtc(item.Published).ToLocalTime().ToShortDateString()
-                </td>
-                <td>
-                    @regex.Replace(item.Title,"")
-                </td>
-                <td>
-                    @string.Join(", ", item.Tags)
-                </td>
-                <td>
-                    @Html.ActionLink("Edit", "Edit", new { id = item.Key }) |
-                    @Html.ActionLink("Delete", "Delete", new { id = item.Key })
-                </td>
-            </tr>
-        }
-
-    </table>
+<div class="col-sm-7 col-sm-offset-1">
+    <span class="postIndex">Page @(page + 1) of @(pageCount)</span>
+    <hr style="clear: both;" />
+    @foreach (var item in Model)
+    {
+        <div class="post box" style="padding-bottom:20px;">
+            <span class="postIndex2">@(++index)</span>
+            @if (item.Images != null && item.Images.Count > 0 && !string.IsNullOrEmpty(item.Images.First()))
+            {
+                <div class="imageDiv" style="width:150px;height:150px;background-image: url('@item.Images.First()');">
+                </div>
+            }
+            <a class="articleTitle" href="/Article/Details/@(item.UniqueKey.GetHashCode())/@(item.GetSlug())">
+                @Html.Raw(item.TaglessTitle())
+            </a>
+            <p>
+                @Html.Raw(item.TaglessSubTitle())
+            </p>
+            <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
+        </div>
+    }
+    @if (pageCount > 1)
+    {
+    <div class="box col4 text-center">
+        <ul class="pagination">
+            <li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/Article/Index/" + Convert.ToInt32(Math.Max(page - 1, 0))) + "\"")">«</a></li>
+            @for (int i = 0; i < pageCount; i++)
+            {
+                <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/Article/Index/" + i)">@(i + 1)</a></li>
+            }
+            <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/?page=" + (page + 1)) + "\"")">»</a></li>
+        </ul>
+    </div>
+    }
+</div>
+<div class="col-md-3 col-sm-3">
+    @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
+    {
+        <span class="postIndex pull-left">Related</span>
+        <hr style="clear: both;" />
+        <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
+            @Html.Raw(PrimaryUser.AdScript)
+        </div>
+    }
 </div>
