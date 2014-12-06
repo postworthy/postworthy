@@ -1,0 +1,31 @@
+﻿@model IEnumerable<Postworthy.Models.Web.Article>
+@{
+    var i = 0;
+}
+<div id="article-carousel" class="carousel slide">
+    <div class="carousel-inner">
+        @foreach(var item in Model)
+        { 
+        <div class="item @(i++ == 0 ? "active" : "")">
+            @if(item.Images != null && item.Images.Count > 0)
+            { 
+            <img src="@item.Images.FirstOrDefault()" alt="" />
+            }
+            <div class="carousel-caption">
+                <p>@item.TaglessTitle()</p>
+            </div>
+        </div>
+        }
+    </div>
+    <a class="carousel-control left" href="#article-carousel" data-slide="prev">&lsaquo;</a>
+    <a class="carousel-control right" href="#article-carousel" data-slide="next">&rsaquo;</a>
+</div>
+
+<script>
+    function startArticleCarousel() {
+        $('.carousel').carousel();
+    }
+
+    window.addEventListener("load", startArticleCarousel);
+</script>
+

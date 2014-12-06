@@ -17,10 +17,11 @@
     }
     var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
 }
-
-@{
-    Html.RenderPartial("_DefaultArticleTemplate", Model);
-}
+<div class="col-sm-7 col-sm-offset-1">
+    @{
+        Html.RenderPartial("_DefaultArticleTemplate", Model);
+    }
+</div>
 <div class="col-sm-3 hidden-xs" style="margin-top:20px;">
     <ul>
         <li>The form to the left is editable</li>
@@ -43,6 +44,11 @@
     <script src="~/Scripts/holder.js"></script>
     <script src="~/Scripts/dropzone/dropzone.js"></script>
     <script type="text/javascript">
+        $("#Title").attr("contenteditable", true);
+        $("#SubTitle").attr("contenteditable", true);
+        $("#Content").attr("contenteditable", true);
+        $("#Tags").attr("contenteditable", true);
+
         var dropzoneSettings = function () {
             return {
                 url: "@Url.RouteUrl(new { controller = "Article", action = (isNew ? "Create" : "Edit"), id = "File" })",
@@ -101,14 +107,10 @@
             $this.html(newHtml)
         })
 
-        
-
-        $("#Title").attr("contenteditable", true);
-        $("#SubTitle").attr("contenteditable", true);
-        $("#Content").attr("contenteditable", true);
-        $("#Tags").attr("contenteditable", true);
-
-        $("#Content").prepend('<img id="Images" class="img" src="holder.js/637x637/text:IMG" />');
+        @if(isNew)
+        {
+            @Html.Raw("$('#Content').prepend('<img id=\"Images\" class=\"img\" src=\"holder.js/637x637/text:IMG\" />')");
+        }
 
         setTimeout(function () {
             $("#Images").dropzone(dropzoneSettings());

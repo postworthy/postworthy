@@ -14,6 +14,7 @@ namespace Postworthy.Models.Web
         public string SubTitle { get; set; }
         public Uri Link { get; set; }
         public string Image { get; set; }
+        public Uri OriginalImageUri { get; set; }
         public string Summary { get; set; }
         public Uri Video { get; set; }
 

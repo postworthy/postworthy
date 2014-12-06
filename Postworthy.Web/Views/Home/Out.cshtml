@@ -1,0 +1,62 @@
+﻿@model Postworthy.Models.Web.ArticleStub
+
+@{
+    var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+    var originalPage = ViewBag.OriginalPage ?? "~/";
+    ViewBag.Title = "Out";
+}
+
+@if (Model != null)
+{
+    <fieldset class="col-md-10 col-md-offset-1">
+        <legend>Welcome to @PrimaryUser.SiteName</legend>
+
+        <span class="postIndex">Did we send traffic your way?</span>
+        <hr style="clear: both;" />
+
+        <p>
+            You must be looking for the link that sent traffic your way. Below is the link in question and it was originally seen on <a href="@Url.Content(originalPage)">this page</a>. Your article was noticed by the software running this site. The tool it is called <a href="http://postworthy.org/">Postworthy</a>.
+        </p>
+
+        <span class="postIndex">Original Post</span>
+        <hr style="clear: both;" />
+
+        <div class="post box" style="padding-bottom:20px;">
+            @if (!string.IsNullOrEmpty(Model.Image))
+            {
+                <div class="imageDiv" style="background-image: url('data:image/jpg;base64,@Model.Image');">
+                </div>
+            }
+            <a class="articleTitle" href="@Model.Link.ToString()">
+                @Html.Raw(Model.Title)
+            </a>
+            <p>
+                @Html.Raw(Model.GetSummary())
+            </p>
+            <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
+        </div>
+    </fieldset>
+}
+else
+{
+    Layout = "~/Views/Shared/_Basic.cshtml";
+    <form name="ignore_me">
+        <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0" />
+    </form>
+}
+
+@section scripts{
+    @if (Model == null)
+    {
+        <script type="text/javascript">
+            var dirty_bit = $('#page_is_dirty');
+
+            if (dirty_bit.val() == '1')
+                document.location = '@Url.Content(originalPage)';
+            else {
+                dirty_bit.val('1');
+                document.location = '@ViewBag.Outbound';
+            }
+        </script>
+    }
+}

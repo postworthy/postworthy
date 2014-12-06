@@ -18,10 +18,12 @@ namespace Postworthy.Web.Controllers
         private const string FRONTPAGE_SLUG = "frontpage";
         private const string PHOTOS_SLUG = "photos";
         private const string VIDEOS_SLUG = "videos";
+        public static string[] IMAGE_DOMAINS = { "instagram.com", "ow.ly" };
         protected PostworthyUser PrimaryUser { get; set; }
         protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
             base.Initialize(requestContext);
+            ViewBag.Home = true;
             PrimaryUser = UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
             if (PrimaryUser != null)
                 ViewBag.Brand = PrimaryUser.SiteName;
@@ -29,11 +31,13 @@ namespace Postworthy.Web.Controllers
         [OutputCache(Duration = 300, VaryByCustom = "User")]
         public ActionResult Index(DateTime? id = null, string slug = null)
         {
-            //if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("index", "mobile");
-            if (!String.IsNullOrEmpty(Request.QueryString["p"]))
-                return RedirectPermanent("~/");
+            var p = Request.QueryString["p"];
+            if (!string.IsNullOrEmpty(p))
+            {
+                Session[p] = Request.Url.ToString();
+                return RedirectToAction("Details", "Article", new { id = p, slug = "p" });
+            }
 
-            string dayTag = "";
             DateTime date = DateTime.Now;
             if (id.HasValue)
             {
@@ -50,27 +54,15 @@ namespace Postworthy.Web.Controllers
                             return Video(DateTime.Now.ToShortDateString() != date.ToShortDateString() ? (DateTime?)date : null, slug);
                     }
                 }
-                else
-                    dayTag = "_" + date.ToShortDateString();
             }
-
-            ViewBag.Date = date;
-            ViewBag.ArticleStubIndex = CachedRepository<ArticleStubIndex>.Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT_INDEX)
-                .FirstOrDefault();
             
-            var page = CachedRepository<ArticleStubPage>
-                .Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag)
-                .FirstOrDefault() ?? new ArticleStubPage();
+            var model = new PostworthyArticleModel(PrimaryUser);
+            ViewBag.Date = date;
+            ViewBag.ArticleStubIndex = model.GetArticleStubIndex();
+            ViewBag.ArticlesIndex = model.GetArticleIndex();
+ 
+            return View(model.GetArticleStubPage(date));
 
-            var articleIndex = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX)
-                .FirstOrDefault() ?? new ArticleIndex();
-
-            ViewBag.ArticlesIndex = articleIndex;
-
-            return View(page);
         }
         public ActionResult FrontPage()
         {
@@ -107,24 +99,14 @@ namespace Postworthy.Web.Controllers
         [AuthorizePrimaryUser]
         public ActionResult Index(string slug, DateTime? id = null)
         {
-            string dayTag = "";
             DateTime date = DateTime.Now;
             if (id.HasValue)
-            {
                 date = id.Value;
-                dayTag = "_" + date.ToShortDateString();
-            }
 
             ViewBag.Date = date;
 
-            var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
-
-            var article = page.ArticleStubs.Where(s => s.GetSlug() == slug).FirstOrDefault();
-            page.ExcludedArticleStubs.Add(article);
-
-            page.ExcludedArticleStubs = page.ExcludedArticleStubs.Distinct().ToList();
-
-            CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Save(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag, page);
+            var model = new PostworthyArticleModel(PrimaryUser);
+            model.ExcludeArticleStub(date, slug);
 
             HttpResponse.RemoveOutputCacheItem(Url.RouteUrl(Request.RequestContext.RouteData.Values));
 
@@ -139,9 +121,8 @@ namespace Postworthy.Web.Controllers
 
             ViewBag.Date = date;
 
-            var dayTag = id.HasValue ? "_" + id.Value.ToShortDateString() : "";
-
-            var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
+            var model = new PostworthyArticleModel(PrimaryUser);
+            var page = model.GetArticleStubPage(date);
 
             var videos = page.ArticleStubs.Where(s => s.Video != null).ToList();
 
@@ -161,9 +142,8 @@ namespace Postworthy.Web.Controllers
 
             ViewBag.Date = date;
 
-            var dayTag = id.HasValue ? "_" + id.Value.ToShortDateString() : "";
-
-            var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
+            var model = new PostworthyArticleModel(PrimaryUser);
+            var page = model.GetArticleStubPage(date);
 
             var videos = page.ArticleStubs.Where(s => s.Video != null).ToList();
             var stub = videos.Where(s => s.GetSlug() == slug).FirstOrDefault();
@@ -184,9 +164,9 @@ namespace Postworthy.Web.Controllers
 
             ViewBag.Date = date;
 
-            var dayTag = id.HasValue ? "_" + id.Value.ToShortDateString() : "";
-            var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
-            var photoStubs = page.ArticleStubs.Where(s => s.Link.Authority.ToLower() == "instagram.com").ToList();
+            var model = new PostworthyArticleModel(PrimaryUser);
+            var page = model.GetArticleStubPage(date);
+            var photoStubs = page.ArticleStubs.Where(s => IMAGE_DOMAINS.Contains(s.Link.Authority.ToLower())).ToList();
 
             if (photoStubs != null && photoStubs.Count > 0)
                 return View("Photos", photoStubs);
@@ -221,11 +201,20 @@ namespace Postworthy.Web.Controllers
         {
             return View(UsersCollection.All());
         }*/
+        public ActionResult Archive()
+        {
+            //if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("about", "mobile");
+            ViewBag.Archive = true;
+            ViewBag.Home = false;
+            var model = new PostworthyArticleModel(PrimaryUser);
+            return View(model.GetArticleStubIndex());
+        }
 
         public ActionResult About()
         {
             //if (MobileHelper.IsMobileDevice(Request.UserAgent)) return RedirectToAction("about", "mobile");
-
+            ViewBag.About = true;
+            ViewBag.Home = false;
             return View(PrimaryUser);
         }
 
@@ -233,9 +222,36 @@ namespace Postworthy.Web.Controllers
         {
             var base64 = (string)System.Web.HttpContext.Current.Cache[id];
             if (!string.IsNullOrEmpty(base64))
-                return File(Convert.FromBase64String(base64), "image/png");
+                return File(Convert.FromBase64String(base64), "image/jpg");
             else
                 throw new HttpException(404, id + " not found");
+        }
+
+        public ActionResult Out(DateTime id, string slug)
+        {
+            var model = new PostworthyArticleModel(PrimaryUser);
+            var articles = model.GetArticleStubPage(id).ArticleStubs;
+            var article = articles
+                .Where(x => x.GetSlug().ToLower() == slug.ToLower())
+                .FirstOrDefault();
+            ViewBag.OriginalPage = "~/" + id.ToShortDateString().Replace("/", "-");
+            if (article != null)
+            {
+                if (Request.UrlReferrer != null && Request.UrlReferrer.Authority != Request.Url.Authority)
+                    return View(article);
+                else
+                {
+                    ViewBag.Outbound = article.Link.ToString();
+                    return View();
+                }
+            }
+            else
+            {
+                ViewBag.OriginalPage = "~/";
+                ViewBag.Outbound = Url.Content("~/");
+                Response.StatusCode = 404;
+                return View();
+            }
         }
     }
 }

@@ -1,11 +1,18 @@
 ﻿@model Postworthy.Models.Web.Article
-
 @{
     var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
     ViewBag.Title = @Model.TaglessTitle();
 
     var guid = Guid.NewGuid().ToString();
-    System.Web.HttpContext.Current.Cache[guid] = (Model.Images.FirstOrDefault() ?? "").Split(',').Skip(1).FirstOrDefault() ?? "";
+    System.Web.HttpContext.Current.Cache.Add(
+        guid,
+        (Model.Images.FirstOrDefault() ?? "").Split(',').Skip(1).FirstOrDefault() ?? "",
+        null,
+        DateTime.Now.AddDays(1),
+        System.Web.Caching.Cache.NoSlidingExpiration,
+        System.Web.Caching.CacheItemPriority.Normal,
+        null);
+    
 }
 @section meta{
     <meta name="twitter:card" data-page-subject="true" content="summary" />
@@ -13,18 +20,62 @@
     <meta name="twitter:description" data-page-subject="true" content="@Model.TaglessSubTitle()" />
     <meta name="twitter:image" data-page-subject="true" content="@Url.RouteUrl("default", new RouteValueDictionary(new { controller="home", action="image", id=guid }), Request.Url.Scheme, Request.Url.Host)" />
 }
-<div class="container">
+<div class="col-sm-7 col-sm-offset-1">
     @{
         Html.RenderPartial("_DefaultArticleTemplate", Model);
     }
-    <div style="margin-top:20px" class="col-md-3 col-sm-3">
-        @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
-        {
-            <span class="postIndex pull-left">Related</span>
-            <hr style="clear: both;" />
-            <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
-                @Html.Raw(PrimaryUser.AdScript)
-            </div>
-        }
-    </div>
+    @{
+        List<Postworthy.Models.Web.Article> relatedArticles = ViewBag.RelatedArticles;
+    }
+    @if (relatedArticles != null)
+    {
+        int i = 0;
+        <div class="col-sm-12">
+            @foreach (var item in relatedArticles)
+            {
+                <div class="col-sm-4" style="padding-bottom:20px;@(i++ % 3 == 0 ? "clear:left;" : "")">
+                    <a class="articleTitle" style="display:block;margin-bottom:10px" href="@Url.Content("~/Article/Details/" + item.ID() + "/" + item.GetSlug())">
+                        @if (item.Images != null && item.Images.Count > 0)
+                        {
+                            <div class="imageDiv" style="width:100%;max-width:250px;background-image: url('@item.Images.First()');">
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="imageDiv holderjs" style="width: 100%; max-width: 250px; background-size:cover; background-image: url(?holder.js/250x250/text:IMG); ">
+                            </div>
+                        }
+                        <div style="clear:left;">
+                            @Html.Raw(@item.TaglessTitle())
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
 </div>
+<div style="margin-top:20px" class="col-md-3 col-sm-3">
+    @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
+    {
+        <span class="postIndex pull-left">Related</span>
+        <hr style="clear: both;" />
+        <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
+            @Html.Raw(PrimaryUser.AdScript)
+        </div>
+    }
+    @if (ViewBag.Tags != null)
+    {
+        IEnumerable<string> tags = ViewBag.Tags;
+        <span class="postIndex pull-left">Tags</span>
+        <hr style="clear: both;" />
+        <ul>
+            @foreach (var tag in tags)
+            {
+                <li>@Html.Raw(tag)</li>
+            }
+        </ul>
+    }
+</div>
+@section scripts{
+    <script src="~/Scripts/holder.js"></script>
+}

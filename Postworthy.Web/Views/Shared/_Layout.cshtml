@@ -7,6 +7,7 @@
     }
 
     var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+    var HasArticles = new PostworthyArticleModel(PrimaryUser).HasArticles();
 }
 
 <!DOCTYPE html>
@@ -38,8 +39,29 @@
             </div>
             <div class="navbar-collapse collapse pull-right">
                 <ul class="nav navbar-nav">
-                    <li class="@((ViewBag.Home == true) ? "active" : "")"><a href="@Url.Content("~/")"><i class="glyphicon glyphicon-home @((ViewBag.Home == true) ? "icon-white" : "")"></i><span class="hidden-xs" style="display: inline !important"> Home</span></a></li>
-                    <li class="@((ViewBag.About == true)? "active" : "")"><a href="@(Url.Content("~/home/about/" + PrimaryUser.TwitterScreenName))"><i class="glyphicon glyphicon-info-sign @((ViewBag.About == true) ? "icon-white" : "")"></i><span class="hidden-xs" style="display: inline !important"> About</span></a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="glyphicon glyphicon-home @((ViewBag.Home == true || ViewBag.Article == true || ViewBag.Archive == true || ViewBag.About == true) ? "icon-white" : "")"></i><span class="hidden-xs" style="display: inline !important"> Home</span>
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="@Url.Content("~/")"></i><span style="display: inline !important"> Front Page</span></a>
+                            </li>
+                            @if (HasArticles)
+                            {
+                                <li>
+                                    <a href="@Url.Content("~/article/index/0")"><span style="display: inline !important"> Articles</span></a>
+                                </li>
+                            }
+                            <li>
+                                <a href="@Url.Content("~/home/archive/all")"><span style="display: inline !important"> Archive</span></a>
+                            </li>
+                            <li>
+                                <a href="@(Url.Content("~/home/about/" + PrimaryUser.TwitterScreenName))"><span style="display: inline !important"> About</span></a>
+                            </li>
+                        </ul>
+                    </li>
                     @Html.Partial("_LoginPartial")
                 </ul>
             </div>

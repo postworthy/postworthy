@@ -57,7 +57,7 @@ namespace Postworthy.Models.Repository.Providers
             var obj = SharedCache.Get(itemKey + "_0") as string;
             if (obj == null)
             {
-                var ltobj = LongTermStorage.Single(collectionKey, itemKey);
+                var ltobj = LongTermStorage != null ? LongTermStorage.Single(collectionKey, itemKey) : null;
                 if (ltobj != null)
                 {
                     StoreSingle(ltobj);

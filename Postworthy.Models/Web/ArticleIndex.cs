@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Models.Web
 {
@@ -45,6 +46,11 @@ namespace Postworthy.Models.Web
 
                 return str;
 
+            }
+
+            public uint ID()
+            {
+                return Key.GetUintHashCode();
             }
         }
         public Guid ArticleIndexID { get; set; }
