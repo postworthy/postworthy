@@ -197,6 +197,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AuthorizePrimaryUserAttribute.cs" />
+    <Compile Include="Models\FrontPageModel.cs" />
     <Compile Include="Models\ItemData.cs" />
     <Compile Include="Models\MobileHelper.cs" />
     <Compile Include="Models\HtmlHelperExtensions.cs" />
@@ -305,6 +306,8 @@
     <Content Include="Views\Article\Index.cshtml" />
     <Content Include="Views\Article\Details.cshtml" />
     <Content Include="Views\Shared\_DefaultArticleTemplate.cshtml" />
+    <Content Include="Views\Shared\_Layout_v1.cshtml" />
+    <Content Include="Views\Home\FrontPage.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
