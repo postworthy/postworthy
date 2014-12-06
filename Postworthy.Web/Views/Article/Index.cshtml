@@ -21,7 +21,7 @@
                 <div class="imageDiv" style="width:150px;height:150px;background-image: url('@item.Images.First()');">
                 </div>
             }
-            <a class="articleTitle" href="~/Article/Details/@(item.UniqueKey.GetHashCode())/@(item.GetSlug())">
+            <a class="articleTitle" href="/Article/Details/@(item.UniqueKey.GetHashCode())/@(item.GetSlug())">
                 @Html.Raw(item.TaglessTitle())
             </a>
             <p>

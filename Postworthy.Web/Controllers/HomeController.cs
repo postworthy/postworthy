@@ -15,7 +15,6 @@ namespace Postworthy.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private const string FRONTPAGE_SLUG = "frontpage";
         private const string PHOTOS_SLUG = "photos";
         private const string VIDEOS_SLUG = "videos";
         protected PostworthyUser PrimaryUser { get; set; }
@@ -55,52 +54,12 @@ namespace Postworthy.Web.Controllers
             }
 
             ViewBag.Date = date;
-            ViewBag.ArticleStubIndex = CachedRepository<ArticleStubIndex>.Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT_INDEX)
-                .FirstOrDefault();
-            
-            var page = CachedRepository<ArticleStubPage>
-                .Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag)
-                .FirstOrDefault() ?? new ArticleStubPage();
+            ViewBag.ArticleStubIndex = CachedRepository<ArticleStubIndex>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT_INDEX).FirstOrDefault();
+            ViewBag.ArticlesIndex = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX).FirstOrDefault() ?? new ArticleIndex();
 
-            var articleIndex = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX)
-                .FirstOrDefault() ?? new ArticleIndex();
+            var page = CachedRepository<ArticleStubPage>.Instance(PrimaryUser.TwitterScreenName).Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT + dayTag).FirstOrDefault();
 
-            ViewBag.ArticlesIndex = articleIndex;
-
-            return View(page);
-        }
-        public ActionResult FrontPage()
-        {
-            ViewBag.ArticleStubIndex = CachedRepository<ArticleStubIndex>.Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT_INDEX)
-                .FirstOrDefault();
-
-            var page = CachedRepository<ArticleStubPage>
-                .Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).CONTENT)
-                .FirstOrDefault() ?? new ArticleStubPage();
-
-            var index = CachedRepository<ArticleIndex>.Instance(PrimaryUser.TwitterScreenName)
-                .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE_INDEX).FirstOrDefault() ?? new ArticleIndex();
-
-            var items = index.Articles.OrderByDescending(i => i.Published).Take(25);
-
-            var fullArticles = new List<Article>();
-
-            foreach (var item in items)
-            {
-                var articles = CachedRepository<Article>.Instance(PrimaryUser.TwitterScreenName)
-                    .Query(TwitterModel.Instance(PrimaryUser.TwitterScreenName).ARTICLE + item.DayTag).ToList();
-
-                var article = articles.Where(x => x.UniqueKey == item.Key).FirstOrDefault();
-                if (article != null)
-                    fullArticles.Add(article);
-            }
-
-            return View("FrontPage",new FrontPageModel(fullArticles, page.ArticleStubs));
+            return View(page ?? new ArticleStubPage());
         }
 
         [HttpPost]

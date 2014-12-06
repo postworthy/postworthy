@@ -1,4 +1,5 @@
 ﻿body {
+    
     padding-bottom: 20px;
 }
 
@@ -351,15 +352,4 @@ removeButton {
     margin-right: 5px; 
     width: 200px; 
     height: 100px;
-    position:relative;
-}
-
-.imageDiv div{
-    background: rgba(254, 254, 254, 0.7);
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    color: black;
-    width:100%;
-    word-wrap: break-word;
 }

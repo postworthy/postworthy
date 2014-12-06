@@ -13,18 +13,16 @@
     <meta name="twitter:description" data-page-subject="true" content="@Model.TaglessSubTitle()" />
     <meta name="twitter:image" data-page-subject="true" content="@Url.RouteUrl("default", new RouteValueDictionary(new { controller="home", action="image", id=guid }), Request.Url.Scheme, Request.Url.Host)" />
 }
-<div class="container">
-    @{
-        Html.RenderPartial("_DefaultArticleTemplate", Model);
+@{   
+    Html.RenderPartial("_DefaultArticleTemplate", Model);
+}
+<div style="margin-top:20px" class="col-md-3 col-sm-3">
+    @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
+    {
+        <span class="postIndex pull-left">Related</span>
+        <hr style="clear: both;" />
+        <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
+            @Html.Raw(PrimaryUser.AdScript)
+        </div>
     }
-    <div style="margin-top:20px" class="col-md-3 col-sm-3">
-        @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
-        {
-            <span class="postIndex pull-left">Related</span>
-            <hr style="clear: both;" />
-            <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
-                @Html.Raw(PrimaryUser.AdScript)
-            </div>
-        }
-    </div>
 </div>

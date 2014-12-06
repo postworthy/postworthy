@@ -21,7 +21,7 @@
     }
 }
 
-<div>
+<div id="container">
     <div>
 
         @*<div class="box adbox col-md-10 col-md-offset-1" style="padding: 5px 0px 5px 0px;">
@@ -44,7 +44,7 @@
                 }
                 using (Html.BeginForm())
                 {
-                    <div class="post box col-md-12 col-sm-12" style="font-size:large;line-height:1em;clear:both">
+                    <div class=" post box col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-1" style="font-size:large;line-height:1em;clear:both">
                         <!--<span class="postIndex">Top Story</span>
                         <hr style="clear: both;" />-->
                         @if (isPrimaryLoggedIn)
@@ -66,7 +66,7 @@
                         </p>
                         <div style="clear: both; margin: 5px 0px 5px 0px;"></div>
                     </div>
-                    <div class="col-md-8 col-sm-8" style="padding-bottom:20px">
+                    <div class="col-md-7 col-sm-7 col-md-offset-1 col-sm-offset-1" style="padding-bottom:20px">
                         @foreach (var stub in Model.ArticleStubs.Skip(1).Take(49))
                         {
                             <div class="post box" style="padding-bottom:20px;">
@@ -113,7 +113,7 @@
                             </div>
                         }
                     </div>
-                    <div class="col-md-4 col-sm-4">
+                    <div class="col-md-3 col-sm-3">
                         @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
                         {
                             <span class="postIndex pull-left">Related</span>
@@ -196,7 +196,7 @@
         }
         else
         {
-            <div class="box col-md-12">
+            <div class="box col-md-10 col-md-offset-1">
                 <div style="padding: 5px;">
                     @if (Request.IsAuthenticated && user != null && user.IsPrimaryUser && user.CanAuthorize)
                     {
