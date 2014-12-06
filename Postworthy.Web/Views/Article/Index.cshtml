@@ -21,17 +21,13 @@
                 <div class="imageDiv" style="width:150px;height:150px;background-image: url('@item.Images.First()');">
                 </div>
             }
-<<<<<<< HEAD
-            <a class="articleTitle" href="~/Article/Details/@(item.UniqueKey.GetHashCode())/@(item.GetSlug())">
-=======
             else
             {
                 <div class="imageDiv" style="width:150px;height:150px;">
                     <img class="img" src="holder.js/150x150/text:IMG" />
                 </div>
             }
-            <a class="articleTitle" href="/Article/Details/@(item.ID())/@(item.GetSlug())">
->>>>>>> origin/master
+            <a class="articleTitle" href="~/Article/Details/@(item.ID())/@(item.GetSlug())">
                 @Html.Raw(item.TaglessTitle())
             </a>
             <p>

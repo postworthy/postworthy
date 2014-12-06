@@ -162,12 +162,13 @@
                             <hr style="clear: both;" />
                             @{
                         Postworthy.Models.Web.ArticleStubIndex articleStubIndex = ViewBag.ArticleStubIndex;
-                        var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key);
+                        var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key).Take(10);
                             }
                             @foreach (var kvp in archivedPages)
                             {
                                 <a style="display: block; margin-bottom: 10px" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
                             }
+                            <a style="display: block; margin-bottom: 10px" href="~/home/archive/all">[View All Archives]</a>
                         </div>
                     </div>
                 }
