@@ -1,0 +1,42 @@
+﻿@using Postworthy.Web.Models;
+@{
+    string Brand = ViewBag.Brand;
+    if (string.IsNullOrEmpty(Brand))
+    {
+        Brand = "Postworthy";
+    }
+
+    var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+    var HasArticles = new PostworthyArticleModel(PrimaryUser).HasArticles();
+}
+
+<!DOCTYPE html>
+<html>
+<body>
+
+    @RenderBody()
+
+    @Scripts.Render("~/bundles/jquery")
+    @RenderSection("scripts", required: false)
+    @Html.Raw(PrimaryUser.AnalyticsScript ?? "")
+    <script type="text/javascript">
+        if (typeof ga != 'undefined' && typeof jQuery != 'undefined') {
+            jQuery('body').on('click', 'a', function (event) {
+                var el = jQuery(this);
+                var track = true;
+                var href = (typeof (el.attr('href')) != 'undefined') ? el.attr('href') : '';
+                var isThisDomain = href.match(document.domain.split('.').reverse()[1] + '.' + document.domain.split('.').reverse()[0]);
+                var label = href.replace(/^https?\:\/\//i, '')
+                if (href.match(/^https?\:/i) && !isThisDomain) {
+                    ga('send', 'event', 'outbound', 'click', label, {
+                        'hitCallback':
+                            function () {
+                                document.location = href;
+                            }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -200,6 +200,7 @@
     <Compile Include="Models\ItemData.cs" />
     <Compile Include="Models\MobileHelper.cs" />
     <Compile Include="Models\HtmlHelperExtensions.cs" />
+    <Compile Include="Models\PostworthyArticleModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
@@ -305,6 +306,10 @@
     <Content Include="Views\Article\Index.cshtml" />
     <Content Include="Views\Article\Details.cshtml" />
     <Content Include="Views\Shared\_DefaultArticleTemplate.cshtml" />
+    <Content Include="Views\Shared\_ArticleCarousel.cshtml" />
+    <Content Include="Views\Home\Archive.cshtml" />
+    <Content Include="Views\Home\Out.cshtml" />
+    <Content Include="Views\Shared\_Basic.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

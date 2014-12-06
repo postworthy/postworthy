@@ -15,10 +15,11 @@ namespace Postworthy.Models.Core
         private const string URL_TWEET_COUNT_ENDPOINT = "http://urls.api.twitter.com/1/urls/count.json?url=";
         private const string URL_FACEBOOK_SHARE_COUNT_ENDPOINT = "https://api.facebook.com/method/fql.query?format=json&query=select%20%20like_count%20from%20link_stat%20where%20url=%22{0}%22";
 
-        public static HttpWebRequest GetWebRequest(this Uri uri)
+        public static HttpWebRequest GetWebRequest(this Uri uri, int connectionTimeout = 100000, int readwriteTimeout = 100000)
         {
             var webReq = (HttpWebRequest)WebRequest.Create(uri);
-            //webReq.Timeout = 300000;
+            webReq.Timeout = connectionTimeout;
+            webReq.ReadWriteTimeout = readwriteTimeout;
             webReq.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1092.0 Safari/536.6";
             webReq.KeepAlive = true;
             webReq.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";

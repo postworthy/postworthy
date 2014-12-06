@@ -1,0 +1,28 @@
+﻿@model Postworthy.Models.Web.ArticleStubIndex
+@{
+    var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+    ViewBag.Title = "Archive";
+    ViewBag.Archive = true;
+}
+@{
+    var archivedPages = Model.ArticleStubPages.OrderByDescending(x => x.Key);
+}
+<div class="col-sm-7 col-sm-offset-1">
+    <span class="postIndex">Archives (@Model.PageCount)</span>
+    <hr style="clear: both;" />
+
+    @foreach (var kvp in archivedPages)
+    {
+        <a style="display: block; margin-bottom: 10px" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
+    }
+</div>
+<div class="col-sm-3">
+    @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
+    {
+        <span class="postIndex pull-left">Related</span>
+        <hr style="clear: both;" />
+        <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
+            @Html.Raw(PrimaryUser.AdScript)
+        </div>
+    }
+</div>

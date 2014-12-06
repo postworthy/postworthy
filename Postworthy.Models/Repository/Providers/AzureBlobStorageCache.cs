@@ -18,6 +18,7 @@ namespace Postworthy.Models.Repository.Providers
         private CloudStorageAccount storageAccount = null;
         private CloudBlobClient blobClient = null;
         private CloudBlobContainer container = null;
+        private DistributedSharedCache<TYPE> Cache;
 
         public AzureBlobStorageCache(string providerKey)
             : base(providerKey)
@@ -25,6 +26,8 @@ namespace Postworthy.Models.Repository.Providers
             var connectionString = ConfigurationManager.AppSettings["AzureStorageConnectionString"];
             if (string.IsNullOrEmpty(connectionString))
                 throw new Exception("Config Section 'appSettings' missing AzureStorageConnectionString value!");
+
+            Cache = new DistributedSharedCache<TYPE>(providerKey, null, new TimeSpan(2, 30, 0));
 
             storageAccount = CloudStorageAccount.Parse(connectionString);
             blobClient = storageAccount.CreateCloudBlobClient();
@@ -41,7 +44,11 @@ namespace Postworthy.Models.Repository.Providers
                 StreamReader reader;
                 try
                 {
-                    blob.DownloadToStream(stream);
+                    blob.DownloadToStream(stream, options: new BlobRequestOptions()
+                    {
+                        ServerTimeout = new TimeSpan(0, 0, 15),
+                        MaximumExecutionTime = new TimeSpan(0, 1, 0)
+                    });
                 }
                 catch (StorageException se)
                 {
@@ -101,7 +108,14 @@ namespace Postworthy.Models.Repository.Providers
             {
                 foreach (var item in items)
                 {
-                    yield return DownloadBlob<TYPE>(item);
+                    var cached = Cache.Single(key, item.Name.Remove(0,key.Length+1));
+                    if (cached == null)
+                    {
+                        cached = DownloadBlob<TYPE>(item);
+                        Cache.Store(key, cached);
+                    }
+
+                    yield return cached;
                 }
             }
 
@@ -110,7 +124,13 @@ namespace Postworthy.Models.Repository.Providers
 
         public override TYPE Single(string collectionKey, string itemKey)
         {
-            return DownloadBlob<TYPE>(container.GetDirectoryReference(collectionKey).GetBlockBlobReference(itemKey));
+            var cached = Cache.Single(collectionKey, itemKey);
+            if (cached == null)
+            {
+                cached = DownloadBlob<TYPE>(container.GetDirectoryReference(collectionKey).GetBlockBlobReference(itemKey));
+                Cache.Store(collectionKey, cached);
+            }
+            return cached;
         }
 
         public override void Store(string key, TYPE obj)
@@ -125,6 +145,8 @@ namespace Postworthy.Models.Repository.Providers
 
             UploadBlob(container.GetDirectoryReference(key).GetBlockBlobReference(obj.UniqueKey), obj);
             UploadBlob(container.GetDirectoryReference(StorageEntityIndex.DIRECTORY_KEY).GetBlockBlobReference(key), index);
+
+            Cache.Store(key, obj);
         }
 
         public override void Store(string key, IEnumerable<TYPE> obj)
@@ -143,11 +165,17 @@ namespace Postworthy.Models.Repository.Providers
             }
 
             UploadBlob(container.GetDirectoryReference(StorageEntityIndex.DIRECTORY_KEY).GetBlockBlobReference(key), index);
+            Cache.Store(key, obj);
         }
 
         public override void Remove(string key, TYPE obj)
         {
-            container.GetDirectoryReference(key).GetBlockBlobReference(obj.UniqueKey).Delete();
+            try
+            {
+                container.GetDirectoryReference(key).GetBlockBlobReference(obj.UniqueKey).Delete();
+                Cache.Remove(key, obj);
+            }
+            catch { }
         }
 
         public override void Remove(string key, IEnumerable<TYPE> obj)
@@ -156,6 +184,7 @@ namespace Postworthy.Models.Repository.Providers
             {
                 Remove(key, o);
             }
+            Cache.Remove(key, obj);
         }
 
         #region Internal Blob Azure Classes

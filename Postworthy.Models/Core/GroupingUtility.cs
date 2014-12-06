@@ -31,6 +31,12 @@ namespace Postworthy.Models.Core
             public T Key { get; set; }
         }
 
+        private class FlaggedObject<T> where T : ISimilarText, ISimilarImage, ISimilarLinks
+        {
+            public T Object { get; set; }
+            public bool Flagged { get; set; }
+        }
+
 
         public static IEnumerable<IGrouping<T, T>> GroupSimilar<T>(this IEnumerable<T> t, decimal MinSimilarity = GOOD, TextWriter log = null) where T : ISimilarText, ISimilarImage, ISimilarLinks
         {
@@ -188,6 +194,112 @@ namespace Postworthy.Models.Core
                 log.WriteLine("{0}: [GroupSimilar] Returning Groups", DateTime.Now, soLength);
 
             return groups;
+        }
+
+        public static IEnumerable<IGrouping<T, T>> GroupSimilar2<T>(this IEnumerable<T> t, decimal MinSimilarity = GOOD) where T : ISimilarText, ISimilarImage, ISimilarLinks
+        {
+            var groups = new List<SimilarObjects<T>>();
+            var items = t.Select(x => new FlaggedObject<T>() { Object = x }).ToList();
+
+            foreach(var item in items)
+            {
+                if(!item.Flagged)
+                {
+                    item.Flagged = true;
+                    var matches = items.Where(x => !x.Flagged && x != item && x.Object.IsSimilar(item.Object));
+                    if(matches.FirstOrDefault() != null)
+                    {
+                        var so = new SimilarObjects<T>() { Key = item.Object };
+                        foreach(var match in matches)
+                        {
+                            match.Flagged = true;
+                            so.Add(match.Object);
+                        }
+                        groups.Add(so);
+                    }
+                    else
+                        groups.Add(new SimilarObjects<T>() { Key = item.Object });
+                }
+            }
+
+            return groups;
+        }
+
+        private static bool IsSimilar<T>(this T t1, T t2, decimal MinSimilarity = GOOD) where T : ISimilarText, ISimilarImage, ISimilarLinks
+        {
+            #region Compare All Pairs and Assign Similarity (Pass 1)
+            int intersection = 0;
+            int union = t1.WordLetterPairHash.Length + t2.WordLetterPairHash.Length;
+            int p1c = 0;
+            int p2c = 0;
+            int[] wlp1 = null;
+            int[] wlp2 = null;
+            decimal earlyExitCheckValue = 0;
+            //We want the shortest collection to the the outter collection
+            if(t1.WordLetterPairHash.Length < t2.WordLetterPairHash.Length)
+            {
+                p1c = t1.WordLetterPairHash.Length;
+                p2c = t2.WordLetterPairHash.Length;
+                wlp1 = t1.WordLetterPairHash;
+                wlp2 = t2.WordLetterPairHash;
+            }
+            else
+            {
+                p1c = t2.WordLetterPairHash.Length;
+                p2c = t1.WordLetterPairHash.Length;
+                wlp1 = t2.WordLetterPairHash;
+                wlp2 = t1.WordLetterPairHash;
+            }
+
+            earlyExitCheckValue = (MinSimilarity * union) / 2.0M;
+
+            if (union != 0)
+            {
+                for (int k = 0; k < p1c; k++)
+                {
+                    for (int l = 0; l < p2c; l++)
+                    {
+                        if (wlp1[k] == wlp2[l])
+                        {
+                            intersection++;
+                            break;
+                        }
+                    }
+
+                    if (intersection >= earlyExitCheckValue)
+                        return true;
+                    else if (intersection + (p1c-k) < earlyExitCheckValue)
+                        break;
+                }
+                //decimal si = (2.0M * intersection) / union;
+                //if (si >= MinSimilarity)
+                //    return true;
+            }
+            #endregion
+            #region Compare Links and Assign Similarity (Pass 2)
+            if (t1.Links != null && t2.Links != null)
+            {
+                var iLinks = t1.Links.Select(x => x);
+                var jLinks = t2.Links.Select(x => x);
+                var linkCount = iLinks.Count() + jLinks.Count();
+                if (linkCount > 0)
+                {
+                    var matchPercentage = (2.0M * iLinks.Count(x => jLinks.Any(y => y.Equals(x)))) / linkCount;
+                    if (matchPercentage != 0)
+                        return true;
+                }
+            }
+            #endregion
+            #region Compare Images and Assign Similarity (Pass 3)
+            if (t1.Image != null && t2.Image != null)
+            {
+                var etm = new ExhaustiveTemplateMatching(0);
+                TemplateMatch[] matchings = etm.ProcessImage(t1.Image, t2.Image);
+                if (matchings[0].Similarity > 0.90)
+                    return true;
+            }
+            #endregion
+            return false;
         }
     }
 }

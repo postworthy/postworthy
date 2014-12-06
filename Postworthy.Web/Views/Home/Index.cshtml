@@ -1,5 +1,6 @@
 ﻿@model Postworthy.Models.Web.ArticleStubPage
 @using Postworthy.Models.Twitter
+@using Postworthy.Models.Core
 @{
     DateTime date = ViewBag.Date;
     ViewBag.Title = ViewBag.Brand ?? "Postworthy";
@@ -10,7 +11,7 @@
 
     Model.ArticleStubs = Model.ArticleStubs.Distinct().Where(x => !Model.ExcludedArticleStubs.Contains(x)).ToList();
 
-    var photoStubs = Model.ArticleStubs.Where(s => s.Link.Authority.ToLower() == "instagram.com").ToList();
+    var photoStubs = Model.ArticleStubs.Where(s => Postworthy.Web.Controllers.HomeController.IMAGE_DOMAINS.Contains(s.Link.Authority.ToLower())).ToList();
 
     Model.ArticleStubs = Model.ArticleStubs.Where(x => !photoStubs.Contains(x)).ToList();
 
@@ -35,7 +36,14 @@
                 var index = 1;
                 var featuredStub1 = Model.ArticleStubs.First();
                 var guid = Guid.NewGuid().ToString();
-                System.Web.HttpContext.Current.Cache[guid] = featuredStub1.Image ?? "";
+                System.Web.HttpContext.Current.Cache.Add(
+                    guid,
+                    featuredStub1.Image ?? "",
+                    null,
+                    DateTime.Now.AddDays(1),
+                    System.Web.Caching.Cache.NoSlidingExpiration,
+                    System.Web.Caching.CacheItemPriority.Normal,
+                    null);
                 @section meta{
                     <meta name="twitter:card" data-page-subject="true" content="summary" />
                     <meta name="twitter:title" data-page-subject="true" content="@featuredStub1.Title" />
@@ -55,10 +63,10 @@
                         }
                         @if (!string.IsNullOrEmpty(featuredStub1.Image))
                         {
-                            <div class="imageDiv" style="height:200px;background-image: url('data:image/png;base64,@featuredStub1.Image');">
+                            <div class="imageDiv" style="height:200px;background-image: url('data:image/jpg;base64,@featuredStub1.Image');">
                             </div>
                         }
-                        <a class="articleTitle" href="@featuredStub1.Link.ToString()">
+                        <a class="articleTitle outbound" href="@featuredStub1.Link.ToString()" data-out="@Url.Content("~/home/out/" + date.ToShortDateString().Replace('/','-') + "/" + featuredStub1.GetSlug())">
                             @Html.Raw(featuredStub1.Title)
                         </a>
                         <p>
@@ -84,10 +92,10 @@
                                 }
                                 @if (!string.IsNullOrEmpty(stub.Image))
                                 {
-                                    <div class="imageDiv" style="background-image: url('data:image/png;base64,@stub.Image');">
+                                    <div class="imageDiv" style="background-image: url('data:image/jpg;base64,@stub.Image');">
                                     </div>
                                 }
-                                <a class="articleTitle" href="@stub.Link.ToString()">
+                                <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/home/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())">
                                     @Html.Raw(stub.Title)
                                 </a>
                                 <p>
@@ -106,7 +114,7 @@
                                         <span class="glyphicon glyphicon-remove"></span>
                                     </button>
                                 }
-                                <a class="articleTitle" href="@stub.Link.ToString()">
+                                <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/home/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())">
                                     @Html.Raw(stub.Title)
                                 </a>
                                 <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
@@ -124,12 +132,12 @@
                         }
                         @if (articles != null && articles.Count() > 0)
                         {
-                            <span class="postIndex pull-left">Articles</span>
+                            <span class="postIndex pull-left">Latest Articles</span>
                             <hr style="clear: both;" />
                             <div class="post box clearfix">
                                 @foreach (var item in articles.Take(5))
                                 {
-                                    <a style="display: block; margin-bottom: 10px" href="/Article/Details/@(item.Key.GetHashCode())/@(item.GetSlug())">@Html.Raw(item.Title)</a>
+                                    <a style="display: block; margin-bottom: 10px" href="~/Article/Details/@(item.ID())/@(item.GetSlug())">@Html.Raw(item.Title)</a>
                                 }
                             </div>
                             <a style="display: block; margin-bottom: 10px" href="~/Article/Index/0">[View All Articles]</a>
@@ -142,8 +150,8 @@
                                 <hr style="clear: both;" />
                                 @foreach (var stub in photoStubs)
                                 {
-                                    <a href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")">
-                                        <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/png;base64,@stub.Image');">
+                                    <a class="outbound" href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")">
+                                        <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/jpg;base64,@stub.Image');">
                                         </div>
                                     </a>
                                     if (i % 10 == 0)
@@ -172,7 +180,7 @@
                                     }
                                     else
                                     {
-                                        <a style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()">@Html.Raw(@vs.Title)</a>
+                                        <a class="outbound" style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()">@Html.Raw(@vs.Title)</a>
                                     }
                                 }
                             </div>
@@ -183,12 +191,13 @@
                             <hr style="clear: both;" />
                             @{
                         Postworthy.Models.Web.ArticleStubIndex articleStubIndex = ViewBag.ArticleStubIndex;
-                        var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key);
+                        var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key).Take(10);
                             }
                             @foreach (var kvp in archivedPages)
                             {
                                 <a style="display: block; margin-bottom: 10px" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
                             }
+                            <a style="display: block; margin-bottom: 10px" href="~/home/archive/all">[View All Archives]</a>
                         </div>
                     </div>
                 }
@@ -226,6 +235,14 @@
     </div>
 </div>
 @section scripts{
-    <script src="~/Scripts/smartResize.js"></script>
-    <script src="~/Scripts/squaredUp.js"></script>
+    <script type="text/javascript" src="~/Scripts/smartResize.js"></script>
+    <script type="text/javascript" src="~/Scripts/squaredUp.js"></script>
+    <script type="text/javascript">
+        $(".outbound").on("click",function (e) {
+            if ($(this).attr("data-out")) {
+                document.location = $(this).attr("data-out");
+                return false;
+            }
+        })
+    </script>
 }

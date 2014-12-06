@@ -127,6 +127,7 @@
     <Compile Include="Core\FileUtility.cs" />
     <Compile Include="Core\ISimilarLinks.cs" />
     <Compile Include="Core\LazyLoader.cs" />
+    <Compile Include="Core\ObjectExtensions.cs" />
     <Compile Include="Repository\CachedRepository.cs" />
     <Compile Include="Repository\IRepository.cs" />
     <Compile Include="Repository\Providers\AzureBlobStorageCache.cs" />

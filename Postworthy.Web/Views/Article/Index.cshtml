@@ -1,5 +1,5 @@
 ﻿@model IEnumerable<Postworthy.Models.Web.Article>
-
+@using Postworthy.Models.Core
 @{
     var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
     int page = ViewBag.Page;
@@ -21,7 +21,13 @@
                 <div class="imageDiv" style="width:150px;height:150px;background-image: url('@item.Images.First()');">
                 </div>
             }
-            <a class="articleTitle" href="/Article/Details/@(item.UniqueKey.GetHashCode())/@(item.GetSlug())">
+            else
+            {
+                <div class="imageDiv" style="width:150px;height:150px;">
+                    <img class="img" src="holder.js/150x150/text:IMG" />
+                </div>
+            }
+            <a class="articleTitle" href="/Article/Details/@(item.ID())/@(item.GetSlug())">
                 @Html.Raw(item.TaglessTitle())
             </a>
             <p>
@@ -32,16 +38,16 @@
     }
     @if (pageCount > 1)
     {
-    <div class="box col4 text-center">
-        <ul class="pagination">
-            <li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/Article/Index/" + Convert.ToInt32(Math.Max(page - 1, 0))) + "\"")">«</a></li>
-            @for (int i = 0; i < pageCount; i++)
-            {
-                <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/Article/Index/" + i)">@(i + 1)</a></li>
-            }
-            <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/?page=" + (page + 1)) + "\"")">»</a></li>
-        </ul>
-    </div>
+        <div class="box col4 text-center">
+            <ul class="pagination">
+                <li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/Article/Index/" + Convert.ToInt32(Math.Max(page - 1, 0))) + "/" + ViewBag.Slug + "\"") ">«</a></li>
+                @for (int i = 0; i < pageCount; i++)
+                {
+                    <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/Article/Index/" + i + "/" + ViewBag.Slug)">@(i + 1)</a></li>
+                }
+                <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/Article/Index/" + (page + 1)) + "/" + ViewBag.Slug + "\"") ">»</a></li>
+            </ul>
+        </div>
     }
 </div>
 <div class="col-md-3 col-sm-3">
@@ -53,4 +59,20 @@
             @Html.Raw(PrimaryUser.AdScript)
         </div>
     }
+    @if (ViewBag.Tags != null)
+    {
+        IEnumerable<string> tags = ViewBag.Tags;
+        <span class="postIndex pull-left">Tags</span>
+        <hr style="clear: both;" />
+        <ul>
+            @foreach (var tag in tags)
+            {
+                <li>@Html.Raw(tag)</li>
+            }
+        </ul>
+    }
 </div>
+
+@section scripts{
+    <script src="~/Scripts/holder.js"></script>
+}

@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Postworthy.Models.Core;
 
 namespace Postworthy.Models.Web
 {
@@ -28,12 +29,18 @@ namespace Postworthy.Models.Web
         [DataType(DataType.MultilineText)]
         public string Content { get; set; }
         public List<string> Tags { get; set; }
+        public List<KeyValuePair<string,string>> MetaData { get; set; }
+        public uint ID()
+        {
+            return UniqueKey.GetUintHashCode();
+        }
 
         public Article()
         {
             ArticleID = Guid.NewGuid();
             Images = new List<string>();
             Tags = new List<string>();
+            MetaData = new List<KeyValuePair<string, string>>();
             PublishedDate = DateTime.Now;
         }
 
