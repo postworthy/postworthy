@@ -68,7 +68,7 @@
 
 @if (videoStubs != null)
 {
-    videoStubs = videoStubs.OrderBy(stub => stub.Video.Authority.ToLower().Contains("youtube"));
+    videoStubs = videoStubs.OrderByDescending(stub => stub.Video.Authority.ToLower().Contains("youtube"));
     <fieldset class="col-md-10 col-md-offset-1">
         <legend class="postIndex">Videos for @date.ToShortDateString()</legend>
         @foreach (var stub in videoStubs)
