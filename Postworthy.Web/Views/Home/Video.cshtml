@@ -68,6 +68,7 @@
 
 @if (videoStubs != null)
 {
+    videoStubs = videoStubs.OrderBy(stub => stub.Video.Authority.ToLower().Contains("youtube"));
     <fieldset class="col-md-10 col-md-offset-1">
         <legend class="postIndex">Videos for @date.ToShortDateString()</legend>
         @foreach (var stub in videoStubs)
@@ -101,6 +102,16 @@
                             </div>
                         </a>
                     }
+                }
+                else
+                {
+                    <a class="articleTitle" style="display: block; margin-bottom: 10px" href="@stub.Video.ToString()">
+                        <div class="imageDiv" style="width:100%;max-width:250px;background-color:#ececec">
+                        </div>
+                        <div style="clear:left;">
+                            @Html.Raw(@stub.Title)
+                        </div>
+                    </a>
                 }
             </div>
         }
