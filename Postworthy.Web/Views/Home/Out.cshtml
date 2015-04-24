@@ -27,7 +27,7 @@
                 <div class="imageDiv" style="background-image: url('data:image/jpg;base64,@Model.Image');">
                 </div>
             }
-            <a class="articleTitle" href="@Model.Link.ToString()">
+            <a class="articleTitle" href="@Model.Link.ToString()" rel="nofollow">
                 @Html.Raw(Model.Title)
             </a>
             <p>
