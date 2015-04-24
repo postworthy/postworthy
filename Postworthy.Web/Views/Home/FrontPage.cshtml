@@ -100,7 +100,7 @@
                                     <div class="imageDiv" style="background-image: url('data:image/png;base64,@stub.Image');width:50px;height:50px;">
                                     </div>
                                 }
-                                <a class="articleTitle" href="@stub.Link.ToString()">
+                                <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())" rel=" nofollow">
                                     @Html.Raw(stub.Title)
                                 </a>
                                 <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
@@ -124,7 +124,7 @@
                                 <hr style="clear: both;" />
                                 @foreach (var stub in photoStubs)
                                 {
-                                    <a href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")">
+                                    <a href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")" rel="nofollow">
                                         <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/png;base64,@stub.Image');">
                                         </div>
                                     </a>
@@ -151,7 +151,7 @@
                                     }
                                     else
                                     {
-                                        <a style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()">@Html.Raw(@vs.Title)</a>
+                                        <a style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()" rel="nofollow">@Html.Raw(@vs.Title)</a>
                                     }
                                 }
                             </div>
@@ -217,6 +217,14 @@
                 }
             });
         });
+    </script>
+    <script type="text/javascript">
+        $(".outbound").on("click", function (e) {
+            if ($(this).attr("data-out")) {
+                document.location = $(this).attr("data-out");
+                return false;
+            }
+        })
     </script>
 }
 

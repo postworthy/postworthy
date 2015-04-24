@@ -45,6 +45,11 @@ namespace Postworthy.Web
                 defaults: new { controller = "Article", action = "Details", id = UrlParameter.Optional, slug = UrlParameter.Optional, seo = true }
             );
             routes.MapRoute(
+                name: "Out (SEO)",
+                url: "out/{id}/{slug}",
+                defaults: new { controller = "Home", action = "Out", id = UrlParameter.Optional, slug = UrlParameter.Optional }
+            );
+            routes.MapRoute(
                 name: "Shortest",
                 url: "{id}",
                 defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }

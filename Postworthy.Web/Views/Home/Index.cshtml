@@ -66,7 +66,7 @@
                             <div class="imageDiv" style="height:200px;background-image: url('data:image/jpg;base64,@featuredStub1.Image');">
                             </div>
                         }
-                        <a class="articleTitle outbound" href="@featuredStub1.Link.ToString()" data-out="@Url.Content("~/home/out/" + date.ToShortDateString().Replace('/','-') + "/" + featuredStub1.GetSlug())">
+                        <a class="articleTitle outbound" href="@featuredStub1.Link.ToString()" data-out="@Url.Content("~/out/" + date.ToShortDateString().Replace('/','-') + "/" + featuredStub1.GetSlug())" rel="nofollow">
                             @Html.Raw(featuredStub1.Title)
                         </a>
                         <p>
@@ -95,7 +95,7 @@
                                     <div class="imageDiv" style="background-image: url('data:image/jpg;base64,@stub.Image');">
                                     </div>
                                 }
-                                <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/home/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())">
+                                <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())" rel="nofollow">
                                     @Html.Raw(stub.Title)
                                 </a>
                                 <p>
@@ -114,7 +114,7 @@
                                         <span class="glyphicon glyphicon-remove"></span>
                                     </button>
                                 }
-                                <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/home/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())">
+                                <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())" rel="nofollow">
                                     @Html.Raw(stub.Title)
                                 </a>
                                 <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
@@ -137,10 +137,10 @@
                             <div class="post box clearfix">
                                 @foreach (var item in articles.Take(5))
                                 {
-                                    <a style="display: block; margin-bottom: 10px" href="~/Article/Details/@(item.ID())/@(item.GetSlug())">@Html.Raw(item.Title)</a>
+                                    <a style="display: block; margin-bottom: 10px" href="~/article/@(item.GetSlug())_@(item.ID())">@Html.Raw(item.Title)</a>
                                 }
                             </div>
-                            <a style="display: block; margin-bottom: 10px" href="~/Article/Index/0">[View All Articles]</a>
+                            <a style="display: block; margin-bottom: 10px" href="~/articles">[View All Articles]</a>
                         }
                         @if (photoStubs.Count > 0)
                         {
@@ -150,7 +150,7 @@
                                 <hr style="clear: both;" />
                                 @foreach (var stub in photoStubs)
                                 {
-                                    <a class="outbound" href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")">
+                                    <a class="outbound" href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")" rel="nofollow">
                                         <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/jpg;base64,@stub.Image');">
                                         </div>
                                     </a>
@@ -180,7 +180,7 @@
                                     }
                                     else
                                     {
-                                        <a class="outbound" style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()">@Html.Raw(@vs.Title)</a>
+                                        <a class="outbound" style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()" rel="nofollow">@Html.Raw(@vs.Title)</a>
                                     }
                                 }
                             </div>
