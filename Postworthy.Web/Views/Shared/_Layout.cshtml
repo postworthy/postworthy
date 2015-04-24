@@ -51,14 +51,14 @@
                             @if (HasArticles)
                             {
                                 <li>
-                                    <a href="@Url.Content("~/article/index/0")"><span style="display: inline !important"> Articles</span></a>
+                                    <a href="@Url.Content("~/articles")"><span style="display: inline !important"> Articles</span></a>
                                 </li>
                             }
                             <li>
-                                <a href="@Url.Content("~/home/archive/all")"><span style="display: inline !important"> Archive</span></a>
+                                <a href="@Url.Content("~/archive")"><span style="display: inline !important"> Archive</span></a>
                             </li>
                             <li>
-                                <a href="@(Url.Content("~/home/about/" + PrimaryUser.TwitterScreenName))"><span style="display: inline !important"> About</span></a>
+                                <a href="@(Url.Content("~/about"))"><span style="display: inline !important"> About</span></a>
                             </li>
                         </ul>
                     </li>

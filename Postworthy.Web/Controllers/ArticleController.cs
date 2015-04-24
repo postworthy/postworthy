@@ -48,31 +48,51 @@ namespace Postworthy.Web.Controllers
         }
 
         [OutputCache(VaryByParam = "id,slug", Duration = 86400)]
-        public ActionResult Details(uint id, string slug)
+        public ActionResult Details(uint id, string slug, bool seo = false)
         {
             Article article = null;
 
             var model = new PostworthyArticleModel(PrimaryUser);
 
-            if (slug != "p")
+            if (slug != "p" && seo == true)
             {
                 article = model.GetArticle(id);
                 if (article != null)
-                    ViewBag.RelatedArticles = model.Articles(x => x.ID() != article.ID() && x.Tags.Any(y => article.Tags.Where(z => z.ToLower() == y.ToLower()).Count() > 0)).Where(x => x != null).Take(3).ToList();
+                    ViewBag.RelatedArticles = model
+                        .Articles(x => 
+                            x.ID() != article.ID() && 
+                            x.Tags.Any(y => 
+                                article.Tags.Where(z => 
+                                    z.ToLower() == y.ToLower()).Any()))
+                        .Where(x => x != null)
+                        .Take(3)
+                        .ToList();
                 else
                     ViewBag.RelatedArticles = null;
             }
-            else
+            else if(slug == "p")
             {
-                var oldURL = (Session[id.ToString()] ?? "").ToString().ToLower();
+                var oldURL = (Session[id.ToString()] ?? id.ToString()).ToString().ToLower();
 
                 if (!string.IsNullOrEmpty(oldURL))
                 {
-                    article = model.Articles(x => x.MetaData.Where(y => y.Key == OLD_URL && y.Value.ToLower() == oldURL).Count() > 0).FirstOrDefault();
+                    article = model.Articles(x => x.MetaData.Where(y => 
+                        y.Key == OLD_URL && 
+                        (
+                            y.Value.ToLower() == oldURL || 
+                            y.Value.ToLower().EndsWith("?p="+id.ToString())  || 
+                            y.Value.ToLower().EndsWith("?id="+id.ToString())
+                        )).Any())
+                        .FirstOrDefault();
 
                     if (article != null)
-                        return RedirectPermanent("~/Article/Details/" + article.ID() + "/" + article.GetSlug());
+                        return RedirectPermanent("~/" + article.GetSlug() + "_" + article.ID());
                 }
+            }
+            else if(!seo)
+            {
+                article = model.GetArticle(id);
+                return RedirectPermanent("~/" + article.GetSlug() + "_" + article.ID());
             }
 
             if (article != null)
@@ -212,7 +232,7 @@ namespace Postworthy.Web.Controllers
 
         private string GetTagLink(string x)
         {
-            return "<a href=\"" + Url.RouteUrl("Article", new { controller = "Article", action = "Index", id = 0, slug = x.Replace("&", "").Replace(" ", "-").Replace(".", "-") }) + "\" title=\"" + x + "\">" + x + "</a>";
+            return "<a href=\"" + Url.Content("~/articles/tag/" + x.Replace("&", "").Replace(" ", "-").Replace(".", "-").ToLower()) + "\" title=\"" + x + "\">" + x + "</a>";
         }
     }
 }

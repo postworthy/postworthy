@@ -1,5 +1,7 @@
 ﻿@model Postworthy.Models.Web.Article
-
+@{
+    var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+}
 <style type="text/css">
     article header aside {
         margin-bottom: 20px;
@@ -76,6 +78,13 @@
         <aside id="SubTitle">@Html.Raw(Model.SubTitle)</aside>
     </header>
     <section id="Content">
+        @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
+        {
+            <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
+                @Html.Raw(PrimaryUser.AdScript)
+            </div>
+        }
+        
         @Html.Raw(Model.Content)
     </section>
     <footer>

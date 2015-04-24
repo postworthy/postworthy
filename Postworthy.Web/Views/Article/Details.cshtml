@@ -31,10 +31,12 @@
     {
         int i = 0;
         <div class="col-sm-12">
+            <span class="postIndex pull-right">Similar Articles</span>
+            <hr style="clear: both;" />
             @foreach (var item in relatedArticles)
             {
                 <div class="col-sm-4" style="padding-bottom:20px;@(i++ % 3 == 0 ? "clear:left;" : "")">
-                    <a class="articleTitle" style="display:block;margin-bottom:10px" href="@Url.Content("~/Article/Details/" + item.ID() + "/" + item.GetSlug())">
+                    <a class="articleTitle" style="display:block;margin-bottom:10px" href="@Url.Content("~/article/" + item.GetSlug() + "_" + item.ID())">
                         @if (item.Images != null && item.Images.Count > 0)
                         {
                             <div class="imageDiv" style="width:100%;max-width:250px;background-image: url('@item.Images.First()');">
@@ -69,6 +71,7 @@
         <span class="postIndex pull-left">Tags</span>
         <hr style="clear: both;" />
         <ul>
+            <li><a href="~/articles" title="All">ALL</a></li>
             @foreach (var tag in tags)
             {
                 <li>@Html.Raw(tag)</li>

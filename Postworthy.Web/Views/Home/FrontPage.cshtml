@@ -67,7 +67,7 @@
                         @if(Model.FullArticles!= null && Model.FullArticles.Count > 0)
                         {
                             index = 0;
-                            <span class="postIndex" style="padding-top:20px;"><a href="~/Article/Index/0">Recent Articles</a></span>
+                            <span class="postIndex" style="padding-top:20px;"><a href="~/articles">Recent Articles</a></span>
                             <hr style="clear: both;" />
                             foreach (var full in Model.FullArticles)
                             {
@@ -78,7 +78,7 @@
                                         <div data-squared="height" class="imageDiv @(index % 2 == 0 ? "pull-right" : "")" style="max-width:250px;background-image: url('@full.Images.FirstOrDefault()');width:30%">
                                         </div>
                                     }
-                                    <a class="articleTitle" href="~/Article/Details/@(full.UniqueKey.GetHashCode())/@(full.GetSlug())">
+                                    <a class="articleTitle" href="~/article/@(full.GetSlug())_@(full.ID())">
                                         @Html.Raw(full.TaglessTitle())
                                     </a>
                                     <p>
@@ -87,7 +87,7 @@
                                     <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
                                 </div>
                             }
-                            <h2 class="text-center"><a href="~/Article/Index/0">[View All Articles]</a></h2>
+                            <h2 class="text-center"><a href="~/Articles/">[View All Articles]</a></h2>
                         }
                         <span class="postIndex">Top News</span>
                         <hr style="clear: both;" />
@@ -168,7 +168,7 @@
                             {
                                 <a style="display: block; margin-bottom: 10px" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
                             }
-                            <a style="display: block; margin-bottom: 10px" href="~/home/archive/all">[View All Archives]</a>
+                            <a style="display: block; margin-bottom: 10px" href="~/archive">[View All Archives]</a>
                         </div>
                     </div>
                 }

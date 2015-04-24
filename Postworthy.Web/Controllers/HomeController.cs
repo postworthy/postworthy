@@ -38,6 +38,12 @@ namespace Postworthy.Web.Controllers
                 return RedirectToAction("Details", "Article", new { id = p, slug = "p" });
             }
 
+            if (Request.Url.ToString().ToLower().Contains("/home/article?id="))
+            {
+                Session[Request.QueryString["id"]] = Request.Url.ToString();
+                return RedirectToAction("Details", "Article", new { id = Request.QueryString["id"], slug = "p" });
+            }
+
             DateTime date = DateTime.Now;
             if (id.HasValue)
             {
@@ -57,10 +63,15 @@ namespace Postworthy.Web.Controllers
             }
             
             var model = new PostworthyArticleModel(PrimaryUser);
+            var articles = model.GetArticleIndex();
+
+            if (articles.Articles.Count >= 5 && !id.HasValue)
+                return FrontPage();
+
             ViewBag.Date = date;
             ViewBag.ArticleStubIndex = model.GetArticleStubIndex();
-            ViewBag.ArticlesIndex = model.GetArticleIndex();
- 
+            ViewBag.ArticlesIndex = articles;
+
             return View(model.GetArticleStubPage(date));
 
         }
