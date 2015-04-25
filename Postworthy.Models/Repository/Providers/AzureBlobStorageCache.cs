@@ -124,6 +124,9 @@ namespace Postworthy.Models.Repository.Providers
 
         public override TYPE Single(string collectionKey, string itemKey)
         {
+            if (string.IsNullOrEmpty(collectionKey) || string.IsNullOrEmpty(itemKey))
+                return null;
+
             var cached = Cache.Single(collectionKey, itemKey);
             if (cached == null)
             {

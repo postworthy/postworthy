@@ -54,7 +54,10 @@ namespace Postworthy.Models.Repository.Providers
 
         public override TYPE Single(string collectionKey, string itemKey)
         {
-            var obj = SharedCache.Get(itemKey + "_0") as string;
+            if (string.IsNullOrEmpty(collectionKey) || string.IsNullOrEmpty(itemKey))
+                return null;
+
+            object obj = SharedCache.Get(itemKey + "_0");
             if (obj == null)
             {
                 var ltobj = LongTermStorage != null ? LongTermStorage.Single(collectionKey, itemKey) : null;
@@ -66,23 +69,27 @@ namespace Postworthy.Models.Repository.Providers
             }
             else
             {
-                var split = obj.Split(new string[] { SPLIT_BY }, StringSplitOptions.RemoveEmptyEntries);
-                int next = int.Parse(split[0]);
-                if (next == 0)
-                    return Deserialize<TYPE>(split[1]);
-                else
+                var split = obj.ToString().Split(new string[] { SPLIT_BY }, StringSplitOptions.RemoveEmptyEntries);
+                try
                 {
-                    var bigObj = split[1];
-                    while (next > 0)
+                    int next = int.Parse(split[0]);
+                    if (next == 0)
+                        return Deserialize<TYPE>(split[1]);
+                    else
                     {
-                        var temp = SharedCache.Get(itemKey + "_" + next) as string;
-                        split = temp.Split(new string[] { SPLIT_BY }, StringSplitOptions.RemoveEmptyEntries);
-                        next = int.Parse(split[0]);
-                        bigObj += split[1];
-                    }
+                        var bigObj = split[1];
+                        while (next > 0)
+                        {
+                            var temp = SharedCache.Get(itemKey + "_" + next) as string;
+                            split = temp.Split(new string[] { SPLIT_BY }, StringSplitOptions.RemoveEmptyEntries);
+                            next = int.Parse(split[0]);
+                            bigObj += split[1];
+                        }
 
-                    return Deserialize<TYPE>(bigObj);
+                        return Deserialize<TYPE>(bigObj);
+                    }
                 }
+                catch { return null; }
             }
         }
 
