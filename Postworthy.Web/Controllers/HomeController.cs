@@ -38,7 +38,7 @@ namespace Postworthy.Web.Controllers
                 return RedirectToAction("Details", "Article", new { id = p, slug = "p" });
             }
 
-            if (Request.Url.ToString().ToLower().Contains("/home/article?id="))
+            if (Request.Url.ToString().ToLower().Contains("/home/article?id=") || Request.Url.ToString().ToLower().Contains("/home/article/?id="))
             {
                 Session[Request.QueryString["id"]] = Request.Url.ToString();
                 return RedirectToAction("Details", "Article", new { id = Request.QueryString["id"], slug = "p" });
