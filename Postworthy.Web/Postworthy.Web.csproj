@@ -240,12 +240,14 @@
     <Content Include="Example.UsersCollection.config" />
     <Content Include="Example.Web.config" />
     <None Include="Properties\PublishProfiles\BestInCode.com.pubxml" />
+    <None Include="Properties\PublishProfiles\beta.pubxml" />
     <None Include="Properties\PublishProfiles\EndlessPrayer.com.pubxml" />
     <None Include="Properties\PublishProfiles\Postworthy.com.pubxml" />
     <Content Include="Scripts\dropzone\css\basic.css" />
     <Content Include="Scripts\dropzone\css\dropzone.css" />
     <Content Include="Scripts\dropzone\css\stylus\dropzone.styl" />
     <Content Include="Scripts\dropzone\css\stylus\basic.styl" />
+    <None Include="Properties\PublishProfiles\prod.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\dropzone\dropzone-amd-module.js" />
     <Content Include="Scripts\dropzone\dropzone-amd-module.min.js" />

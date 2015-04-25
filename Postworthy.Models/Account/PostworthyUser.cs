@@ -57,6 +57,8 @@ namespace Postworthy.Models.Account
 
         public List<string> PrimaryDomains { get; set; }
 
+        public bool EnableFrontPage { get; set; }
+
         public bool CanAuthorize
         {
             get

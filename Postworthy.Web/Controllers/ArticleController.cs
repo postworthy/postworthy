@@ -86,13 +86,13 @@ namespace Postworthy.Web.Controllers
                         .FirstOrDefault();
 
                     if (article != null)
-                        return RedirectPermanent("~/" + article.GetSlug() + "_" + article.ID());
+                        return RedirectPermanent("~/article/" + article.GetSlug() + "_" + article.ID());
                 }
             }
             else if(!seo)
             {
                 article = model.GetArticle(id);
-                return RedirectPermanent("~/" + article.GetSlug() + "_" + article.ID());
+                return RedirectPermanent("~/article/" + article.GetSlug() + "_" + article.ID());
             }
 
             if (article != null)

@@ -65,7 +65,7 @@ namespace Postworthy.Web.Controllers
             var model = new PostworthyArticleModel(PrimaryUser);
             var articles = model.GetArticleIndex();
 
-            if (articles.Articles.Count >= 5 && !id.HasValue)
+            if (articles.Articles.Count >= 5 && !id.HasValue && PrimaryUser.EnableFrontPage)
                 return FrontPage();
 
             ViewBag.Date = date;
