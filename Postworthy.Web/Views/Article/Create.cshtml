@@ -16,6 +16,7 @@
         ViewBag.Title = "Edit Article";
     }
     var PrimaryUser = Postworthy.Models.Account.UsersCollection.PrimaryUsers().Where(u => u.IsPrimaryUser).FirstOrDefault();
+    ViewBag.Editing = true;
 }
 <div class="col-sm-7 col-sm-offset-1">
     @{

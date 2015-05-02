@@ -118,6 +118,9 @@ namespace Postworthy.Models.Repository.Providers
 
         public override void Store(string key, TYPE obj)
         {
+            if (string.IsNullOrEmpty(key) || obj == null)
+                return;
+
             key = key.ToLower();
             var objects = GetSharedCacheItemKeys(key);
 
@@ -144,6 +147,9 @@ namespace Postworthy.Models.Repository.Providers
 
         public override void Store(string key, IEnumerable<TYPE> obj)
         {
+            if (string.IsNullOrEmpty(key) || obj == null)
+                return;
+
             key = key.ToLower();
             var objects = GetSharedCacheItemKeys(key);
 

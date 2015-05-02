@@ -24,7 +24,7 @@
             {
                 var index = 0;
                 var featured = Model.FullArticles.FirstOrDefault();
-                if(featured != null)
+                if (featured != null)
                 {
                     var guid = Guid.NewGuid().ToString();
                     System.Web.HttpContext.Current.Cache[guid] = featured.Images.FirstOrDefault() ?? "";
@@ -64,7 +64,7 @@
                             }
                             <div style="clear: both; margin: 5px 0px 5px 0px;"></div>
                         }
-                        @if(Model.FullArticles!= null && Model.FullArticles.Count > 0)
+                        @if (Model.FullArticles != null && Model.FullArticles.Count > 0)
                         {
                             index = 0;
                             <span class="postIndex" style="padding-top:20px;"><a href="~/articles">Recent Articles</a></span>
@@ -143,16 +143,23 @@
                                 <hr style="clear: both;" />
                                 @foreach (var vs in videoStubs)
                                 {
-                                    if (vs.Video.Authority.ToLower().Contains("youtube"))
-                                    {
-                                        <a style="display:block;margin-bottom:10px" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + vs.GetSlug())">
-                                            @Html.Raw(@vs.Title)
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <a style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()" rel="nofollow">@Html.Raw(@vs.Title)</a>
-                                    }
+                                    var isNoFollow = !vs.Video.Authority.ToLower().Contains("youtube");
+                                    var url = !isNoFollow ? Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + vs.GetSlug()) : vs.Video.ToString();
+                                    <a class="" style="display: block; margin-bottom: 10px" href="@url" @(isNoFollow ? "rel=\"nofollow\"" : "")>
+                                        @Html.Raw(@vs.Title)
+                                    </a>
+                                    @*
+                                        if (vs.Video.Authority.ToLower().Contains("youtube"))
+                                        {
+                                            <a style="display:block;margin-bottom:10px" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + vs.GetSlug())">
+                                                @Html.Raw(@vs.Title)
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()" rel="nofollow">@Html.Raw(@vs.Title)</a>
+                                        }
+                                    *@
                                 }
                             </div>
                             <a style="display: block; margin-bottom: 10px" href="~/@date.ToShortDateString().Replace('/','-')/videos">[View All Videos]</a>

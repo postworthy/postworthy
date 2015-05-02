@@ -78,7 +78,7 @@
         <aside id="SubTitle">@Html.Raw(Model.SubTitle)</aside>
     </header>
     <section id="Content">
-        @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
+        @if (!string.IsNullOrEmpty(PrimaryUser.AdScript) && ViewBag.Editing == null)
         {
             <div class="box" style="width:100%;overflow:hidden;padding: 5px 0px 5px 0px;">
                 @Html.Raw(PrimaryUser.AdScript)

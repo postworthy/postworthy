@@ -72,27 +72,35 @@ namespace Postworthy.Models.Repository
         {
             Storage.Save(key, obj);
             Cache.Delete(key + "_0_100"); //Remove the first page
+            Cache.Delete(key + "_0_1000"); //Remove the first page
         }
 
         public void Save(string key, IEnumerable<TYPE> objects)
         {
             Storage.Save(key, objects);
             Cache.Delete(key + "_0_100"); //Remove the first page
+            Cache.Delete(key + "_0_1000"); //Remove the first page
         }
 
         public void Delete(string key)
         {
             Storage.Delete(key);
+            Cache.Delete(key + "_0_100"); //Remove the first page
+            Cache.Delete(key + "_0_1000"); //Remove the first page
         }
 
         public void Delete(string key, TYPE obj)
         {
             Storage.Delete(key, obj);
+            Cache.Delete(key + "_0_100"); //Remove the first page
+            Cache.Delete(key + "_0_1000"); //Remove the first page
         }
 
         public void Delete(string key, IEnumerable<TYPE> objects)
         {
             Storage.Delete(key, objects);
+            Cache.Delete(key + "_0_100"); //Remove the first page
+            Cache.Delete(key + "_0_1000"); //Remove the first page
         }
     }
 }

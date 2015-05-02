@@ -234,5 +234,11 @@ namespace Postworthy.Web.Controllers
         {
             return "<a href=\"" + Url.Content("~/articles/tag/" + x.Replace("&", "").Replace(" ", "-").Replace(".", "-").ToLower()) + "\" title=\"" + x + "\">" + x + "</a>";
         }
+
+        public ActionResult TwitterCardMeta(uint id, string slug)
+        {
+            var model = new PostworthyArticleModel(PrimaryUser);
+            return View(model.GetArticle(id));
+        }
     }
 }

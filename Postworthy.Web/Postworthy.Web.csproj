@@ -315,6 +315,7 @@
     <Content Include="Views\Home\Archive.cshtml" />
     <Content Include="Views\Home\Out.cshtml" />
     <Content Include="Views\Shared\_Basic.cshtml" />
+    <Content Include="Views\Article\TwitterCardMeta.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

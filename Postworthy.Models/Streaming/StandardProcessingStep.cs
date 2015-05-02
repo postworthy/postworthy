@@ -54,6 +54,13 @@ namespace Postworthy.Models.Streaming
         protected virtual void StoreInRepository(IEnumerable<Tweep> tweeps)
         {
             CachedRepository<Tweep>.Instance(screenName).Save(screenName + TwitterModel.Instance(screenName).FRIENDS, tweeps);
+            log.WriteLine("{0}: {1} Freinds Added ({3}) for {2}", DateTime.Now, tweeps.Count(), screenName, string.Join(",", tweeps.Select(x => x.ScreenName)));
+        }
+
+        protected void RemoveOldTweeps()
+        {
+            CachedRepository<Tweep>.Instance(screenName).Delete(screenName + TwitterModel.Instance(screenName).FRIENDS);
+            log.WriteLine("{0}: Removed Old Friends for {1}", DateTime.Now, screenName);
         }
 
         public void Shutdown()
@@ -65,6 +72,7 @@ namespace Postworthy.Models.Streaming
         {
             return Task<IEnumerable<Core.LazyLoader<Tweep>>>.Factory.StartNew(new Func<IEnumerable<Core.LazyLoader<Tweep>>>(() =>
             {
+                RemoveOldTweeps();
                 StoreInRepository(tweeps.Select(x => x.Value).ToList());
                 return tweeps;
             }));

@@ -6,6 +6,16 @@
 
 <h1 class="text-danger">Error.</h1>
 <h2 class="text-danger">An error occurred while processing your request.</h2>
+
+@section scripts{
+    <script type="text/javascript">
+        if (ga) {
+            var error = @Newtonsoft.Json.JsonConvert.SerializeObject(Model.Exception);
+            ga('send', 'event', 'error', 'error', JSON.stringify(error));
+        }
+    </script>
+}
+
 <!--
     @Model.Exception.ToString()
 -->
