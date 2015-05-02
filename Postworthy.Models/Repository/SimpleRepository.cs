@@ -35,15 +35,29 @@ namespace Postworthy.Models.Repository
 
             var objects = Storage.Get(key);
 
+            where = where == null ? t => true : where;
+
             if (objects != null)
             {
-                if (where != null)
-                    objects = objects.Where(where);
+                var skip = objects.Skip(pageIndex);
+                
+                int runs = 0;
+                int maxRuns = 0;
 
-                return (pageSize > 0 ? objects.Skip(pageIndex).Take((int)pageSize) : objects).AsParallel().Where(x => x != null).ToList();
+                foreach (var o in skip)
+                {
+                    if (runs >= pageSize || maxRuns++ >= pageSize * 2)
+                        break;
+                    if (o != null && where(o))
+                    {
+                        runs++;
+                        yield return o;
+                    }
+
+                }
             }
-            else
-                return null;
+
+            yield break;
         }
         public void Save(string key, TYPE obj)
         {

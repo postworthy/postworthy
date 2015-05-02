@@ -10,6 +10,7 @@ using Postworthy.Models.Account;
 using Newtonsoft.Json;
 using System.IO;
 using System.IO.Compression;
+using Microsoft.WindowsAzure.Storage.RetryPolicies;
 
 namespace Postworthy.Models.Repository.Providers
 {
@@ -46,8 +47,7 @@ namespace Postworthy.Models.Repository.Providers
                 {
                     blob.DownloadToStream(stream, options: new BlobRequestOptions()
                     {
-                        ServerTimeout = new TimeSpan(0, 0, 15),
-                        MaximumExecutionTime = new TimeSpan(0, 1, 0)
+                        RetryPolicy = new LinearRetry(TimeSpan.FromSeconds(5), 3)
                     });
                 }
                 catch (StorageException se)
@@ -103,7 +103,7 @@ namespace Postworthy.Models.Repository.Providers
                 .ListBlobs().Cast<CloudBlockBlob>()
                 .OrderByDescending(b => b.Properties.LastModified)
                 .ToList();
-
+            int currentIndex = 0;
             if (items.Count > 0)
             {
                 foreach (var item in items)
@@ -114,7 +114,7 @@ namespace Postworthy.Models.Repository.Providers
                         cached = DownloadBlob<TYPE>(item);
                         Cache.Store(key, cached);
                     }
-
+                    currentIndex++;
                     yield return cached;
                 }
             }
