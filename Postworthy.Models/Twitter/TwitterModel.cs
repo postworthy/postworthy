@@ -40,7 +40,7 @@ namespace Postworthy.Models.Twitter
 
         public readonly PostworthyUser PrimaryUser = null;
 
-        private string VERSION
+        public static string VERSION
         {
             get { return "_v" + Assembly.GetCallingAssembly().GetName().Version.ToString(); }
         }

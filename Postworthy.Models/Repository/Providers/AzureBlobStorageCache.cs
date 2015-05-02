@@ -187,7 +187,6 @@ namespace Postworthy.Models.Repository.Providers
             {
                 Remove(key, o);
             }
-            Cache.Remove(key, obj);
         }
 
         #region Internal Blob Azure Classes
