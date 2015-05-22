@@ -147,6 +147,7 @@
     <Compile Include="Streaming\IKeywordSuggestionStep.cs" />
     <Compile Include="Streaming\IProcessingStep.cs" />
     <Compile Include="Streaming\PassThroughProcessingStep.cs" />
+    <Compile Include="Streaming\RealtimeProcessingStep.cs" />
     <Compile Include="Streaming\StandardProcessingStep.cs" />
     <Compile Include="Streaming\StreamItem.cs" />
     <Compile Include="Streaming\TrackerProcessingStep.cs" />
