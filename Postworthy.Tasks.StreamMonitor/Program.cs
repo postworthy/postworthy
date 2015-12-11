@@ -27,7 +27,8 @@ namespace Postworthy.Tasks.StreamMonitor
 
             var streamMonitors = new List<DualStreamMonitor>();
 
-            UsersCollection.PrimaryUsers().AsParallel().ForAll(u =>
+            UsersCollection.PrimaryUsers().AsParallel()
+                .ForAll(u =>
             {
                 var streamMonitor = new DualStreamMonitor(u, Console.Out);
                 streamMonitor.Start();
