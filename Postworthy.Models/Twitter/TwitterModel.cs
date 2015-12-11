@@ -18,6 +18,7 @@ using Postworthy.Models.Core;
 using Postworthy.Models.Repository.Providers;
 using HtmlAgilityPack;
 using System.Reflection;
+using System.IO;
 
 namespace Postworthy.Models.Twitter
 {
@@ -406,7 +407,7 @@ namespace Postworthy.Models.Twitter
             {
                 return new TwitterContext(new MvcAuthorizer()
                 {
-                    CredentialStore = new LinqToTwitter.InMemoryCredentialStore()
+                    CredentialStore = new InMemoryCredentialStore()
                     {
                         OAuthTokenSecret = pm.AccessToken,
                         ConsumerKey = ConfigurationManager.AppSettings["TwitterCustomerKey"],
@@ -418,6 +419,36 @@ namespace Postworthy.Models.Twitter
             else
                 throw new Exception("Can Not Authorize User: " + screenname);
 
+        }
+
+        public bool VerifyCredentials(TwitterContext context, TextWriter log = null)
+        {
+            var accounts =
+                from acct in context.Account
+                where acct.Type == AccountType.VerifyCredentials
+                select acct;
+
+            try
+            {
+                var account = accounts.SingleOrDefault();
+                var user = account.User;
+                if (log != null)
+                {
+                    log.WriteLine("Account credentials are verified for " + user.Name);
+                }
+                return true;
+            }
+            catch (WebException wex)
+            {
+                if (log != null)
+                {
+                    log.WriteLine(
+                    "Twitter did not recognize the credentials. Response from Twitter: "
+                    + wex.Message);
+                }
+            }
+
+            return false;
         }
     }
 }

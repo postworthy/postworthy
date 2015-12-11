@@ -62,7 +62,11 @@ namespace Postworthy.Tasks.StreamMonitor
 
             var userStreamContext = TwitterModel.Instance(PrimaryUser.TwitterScreenName).GetAuthorizedTwitterContext(screenname);
             var trackerStreamContext = TwitterModel.Instance(PrimaryUser.TwitterScreenName).GetAuthorizedTwitterContext(screenname);
-            
+
+            TwitterModel.Instance(PrimaryUser.TwitterScreenName).VerifyCredentials(userStreamContext, log);
+            TwitterModel.Instance(PrimaryUser.TwitterScreenName).VerifyCredentials(trackerStreamContext, log);
+
+
             StartTwitterStream(userStreamContext, trackerStreamContext);
 
             StartProcessingQueue(userStreamContext, trackerStreamContext);
