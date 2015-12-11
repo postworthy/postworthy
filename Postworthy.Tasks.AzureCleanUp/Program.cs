@@ -3,6 +3,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Postworthy.Models.Repository;
 using Postworthy.Models.Twitter;
+using Postworthy.Models.Web;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -40,14 +41,17 @@ namespace Postworthy.Tasks.AzureCleanUp
 
             var version = TwitterModel.VERSION;
 
+            bool content = args.Any(a => a.ToLower() == "content");
             bool cleanVersion = args.Any(a => a.ToLower() == "version");
             bool shrink = args.Any(a => a.ToLower().StartsWith("shrink"));
             int newSize = args.Where(a => a.ToLower().StartsWith("shrink")).Select(x => x == "shrink" ? 500 : int.Parse(x.Replace("shrink", ""))).FirstOrDefault();
 
             blobClient.ListContainers()
+                //.Skip(1) //Short circuit for testing
                 //.Take(1) //Short circuit for testing
                 .ToList().AsParallel().ForAll(c =>
             {
+                #region Index Cleanup
                 var index = c.GetDirectoryReference("Index");
                 foreach (var b in index.ListBlobs().Where(x => x is CloudBlockBlob).Cast<CloudBlockBlob>())
                 {
@@ -86,6 +90,36 @@ namespace Postworthy.Tasks.AzureCleanUp
                         }
                     }
                 }
+                #endregion
+
+                #region Content Cleanup
+                if (content)
+                {
+                    try
+                    {
+                        var repoIndex = new SimpleRepository<ArticleStubIndex>(c.Name);
+                        var repoPage = new SimpleRepository<ArticleStubPage>(c.Name);
+                        var stubIndex = repoIndex.Query(TwitterModel.Instance(c.Name).CONTENT_INDEX).FirstOrDefault();
+                        if (stubIndex != null)
+                        {
+                            var remove = new List<KeyValuePair<long, string>>();
+                            for (var i = stubIndex.ArticleStubPages.Count - 31; i > -1 && i < stubIndex.ArticleStubPages.Count; i++) // Only the last month(ish)
+                            {
+                                var si = stubIndex.ArticleStubPages[i];
+                                var page = repoPage.Query(TwitterModel.Instance(c.Name).CONTENT + "_" + si.Value).FirstOrDefault();
+                                if (page.ArticleStubs == null || page.ArticleStubs.Count == 0)
+                                {
+                                    repoPage.Delete(TwitterModel.Instance(c.Name).CONTENT + "_" + si.Value);
+                                    remove.Add(si);
+                                }
+                            }
+                            remove.ForEach(x => stubIndex.ArticleStubPages.Remove(x));
+                            repoIndex.Save(TwitterModel.Instance(c.Name).CONTENT_INDEX, stubIndex);
+                        }
+                    }
+                    catch { }
+                }
+                #endregion
             });
 
             Console.WriteLine("Waiting on all tasks to complete");
