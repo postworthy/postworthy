@@ -86,24 +86,36 @@ namespace Postworthy.Tasks.WebContent
                 var continueTask = contentTask.ContinueWith(task =>
                 {
                     Console.WriteLine("{0}: Content completed for {1}", DateTime.Now, u.TwitterScreenName);
-                    var articleStubPage = new ArticleStubPage(1, task.Result.Take(MAX_CONTENT));
-
-                    if (existing != null && existing.ExcludedArticleStubs.Count > 0)
+                    var stubs = task.Result.Take(MAX_CONTENT);
+                    if (stubs.Count() > 0 || !string.IsNullOrEmpty(dayTag))
                     {
-                        articleStubPage.ExcludedArticleStubs = existing.ExcludedArticleStubs.Where(e => articleStubPage.ArticleStubs.Contains(e)).ToList();
+                        var articleStubPage = new ArticleStubPage(1, stubs);
+
+                        if (existing != null && existing.ExcludedArticleStubs.Count > 0)
+                        {
+                            articleStubPage.ExcludedArticleStubs = existing.ExcludedArticleStubs.Where(e => articleStubPage.ArticleStubs.Contains(e)).ToList();
+                        }
+
+                        Console.WriteLine("{0}: Deleting old data from files from storage for {1}", DateTime.Now, u.TwitterScreenName);
+                        repoPage.Delete(TwitterModel.Instance(u.TwitterScreenName).CONTENT + dayTag);
+
+                        Console.WriteLine("{0}: Storing data in repository for {1}", DateTime.Now, u.TwitterScreenName);
+                        repoPage.Save(TwitterModel.Instance(u.TwitterScreenName).CONTENT + dayTag, articleStubPage);
+
+                        if (articleStubIndex != null)
+                            repoIndex.Save(TwitterModel.Instance(u.TwitterScreenName).CONTENT_INDEX, articleStubIndex);
+
+                        if (!string.IsNullOrEmpty(tweet))
+                        {
+                            try
+                            {
+                                TwitterModel.Instance(u.TwitterScreenName).UpdateStatus(tweet, processStatus: false);
+                            }
+                            catch(Exception ex) { Console.WriteLine("{0}: Could not tweet message: {1}" + Environment.NewLine + "The following exception was thrown: {2}", DateTime.Now, tweet, ex.ToString()); }
+                        }
                     }
-
-                    Console.WriteLine("{0}: Deleting old data from files from storage for {1}", DateTime.Now, u.TwitterScreenName);
-                    repoPage.Delete(TwitterModel.Instance(u.TwitterScreenName).CONTENT + dayTag);
-
-                    Console.WriteLine("{0}: Storing data in repository for {1}", DateTime.Now, u.TwitterScreenName);
-                    repoPage.Save(TwitterModel.Instance(u.TwitterScreenName).CONTENT + dayTag, articleStubPage);
-
-                    if (articleStubIndex != null)
-                        repoIndex.Save(TwitterModel.Instance(u.TwitterScreenName).CONTENT_INDEX, articleStubIndex);
-
-                    if (!string.IsNullOrEmpty(tweet))
-                        TwitterModel.Instance(u.TwitterScreenName).UpdateStatus(tweet, processStatus: false);
+                    else
+                        Console.WriteLine("{0}: No articles found for {1}", DateTime.Now, u.TwitterScreenName);
                 });
                 tasks.Add(contentTask);
                 tasks.Add(continueTask);
