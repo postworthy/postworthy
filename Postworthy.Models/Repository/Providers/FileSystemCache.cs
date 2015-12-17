@@ -172,8 +172,11 @@ namespace Postworthy.Models.Repository.Providers
             {
                 foreach (var o in obj)
                 {
-                    objects.Remove(o.UniqueKey);
-                    this.Remove(o.UniqueKey.ToString());
+                    if (o != null)
+                    {
+                        objects.Remove(o.UniqueKey);
+                        this.Remove(o.UniqueKey.ToString());
+                    }
                 }
 
                 if (objects.Count > 0)
