@@ -21,17 +21,20 @@ namespace Postworthy.Models.Streaming
         private List<Tweet> Tweets = new List<Tweet>();
         private ArticleStubPage Page = new ArticleStubPage();
         private SimpleRepository<ArticleStubPage> repoPage;
+        private SimpleRepository<ArticleStubIndex> repoIndex;
 
         public override void Init(string screenname, System.IO.TextWriter log)
         {
             base.Init(screenname, log);
             User = UsersCollection.PrimaryUsers().Where(x => x.TwitterScreenName == screenname).First();
             repoPage = new SimpleRepository<ArticleStubPage>(screenname);
+            repoIndex = new SimpleRepository<ArticleStubIndex>(screenname);
         }
 
         protected override void StoreInRepository(IEnumerable<Twitter.Tweet> tweets)
         {
             var start = DateTime.Now.AddHours(-48);
+            var dayTag = "_" + DateTime.Now.ToShortDateString();
 
             Func<Tweet, bool> where = t =>
                 t != null &&
@@ -42,7 +45,7 @@ namespace Postworthy.Models.Streaming
                     //Apply Date Range
                 (t.CreatedAt >= start));
 
-            Tweets = Tweets.Union(tweets.Where(where)).OrderByDescending(x=>x.TweetRank).Take(1000).ToList();
+            Tweets = Tweets.Union(tweets.Where(where)).OrderByDescending(x=>x.TweetRank).Take(MAX_CONTENT).ToList();
             
             var groups = Tweets
                 //Group similar tweets 
@@ -51,8 +54,8 @@ namespace Postworthy.Models.Streaming
                 .Select(g => new TweetGroup(g) { RepositoryKey = TwitterModel.Instance(User.TwitterScreenName).CONTENT })
                 //Order by TweetRank
                 .OrderByDescending(g => g.TweetRank)
-                //Only the top 500
-                .Take(500);
+                //Only the top content
+                .Take(MAX_CONTENT);
 
             Task<List<ArticleStub>> contentTask = null;
             Task continueTask = null;
@@ -66,13 +69,30 @@ namespace Postworthy.Models.Streaming
                 stdev = Math.Sqrt(values.Sum(d => (d - avg) * (d - avg)) / values.Count());
 
                 //Filter groups that are way high...
-                groups = groups.Where(x => x.TweetRank < (avg + stdev));
+                //groups = groups.Where(x => x.TweetRank < (avg + stdev));
 
                 var results = groups.OrderByDescending(x=>x.TweetRank).ToList();
                 contentTask = CreateContent(results, Page);
                 continueTask = contentTask.ContinueWith(task => {
-                    Page = new ArticleStubPage(1, task.Result.Take(MAX_CONTENT));
-                    repoPage.Save(TwitterModel.Instance(screenName).CONTENT, Page);
+                    if (task.Result.Count >= 25)
+                    {
+                        var key = TwitterModel.Instance(screenName).CONTENT.ToLower();
+                        Page = new ArticleStubPage(1, task.Result.Take(100));
+
+                        repoPage.Delete(key);
+                        repoPage.Save(key, Page);
+
+                        repoPage.Delete(key + dayTag);
+                        repoPage.Save(key + dayTag, Page);
+
+                        var articleStubIndex = repoIndex.Query(TwitterModel.Instance(screenName).CONTENT_INDEX).FirstOrDefault() ?? new ArticleStubIndex();
+                        var day = DateTime.Now.StartOfDay();
+                        if (articleStubIndex.ArticleStubPages.Where(x => x.Key == day.ToFileTimeUtc()).Count() == 0)
+                        {
+                            articleStubIndex.ArticleStubPages.Add(new KeyValuePair<long, string>(day.ToFileTimeUtc(), day.ToShortDateString()));
+                            repoIndex.Save(TwitterModel.Instance(screenName).CONTENT_INDEX, articleStubIndex);
+                        }
+                    }
                 });
             }
 
