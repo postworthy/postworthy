@@ -92,25 +92,27 @@ namespace Postworthy.Models.Core
 
         public static int GetTweetCount(this Uri uri)
         {
-            var jss = new JavaScriptSerializer();
-            var twtcnt = new Uri(URL_TWEET_COUNT_ENDPOINT + HttpUtility.UrlEncode(uri.ToString()));
-            try
-            {
-                var req = twtcnt.GetWebRequest();
-                using (var resp = req.GetResponse())
-                {
-                    using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.Default))
-                    {
-                        try
-                        {
-                            var utc = jss.Deserialize<UrlTweetCount>(reader.ReadToEnd());
-                            return utc.count;
-                        }
-                        catch { return 0; }
-                    }
-                }
-            }
-            catch { return 0; }
+            //var jss = new JavaScriptSerializer();
+            //var twtcnt = new Uri(URL_TWEET_COUNT_ENDPOINT + HttpUtility.UrlEncode(uri.ToString()));
+            //try
+            //{
+            //    var req = twtcnt.GetWebRequest();
+            //    using (var resp = req.GetResponse())
+            //    {
+            //        using (var reader = new StreamReader(resp.GetResponseStream(), Encoding.Default))
+            //        {
+            //            try
+            //            {
+            //                var utc = jss.Deserialize<UrlTweetCount>(reader.ReadToEnd());
+            //                return utc.count;
+            //            }
+            //            catch { return 0; }
+            //        }
+            //    }
+            //}
+            //catch { return 0; }
+
+            return 100;
         }
 
         public static int GetFacebookShareCount(this Uri uri)
