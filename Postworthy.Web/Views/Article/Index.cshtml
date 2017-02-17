@@ -18,7 +18,7 @@
             <span class="postIndex2">@(++index)</span>
             @if (item.Images != null && item.Images.Count > 0 && !string.IsNullOrEmpty(item.Images.First()))
             {
-                <div class="imageDiv" style="width:150px;height:150px;background-image: url('@item.Images.First()');">
+                <div class="imageDiv" style="width:150px;height:150px;background-image: url('@item.Images.First()');border-bottom-left-radius:45px;border-bottom-right-radius:45px;border-top-left-radius:45px;">
                 </div>
             }
             else

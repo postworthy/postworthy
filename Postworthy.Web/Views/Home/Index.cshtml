@@ -12,6 +12,7 @@
     Model.ArticleStubs = Model.ArticleStubs.Distinct().Where(x => !Model.ExcludedArticleStubs.Contains(x)).ToList();
 
     var photoStubs = Model.ArticleStubs.Where(s => Postworthy.Web.Controllers.HomeController.IMAGE_DOMAINS.Contains(s.Link.Authority.ToLower())).ToList();
+    var videoStubs = Model.ArticleStubs.Where(x => x.Video != null);
 
     Model.ArticleStubs = Model.ArticleStubs.Where(x => !photoStubs.Contains(x)).ToList();
 
@@ -33,7 +34,7 @@
         {
             if (Model.ArticleStubs.Count() > 0)
             {
-                var index = 1;
+                var index = 0;
                 var featuredStub1 = Model.ArticleStubs.First();
                 var guid = Guid.NewGuid().ToString();
                 System.Web.HttpContext.Current.Cache.Add(
@@ -52,48 +53,48 @@
                 }
                 using (Html.BeginForm())
                 {
-                    <div class=" post box col-md-12 col-sm-12" style="font-size:large;line-height:1em;clear:both">
-                        <!--<span class="postIndex">Top Story</span>
-                        <hr style="clear: both;" />-->
-                        @if (isPrimaryLoggedIn)
-                        {
-                            <button type="submit" class="btn btn-danger btn-xs removeButton" value="@featuredStub1.GetSlug()" name="slug">
-                                <span class="glyphicon glyphicon-remove"></span>
-                            </button>
-                        }
-                        @if (!string.IsNullOrEmpty(featuredStub1.Image))
-                        {
-                            <div class="imageDiv" style="height:200px;background-image: url('data:image/jpg;base64,@featuredStub1.Image');">
-                            </div>
-                        }
-                        <a class="articleTitle outbound" href="@featuredStub1.Link.ToString()" data-out="@Url.Content("~/out/" + date.ToShortDateString().Replace('/','-') + "/" + featuredStub1.GetSlug())" rel="nofollow">
-                            @Html.Raw(featuredStub1.Title)
-                        </a>
-                        <p>
-                            @Html.Raw(featuredStub1.GetSummary())
-                        </p>
-                        <div style="clear: both; margin: 5px 0px 5px 0px;"></div>
-                    </div>
                     <div class="col-md-8 col-sm-8" style="padding-bottom:20px">
-                        @foreach (var stub in Model.ArticleStubs.Skip(1).Take(49))
+                        @if (videoStubs.Where(x => x.Video.Authority.ToLower().Contains("youtube")).Any())
+                        {
+                        <span class="postIndex">Top Videos</span>
+                        <hr style="clear: both;" />
+                            var featuredVideos = videoStubs.Where(x => x.Video.Authority.ToLower().Contains("youtube")).OrderByDescending(x=> !string.IsNullOrEmpty(x.Image));
+                            foreach (var stub in featuredVideos)
+                            {
+                        <div class="post box" style="padding-bottom: 20px;@(index % 2 == 0 ? "background: #fdfdfd;" : "")">
+                            @if (!string.IsNullOrEmpty(stub.Image))
+                            {
+                                <div data-squared="height" class="imageDiv @(false && /* SHORTED OUT 02/10/2017 */ index % 2 == 0 ? "pull-right" : "")" style="max-width:7.65em;background-image: url('data:image/png;base64,@stub.Image');width:30%;border-bottom-left-radius:45px;border-bottom-right-radius:45px;border-top-left-radius:45px;">
+                                </div>
+                            }
+                            <a class="articleTitle" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + stub.GetSlug())">
+                                @Html.Raw(stub.Title)
+                            </a>
+                            <p class="articleSubtitle">
+                                @Html.Raw(stub.SubTitle ?? stub.Summary)
+                            </p>
+                            <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
+                        </div>
+                        videoStubs = videoStubs.Where(x => x != stub);
+                        }
+                        <h2 class="text-center"><a href="~/@date.ToShortDateString().Replace('/','-')/videos">[View All Videos]</a></h2>
+                        }
+                        <span class="postIndex">Top News</span>
+                        <hr style="clear: both;" />
+                        @foreach (var stub in Model.ArticleStubs.Take(50))
                         {
                             <div class="post box" style="padding-bottom:20px;">
-                                @if (index == 1)
-                                {
-                                    <span class="postIndex">Top News</span>
-                                    <hr style="clear: both;" />
-                                }
                                 <span class="postIndex2">@(++index)</span>
                                 @if (isPrimaryLoggedIn)
                                 {
-                                    <button type="submit" class="btn btn-danger btn-xs removeButton" value="@stub.GetSlug()" name="slug">
-                                        <span class="glyphicon glyphicon-remove"></span>
-                                    </button>
+                                <button type="submit" class="btn btn-danger btn-xs removeButton" value="@stub.GetSlug()" name="slug">
+                                    <span class="glyphicon glyphicon-remove"></span>
+                                </button>
                                 }
                                 @if (!string.IsNullOrEmpty(stub.Image))
                                 {
-                                    <div class="imageDiv" style="background-image: url('data:image/jpg;base64,@stub.Image');">
-                                    </div>
+                                <div class="imageDiv" data-squared="height" style="max-width:7.65em;background-image: url('data:image/jpg;base64,@stub.Image');border-bottom-left-radius:45px;border-bottom-right-radius:45px;border-top-left-radius:45px;">
+                                </div>
                                 }
                                 <a class="articleTitle outbound" href="@stub.Link.ToString()" data-out="@Url.Content("~/out/" + date.ToShortDateString().Replace('/','-') + "/" + stub.GetSlug())" rel="nofollow">
                                     @Html.Raw(stub.Title)
@@ -137,10 +138,11 @@
                             <div class="post box clearfix">
                                 @foreach (var item in articles.Take(5))
                                 {
-                                    <a style="display: block; margin-bottom: 10px" href="~/article/@(item.GetSlug())_@(item.ID())">@Html.Raw(item.Title)</a>
+                                    <a class="responsiveSidebarText" style="display: block;" href="~/article/@(item.GetSlug())_@(item.ID())">@Html.Raw(item.TaglessTitle())</a>
                                 }
+                                <a class="responsiveSidebarText" style="display: block;" href="~/articles">[View All Articles]</a>
                             </div>
-                            <a style="display: block; margin-bottom: 10px" href="~/articles">[View All Articles]</a>
+                            
                         }
                         @if (photoStubs.Count > 0)
                         {
@@ -150,7 +152,7 @@
                                 <hr style="clear: both;" />
                                 @foreach (var stub in photoStubs)
                                 {
-                                    <a class="outbound" href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")" rel="nofollow">
+                                    <a class="outbound responsiveSidebarText" href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")" rel="nofollow">
                                         <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/jpg;base64,@stub.Image');">
                                         </div>
                                     </a>
@@ -159,79 +161,78 @@
                                         break;
                                     }
                                 }
+                                <a class="responsiveSidebarText" style="display: block;" href="~/@date.ToShortDateString().Replace('/','-')/photos">[View All Photos]</a>
                             </div>
-                            <a style="display: block; margin-bottom: 10px" href="~/@date.ToShortDateString().Replace('/','-')/photos">[View All Photos]</a>
+                            
                         }
-                        @if (Model.ArticleStubs.Any(s => s.Video != null))
+                        @if (videoStubs.Any())
                         {
                             <div class="post box clearfix">
                                 <span class="postIndex pull-left">Videos</span>
                                 <hr style="clear: both;" />
-                                @{
-                            var videoStubs = Model.ArticleStubs.Where(s => s.Video != null);
-                                }
-                                @foreach (var vs in videoStubs)
+                                @foreach (var vs in videoStubs.OrderByDescending(x => x.Video.Authority.ToLower().Contains("youtube")))
                                 {
                                     if (vs.Video.Authority.ToLower().Contains("youtube"))
                                     {
-                                        <a style="display:block;margin-bottom:10px" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + vs.GetSlug())">
+                                        <a class="responsiveSidebarText" style="display:block;margin-bottom:10px" href="@Url.Content("~/" + date.ToShortDateString().Replace('/', '-') + "/" + vs.GetSlug())">
                                             @Html.Raw(@vs.Title)
                                         </a>
                                     }
                                     else
                                     {
-                                        <a class="outbound" style="display: block; margin-bottom: 10px" href="@vs.Video.ToString()" rel="nofollow">@Html.Raw(@vs.Title)</a>
+                                        <a class="outbound responsiveSidebarText" style="display: block;" href="@vs.Video.ToString()" rel="nofollow">@Html.Raw(@vs.Title)</a>
                                     }
                                 }
+                                <a class="responsiveSidebarText" style="display: block;" href="~/@date.ToShortDateString().Replace('/','-')/videos">[View All Videos]</a>
                             </div>
-                            <a style="display: block; margin-bottom: 10px" href="~/@date.ToShortDateString().Replace('/','-')/videos">[View All Videos]</a>
-                        }
+                            
+                                    }
                         <div class="post box">
                             <span class="postIndex pull-left">Archives</span>
                             <hr style="clear: both;" />
                             @{
-                        Postworthy.Models.Web.ArticleStubIndex articleStubIndex = ViewBag.ArticleStubIndex;
-                        var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key).Take(10);
+                                Postworthy.Models.Web.ArticleStubIndex articleStubIndex = ViewBag.ArticleStubIndex;
+                                var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key).Take(10);
                             }
                             @foreach (var kvp in archivedPages)
                             {
-                                <a style="display: block; margin-bottom: 10px" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
+                                <a class="responsiveSidebarText" style="display: block;" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>
                             }
-                            <a style="display: block; margin-bottom: 10px" href="~/archive">[View All Archives]</a>
+                            <a class="responsiveSidebarText" style="display: block;" href="~/archive">[View All Archives]</a>
                         </div>
                     </div>
-                }
-            }
-        }
-        else
-        {
-            <div class="box col-md-12">
-                <div style="padding: 5px;">
-                    @if (Request.IsAuthenticated && user != null && user.IsPrimaryUser && user.CanAuthorize)
-                    {
-                        <h1>
-                            Hello, @User.Identity.Name! Welcome to the world of <a href="http://postworthy.org">
-                                Postworthy
-                            </a>!
-                        </h1>
-                        <h2>
-                            You should run the streaming tool as well as the web content tool so that you can have some content to view.
-                            But make sure that you have all the configuration settings correct first. For more information
-                            on setting up your site visit the <a href="http://postworthy.org">
-                                Postworthy Project
-                                Page
-                            </a> for setup instructions.
-                        </h2>
-                    }
-                    else
-                    {
-                        <h1>
-                            Sorry no content to view at this time. Please try again later.
-                        </h1>
-                    }
-                </div>
-            </div>
-        }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="box col-md-12">
+                                        <div style="padding: 5px;">
+                                            @if (Request.IsAuthenticated && user != null && user.IsPrimaryUser && user.CanAuthorize)
+                                            {
+                                                <h1>
+                                                    Hello, @User.Identity.Name! Welcome to the world of <a href="http://postworthy.org">
+                                                        Postworthy
+                                                    </a>!
+                                                </h1>
+                                                <h2>
+                                                    You should run the streaming tool as well as the web content tool so that you can have some content to view.
+                                                    But make sure that you have all the configuration settings correct first. For more information
+                                                    on setting up your site visit the <a href="http://postworthy.org">
+                                                        Postworthy Project
+                                                        Page
+                                                    </a> for setup instructions.
+                                                </h2>
+                                            }
+                                            else
+                                            {
+                                                <h1>
+                                                    Sorry no content to view at this time. Please try again later.
+                                                </h1>
+                                            }
+                                        </div>
+                                    </div>
+                                }
     </div>
 </div>
 @section scripts{

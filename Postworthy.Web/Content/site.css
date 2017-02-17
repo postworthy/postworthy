@@ -46,8 +46,24 @@ input[type="checkbox"].input-validation-error {
 }
 
 .articleTitle{
-    font-size: 19px;
+    font-size: 1.25em;
 }
+
+.articleSubtitle{
+    font-size: 1em;
+}
+
+.responsiveSidebarText {
+    font-size: 1.1em;
+    margin: 1em
+}
+
+.center-block {
+   margin-left:auto;
+   margin-right:auto;
+   display:block;
+}
+
 
 @media (max-width: 767px) {
     .navbar-fixed-top {
@@ -304,18 +320,18 @@ input[type="checkbox"].input-validation-error {
 
 .postIndex {
     float: right;
-    font-size: 16px;
+    font-size: 2em;
     font-weight: bold;
-    color: #ccc;
-    line-height: 28px;
+    
+    /*line-height: 28px;*/
     padding-right: 4px;
 }
 .postIndex2 {
     float: left;
-    font-size: 16px;
+    font-size: 0.55em;
     font-weight: bold;
     color: #ccc;
-    line-height: 28px;
+    line-height: 1.5em;
     padding-right: 4px;
     text-align:right;
     width:100px;
@@ -349,9 +365,17 @@ removeButton {
     background-repeat: no-repeat; 
     background-size:cover; 
     margin-right: 5px; 
-    width: 200px; 
-    height: 100px;
+    max-width: 200px; 
+    max-height: 200px;
+    width: 20vw; 
+    height: 20vw;
     position:relative;
+    border-bottom-left-radius:5px;
+    border-bottom-right-radius:5px;
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    box-shadow: 3px 5px 5px 1px;
+    color:#c4c4c4;
 }
 
 .imageDiv div{
@@ -359,7 +383,12 @@ removeButton {
     position: absolute;
     bottom: 0;
     left: 0;
-    color: black;
+    color: #1a0dab;
     width:100%;
     word-wrap: break-word;
+    padding: 0.3em
+}
+
+.imageDiv div:hover{
+    text-decoration: underline;
 }

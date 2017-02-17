@@ -1,5 +1,8 @@
-﻿using System;
+﻿using AForge.Imaging.Filters;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -20,7 +23,7 @@ namespace Postworthy.Models.Web
 
         public string GetSlug(int maxLength = 100)
         {
-            string str = WebUtility.HtmlDecode(Title.ToLower());
+            string str = WebUtility.HtmlDecode(TaglessTitle().ToLower());
 
             // invalid chars, make into spaces
             str = Regex.Replace(str, @"[^a-z0-9\s-]", "");
@@ -33,6 +36,43 @@ namespace Postworthy.Models.Web
 
             return str;
 
+        }
+
+        private string _lazyBluredImage = null;
+        public string ImageWithLazyBlur()
+        {
+            if (_lazyBluredImage == null && !string.IsNullOrEmpty(Image))
+            {
+                var blur = new GaussianBlur(1, 8);
+                using (var ms = new MemoryStream(Convert.FromBase64String(Image)))
+                using (var outStrm = new MemoryStream())
+                using (var png = new Bitmap(ms))
+                {
+                    blur.ApplyInPlace(png);
+                    png.Save(outStrm, System.Drawing.Imaging.ImageFormat.Png);
+                    _lazyBluredImage = Convert.ToBase64String(outStrm.ToArray());
+                }
+            }
+
+            return _lazyBluredImage;
+        }
+
+        public string TaglessTitle()
+        {
+            string str = WebUtility.HtmlDecode(Title);
+
+            var tags = new System.Text.RegularExpressions.Regex(@"</?\w+((\s+\w+(\s*=\s*(?:"".*?""|'.*?'|[^'"">\s]+))?)+\s*|\s*)/?>", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+            return tags.Replace(str, "");
+        }
+
+        public string TaglessSubTitle()
+        {
+            string str = WebUtility.HtmlDecode(SubTitle);
+
+            var tags = new System.Text.RegularExpressions.Regex(@"</?\w+((\s+\w+(\s*=\s*(?:"".*?""|'.*?'|[^'"">\s]+))?)+\s*|\s*)/?>", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+            return tags.Replace(str, "");
         }
 
         public string GetSummary(int length = 1100)
