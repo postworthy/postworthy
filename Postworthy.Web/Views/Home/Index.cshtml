@@ -14,7 +14,7 @@
     var photoStubs = Model.ArticleStubs.Where(s => Postworthy.Web.Controllers.HomeController.IMAGE_DOMAINS.Contains(s.Link.Authority.ToLower())).ToList();
     var videoStubs = Model.ArticleStubs.Where(x => x.Video != null);
 
-    Model.ArticleStubs = Model.ArticleStubs.Where(x => !photoStubs.Contains(x)).ToList();
+    Model.ArticleStubs = Model.ArticleStubs.Where(x => !photoStubs.Contains(x) && !videoStubs.Contains(x)).ToList();
 
     IEnumerable<Postworthy.Models.Web.ArticleIndex.Index> articles = ViewBag.ArticlesIndex.Articles;
     if (articles != null)

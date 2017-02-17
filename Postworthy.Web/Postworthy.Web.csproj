@@ -261,6 +261,7 @@
     <None Include="Properties\PublishProfiles\BestInCode.com.pubxml" />
     <None Include="Properties\PublishProfiles\beta.pubxml" />
     <None Include="Properties\PublishProfiles\EndlessPrayer.com.pubxml" />
+    <None Include="Properties\PublishProfiles\Local.pubxml" />
     <None Include="Properties\PublishProfiles\Postworthy.com.pubxml" />
     <Content Include="Scripts\dropzone\css\basic.css" />
     <Content Include="Scripts\dropzone\css\dropzone.css" />
