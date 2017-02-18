@@ -2,43 +2,19 @@
         @if (Request.IsAuthenticated)
         {
             var user = Postworthy.Models.Account.UsersCollection.Single(User.Identity.Name);
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    <i class="glyphicon glyphicon-user @((ViewBag.Account == true) ? "icon-white" : "")"></i> <span class="hidden-xs" style="display:inline-block !important">@User.Identity.Name</span>
-                    <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                    @if (user != null && user.IsPrimaryUser)
-                    {
-                        <li>
-                            @Html.ActionLink("Personalize", "Personalization", new { controller = "Account", action = "Personalization", id = user.TwitterScreenName })
-                        </li>
-                        <li>
-                            @Html.ActionLink("Articles", "Admin", new { controller = "Article", action = "Admin", id = user.TwitterScreenName })
-                        </li>
-                        @*
-                        <li>
-                            @Html.ActionLink("Friends", "Friends", new { controller = "Account", action = "Friends", id = user.TwitterScreenName })
-                        </li>
-                        *@
-                    }
-                    <li>
-                        @Html.ActionLink("Log Off", "LogOff", new { controller = "Account", action = "LogOff", id = "0" })
-                    </li>
-                </ul>
+            <li style="background-color:#080808;">
+                @*
+                <img src="https://twitter.com/@User.Identity.Name/profile_image?size=normal" style="max-width:20px;max-height:20px;float:left" alt="@User.Identity.Name" title="@User.Identity.Name" />
+                *@
+                <a href="~/account/personalization/@user.TwitterScreenName" title="Site Configuration" style="float:left"><i class="glyphicon glyphicon-cog"></i></a>
+                <a href="~/article/admin/@user.TwitterScreenName" title="Add & Edit Articles" style="float:left"><i class="glyphicon glyphicon-pencil"></i></a>
+                <a href="~/account/logoff/0" title="Sign Out of @User.Identity.Name" style="float:left"><i class="glyphicon glyphicon-off"></i></a>
             </li>
         }
         else
         {
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    <i class="glyphicon glyphicon-user @((ViewBag.Account == true) ? "icon-white" : "")"></i> Guest
-                    <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                    <li>@Html.ActionLink("Register", "Register", "Account", routeValues: new { id="new" }, htmlAttributes: new { id = "registerLink" })</li>
-                    <li>@Html.ActionLink("Log On", "LogOn", "Account", routeValues: new { id="existing" }, htmlAttributes: new { id = "loginLink" })</li>
-                </ul>
+            <li style="background-color:#080808;">
+                <a id="loginLink" href="~/account/logon/existing" title="Sign In" style="float:left"><i class="glyphicon glyphicon-user"></i></a>
             </li>
         }
       

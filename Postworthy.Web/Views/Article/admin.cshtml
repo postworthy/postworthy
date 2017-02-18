@@ -19,7 +19,7 @@
             <th>
                 Title
             </th>
-            <th>
+            <th class="hidden-xs">
                 Tags
             </th>
             <th></th>
@@ -33,7 +33,7 @@
                 <td>
                     @regex.Replace(item.Title,"")
                 </td>
-                <td>
+                <td class="hidden-xs">
                     @string.Join(", ", item.Tags)
                 </td>
                 <td>

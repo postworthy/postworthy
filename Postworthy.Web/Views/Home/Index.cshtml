@@ -150,18 +150,18 @@
                             <div class="post box clearfix">
                                 <span class="postIndex pull-left">Photos</span>
                                 <hr style="clear: both;" />
-                                @foreach (var stub in photoStubs)
-                                {
-                                    <a class="outbound responsiveSidebarText" href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")" rel="nofollow">
-                                        <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/jpg;base64,@stub.Image');">
-                                        </div>
-                                    </a>
-                                    if (i % 10 == 0)
+                                    @foreach (var stub in photoStubs)
                                     {
-                                        break;
+                                        <a class="outbound" href="@stub.Link.ToString()" title="@stub.Title.Replace("\"","")" rel="nofollow">
+                                            <div class="col-md-6 col-sm-6 col-xs-6" data-squared="height" style="@(i++ % 2 == 0 ? "clear:left;" : "")border: solid 1px #fff;margin:0px;padding:0px;background-size:cover;background-image: url('data:image/jpg;base64,@stub.Image');">
+                                            </div>
+                                        </a>
+                                        if (i % 10 == 0)
+                                        {
+                                            break;
+                                        }
                                     }
-                                }
-                                <a class="responsiveSidebarText" style="display: block;" href="~/@date.ToShortDateString().Replace('/','-')/photos">[View All Photos]</a>
+                                <a class="responsiveSidebarText" style="display: block;float:left;" href="~/@date.ToShortDateString().Replace('/','-')/photos">[View All Photos]</a>
                             </div>
                             
                         }
