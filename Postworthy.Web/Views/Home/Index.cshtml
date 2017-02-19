@@ -22,7 +22,12 @@
         articles = articles.OrderByDescending(x => x.Published);
     }
 }
+@{
+    Postworthy.Models.Web.ArticleStubIndex articleStubIndex = ViewBag.ArticleStubIndex;
+    var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key).Take(10);
 
+    int pageCount = articleStubIndex.PageCount;
+}
 <div>
     <div>
 
@@ -121,6 +126,38 @@
                                 <div style="clear: both;margin: 5px 0px 0px 0px;"></div>
                             </div>
                         }
+
+                        @if (pageCount > 1)
+                        {
+                            var pages = articleStubIndex.ArticleStubPages.OrderBy(x => x.Key);
+                            int page = 0;
+
+                            foreach (var p in pages)
+                            {
+                                if (p.Value == date.ToShortDateString())
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    page++;
+                                }
+                            }
+                            int startIndex = pageCount > 10 && page > 9 ? page - 9 : 0;
+                            <div class="box col4 text-center">
+                                <ul class="pagination pagination-md">
+                                    <li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/" + pages.Skip(Math.Max(0,startIndex-1)).FirstOrDefault().Value.Replace('/', '-')) + "\"")>«</a></li>
+                                    
+                                    @for(int i = startIndex; i < pageCount && i < startIndex + 10; i++)
+                                    {
+                                        var kvp = pages.Skip(i).FirstOrDefault();
+                                        <li @Html.Raw(date.ToShortDateString() == kvp.Value ? "class=\"active\"" : "")><a href="@Url.Content("~/" + kvp.Value.Replace('/', '-'))">@(i + 1)</a></li>
+                                    }
+                                    <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/" + pages.Last().Value.Replace('/', '-')) + "\"")>@(page + 1) of @pageCount</a></li>
+                                    <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/" + pages.Skip(Math.Min(pageCount-1,startIndex+10)).FirstOrDefault().Value.Replace('/', '-')) + "\"")>»</a></li>
+                                </ul>
+                            </div>
+                        }
                     </div>
                     <div class="col-md-4 col-sm-4">
                         @if (!string.IsNullOrEmpty(PrimaryUser.AdScript))
@@ -190,10 +227,6 @@
                         <div class="post box">
                             <span class="postIndex pull-left">Archives</span>
                             <hr style="clear: both;" />
-                            @{
-                                Postworthy.Models.Web.ArticleStubIndex articleStubIndex = ViewBag.ArticleStubIndex;
-                                var archivedPages = articleStubIndex.ArticleStubPages.OrderByDescending(x => x.Key).Take(10);
-                            }
                             @foreach (var kvp in archivedPages)
                             {
                                 <a class="responsiveSidebarText" style="display: block;" href="~/@kvp.Value.Replace('/','-')">@(DateTime.Parse(kvp.Value).ToString("MMMM dd yyyy"))</a>

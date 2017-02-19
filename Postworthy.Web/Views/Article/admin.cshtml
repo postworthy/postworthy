@@ -5,43 +5,59 @@
 
     var regex = new System.Text.RegularExpressions.Regex(@"</?\w+((\s+\w+(\s*=\s*(?:"".*?""|'.*?'|[^'"">\s]+))?)+\s*|\s*)/?>", System.Text.RegularExpressions.RegexOptions.Singleline);
 }
+@section meta{
+    <link href="~/Content/datatables.min.css" rel="stylesheet" />
+    <!--<link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css" />-->
+}
 <div class="col-sm-10 col-sm-offset-1">
     <h2>Articles</h2>
 
     <p>
         @Html.ActionLink("Create New", "Create", new { id = "new" })
     </p>
-    <table class="table">
-        <tr>
-            <th>
-                Published
-            </th>
-            <th>
-                Title
-            </th>
-            <th class="hidden-xs">
-                Tags
-            </th>
-            <th></th>
-        </tr>
-        @foreach (var item in Model.Articles.OrderByDescending(a => a.Published))
-        {
+    <table class="table" id="articles">
+        <thead>
             <tr>
-                <td>
-                    @DateTime.FromFileTimeUtc(item.Published).ToLocalTime().ToShortDateString()
-                </td>
-                <td>
-                    @regex.Replace(item.Title,"")
-                </td>
-                <td class="hidden-xs">
-                    @string.Join(", ", item.Tags)
-                </td>
-                <td>
-                    @Html.ActionLink("Edit", "Edit", new { id = item.Key }) |
-                    @Html.ActionLink("Delete", "Delete", new { id = item.Key })
-                </td>
+                <th>
+                    Published
+                </th>
+                <th>
+                    Title
+                </th>
+                <th class="hidden-xs">
+                    Tags
+                </th>
+                <th></th>
             </tr>
-        }
-
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Articles.OrderByDescending(a => a.Published))
+            {
+                <tr>
+                    <td>
+                        @DateTime.FromFileTimeUtc(item.Published).ToLocalTime().ToShortDateString()
+                    </td>
+                    <td>
+                        @regex.Replace(item.Title, "")
+                    </td>
+                    <td class="hidden-xs">
+                        @string.Join(", ", item.Tags)
+                    </td>
+                    <td>
+                        @Html.ActionLink("Edit", "Edit", new { id = item.Key }) |
+                        @Html.ActionLink("Delete", "Delete", new { id = item.Key })
+                    </td>
+                </tr>
+            }
+        </tbody>
     </table>
 </div>
+@section scripts{
+    <script src="~/Scripts/datatables.min.js"></script>
+    <!--<script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>-->
+    <script>
+        $(document).ready(function () {
+            $('#articles').DataTable();
+        });
+    </script>
+}
