@@ -44,6 +44,9 @@ namespace Postworthy.Web.Controllers
             ViewBag.Tags = model.GetArticleIndex().Articles.SelectMany(x => x.Tags).Distinct().Select(x => GetTagLink(x));
             ViewBag.PageCount = pageCount;
 
+            if (id >= pageCount || id < 0)
+                return HttpNotFound("Archive Index Page Not Found");
+
             return View(viewModel);
         }
 

@@ -7,6 +7,7 @@
     int pageCount = ViewBag.PageCount;
     ViewBag.Title = (string.IsNullOrEmpty(ViewBag.Slug) ? "All " : ViewBag.Slug + " ") +  "Articles - Page " + (page + 1);
     int index = page * pageSize;
+    int startIndex = pageCount > 10 && page > 9 ? page - 9 : 0;
 }
 
 <div class="col-sm-7 col-sm-offset-1">
@@ -40,12 +41,13 @@
     {
         var slug = string.IsNullOrEmpty(ViewBag.Slug) ? "" : "tag/" + ViewBag.Slug.Replace("&", "").Replace(" ", "-").Replace(".", "-").ToLower() + "/";
         <div class="box col4 text-center">
-            <ul class="pagination">
+            <ul class="pagination pagination-lg">
                 <li @Html.Raw(page == 0 ? "class=\"disabled\"" : "")><a @Html.Raw(page == 0 ? "" : "href=\"" + Url.Content("~/articles/" + slug + (Convert.ToInt32(Math.Max(page - 1, 0)) == 0 ? "" : Convert.ToInt32(Math.Max(page - 1, 0)).ToString())) + "\"")>«</a></li>
-                @for (int i = 0; i < pageCount; i++)
+                @for (int i = startIndex; i < pageCount && i < startIndex + 10; i++)
                 {
                     <li @Html.Raw(page == i ? "class=\"active\"" : "")><a href="@Url.Content("~/articles/" + slug + (i == 0 ? "" : i.ToString()))">@(i + 1)</a></li>
                 }
+                <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/articles/" + slug + (pageCount - 1).ToString()) + "\"")>@(page + 1) of @pageCount</a></li>
                 <li @Html.Raw(page >= pageCount - 1 ? "class=\"disabled\"" : "")><a @Html.Raw(page >= pageCount - 1 ? "" : "href=\"" + Url.Content("~/articles/" + slug + (page + 1)) + "\"")>»</a></li>
             </ul>
         </div>
