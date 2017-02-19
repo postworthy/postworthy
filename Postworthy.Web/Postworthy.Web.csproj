@@ -247,6 +247,11 @@
     <Content Include="Content\images\pw2.jpg" />
     <Content Include="Content\images\pw2.svg" />
     <Content Include="Content\images\right.png" />
+    <Content Include="Content\images\sort_asc.png" />
+    <Content Include="Content\images\sort_asc_disabled.png" />
+    <Content Include="Content\images\sort_both.png" />
+    <Content Include="Content\images\sort_desc.png" />
+    <Content Include="Content\images\sort_desc_disabled.png" />
     <Content Include="Content\images\video-player-icon.png" />
     <Content Include="Content\images\wash-white.png" />
     <Content Include="favicon.ico" />
