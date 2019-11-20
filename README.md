@@ -1,10 +1,8 @@
 ## Project Demo
-==================================
 
 The best way to explain what Postworthy is all about is to <a href="http://postworthy.com">experience it first hand</a>.
 
 ## Project Intro
-==================================
 
 If you are the type of person who loves to discover amazing content from across the web and share it with your friends
 then postworthy is for you. Postworthy allows you to create a website filled with the things you find and the things 
@@ -16,7 +14,6 @@ Postworthy has been created in C# and has been designed to run on multiple opera
 The project is also mobile ready right out of the box to see this visit the demo link above from your smartphone (iOS or Android).
 
 ## Project Features
-==================================
 
 * C# MVC3 (Razor View Engine)
 * Mobile Ready
@@ -28,7 +25,6 @@ The project is also mobile ready right out of the box to see this visit the demo
 * Runs on Mono (the demo is running on Mono)
 
 ## Tools
-==================================
 
 If you are not familiar with C# then you will want to have a look at these free development tools
 
@@ -46,7 +42,6 @@ If you are not familiar with C# then you will want to have a look at these free 
 
 
 ## Before You Build
-==================================
 
 Before you build you will want to sign up for a twitter account and sign up for a <a href="https://dev.twitter.com/">twitter api key</a>. 
 Postworthy uses the twitter API to find content that you share and also to find content shared by those you follow. 
@@ -86,7 +81,6 @@ the memcached instance to be running local and be available on port 11211.
 If you use Couchbase make sure that you configure it to run as a Memcached server.
 
 ## Software Licensing Policy
-==================================
 
 ##### For Open Source Projects
 
