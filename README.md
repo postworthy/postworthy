@@ -1,7 +1,3 @@
-## Project Demo
-
-The best way to explain what Postworthy is all about is to <a href="http://postworthy.com">experience it first hand</a>.
-
 ## Project Intro
 
 If you are the type of person who loves to discover amazing content from across the web and share it with your friends
